@@ -1,0 +1,52 @@
+# exe to bin
+add_executable(simple_circuit simple_circuit.cpp)
+
+target_link_libraries(simple_circuit xfdtd)
+
+add_executable(simple_capacitor simple_capacitor.cpp)
+
+target_link_libraries(simple_capacitor xfdtd)
+
+add_executable(rlc_circuit rlc_circuit.cpp)
+
+target_link_libraries(rlc_circuit xfdtd)
+
+add_executable(microstrip_low_pass microstrip_low_pass.cpp)
+
+target_link_libraries(microstrip_low_pass xfdtd)
+
+add_executable(quarter_wave_transformer quarter_wave_transformer.cpp)
+
+target_link_libraries(quarter_wave_transformer xfdtd)
+
+add_executable(inverted_f_antenna inverted_f_antenna.cpp)
+
+target_link_libraries(inverted_f_antenna xfdtd)
+
+add_executable(microstrip_branch_line_coupler microstrip_branch_line_coupler.cpp)
+
+target_link_libraries(microstrip_branch_line_coupler xfdtd)
+
+add_executable(microstrip_line microstrip_line.cpp)
+
+target_link_libraries(microstrip_line xfdtd)
+
+add_executable(dielectric_resonator_antenna dielectric_resonator_antenna.cpp)
+
+target_link_libraries(dielectric_resonator_antenna xfdtd)
+
+add_executable(half_wave_dipole half_wave_dipole.cpp)
+
+target_link_libraries(half_wave_dipole xfdtd)
+
+add_executable(dielectric_sphere_scatter dielectric_sphere_scatter.cpp)
+
+target_link_libraries(dielectric_sphere_scatter xfdtd)
+
+add_executable(dielectric_cube_scatter dielectric_cube_scatter.cpp)
+
+target_link_libraries(dielectric_cube_scatter xfdtd)
+
+add_executable(cylinder_scatter_2d cylinder_scatter_2d.cpp)
+
+target_link_libraries(cylinder_scatter_2d xfdtd)

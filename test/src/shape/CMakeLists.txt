@@ -1,0 +1,2 @@
+add_executable(shape_test shape_test.cpp)
+target_link_libraries(shape_test xfdtd_shape xfdtd_coordinate_system)
