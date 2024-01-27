@@ -3,6 +3,7 @@
 
 #include <complex>
 #include <cstdlib>
+#include <filesystem>
 #include <utility>
 #include <xtensor.hpp>
 #include <xtensor/xnpy.hpp>

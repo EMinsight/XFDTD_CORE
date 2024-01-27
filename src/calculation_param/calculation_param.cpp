@@ -1,4 +1,3 @@
-#include <__fwd/get.h>
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/util/constant.h>
