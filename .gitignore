@@ -4,3 +4,5 @@ cmake-build*/
 data/
 plot/
 .*/
+.DS_store
+*.py
