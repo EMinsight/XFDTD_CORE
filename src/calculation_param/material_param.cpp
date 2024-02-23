@@ -1,6 +1,11 @@
 #include <xfdtd/calculation_param/calculation_param.h>
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/material/material.h"
 
 namespace xfdtd {
 
@@ -208,6 +213,10 @@ const xt::xarray<double>& MaterialParam::property(
     default:
       throw XFDTDCalculationParamException("Invalid attribute");
   }
+}
+
+void MaterialParam::addMaterial(std::shared_ptr<Material> material) {
+  _materials.emplace_back(std::move(material));
 }
 
 xt::xarray<double>& MaterialParam::epsX() { return _eps_x; }

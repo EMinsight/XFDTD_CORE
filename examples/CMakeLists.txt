@@ -50,3 +50,7 @@ target_link_libraries(dielectric_cube_scatter xfdtd)
 add_executable(cylinder_scatter_2d cylinder_scatter_2d.cpp)
 
 target_link_libraries(cylinder_scatter_2d xfdtd)
+
+add_executable(lorentz_sphere_scatter lorentz_sphere_scatter.cpp)
+
+target_link_libraries(lorentz_sphere_scatter xfdtd)

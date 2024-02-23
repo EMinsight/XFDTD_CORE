@@ -17,10 +17,12 @@
 #include "xfdtd/network/network.h"
 #include "xfdtd/nffft/nffft.h"
 #include "xfdtd/object/object.h"
-#include "xfdtd/updator/updator.h"
 #include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
+
+// Forward declaration
+class Updator;
 
 class XFDTDSimulationException : public XFDTDException {
  public:
@@ -41,7 +43,7 @@ class Simulation {
 
   Simulation& operator=(Simulation&&) noexcept = default;
 
-  ~Simulation() = default;
+  ~Simulation();
 
   void addObject(std::shared_ptr<xfdtd::Object> object);
 
@@ -63,6 +65,8 @@ class Simulation {
 
   const std::shared_ptr<EMF>& emf() const;
 
+  void init(std::size_t time_step);
+
  private:
   double _dx, _dy, _dz;
   double _cfl;
@@ -81,15 +85,16 @@ class Simulation {
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
-  std::unique_ptr<Updator> _updator;
 
-  void init();
+  std::unique_ptr<Updator> _updator;
 
   void generateGridSpace();
 
   void correctMaterialSpace();
 
   void correctUpdateCoefficient();
+
+  void setUpdator();
 
   void updateE();
 

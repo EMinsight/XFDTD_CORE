@@ -3,6 +3,7 @@
 #include <cmath>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <xtensor.hpp>
 
@@ -60,25 +61,20 @@ std::complex<double> ElectroMagneticProperty::refractIndex() const {
   return _refract_index;
 }
 
-Material::Material(std::string name, ElectroMagneticProperty em_property,
+Material::Material(std::string_view name, ElectroMagneticProperty em_property,
                    bool dispersion)
-    : _name{std::move(name)},
-      _em_property{em_property},
-      _dispersion{dispersion} {}
+    : _name{name}, _em_property{em_property}, _dispersion{dispersion} {}
 
-std::unique_ptr<Material> Material::createAir(std::string name) {
-  return std::make_unique<Material>(std::move(name),
-                                    ElectroMagneticProperty::air());
+std::unique_ptr<Material> Material::createAir(std::string_view name) {
+  return std::make_unique<Material>(name, ElectroMagneticProperty::air());
 }
 
-std::unique_ptr<Material> Material::createPec(std::string name) {
-  return std::make_unique<Material>(std::move(name),
-                                    ElectroMagneticProperty::pec());
+std::unique_ptr<Material> Material::createPec(std::string_view name) {
+  return std::make_unique<Material>(name, ElectroMagneticProperty::pec());
 }
 
-std::unique_ptr<Material> Material::createPmc(std::string name) {
-  return std::make_unique<Material>(std::move(name),
-                                    ElectroMagneticProperty::pmc());
+std::unique_ptr<Material> Material::createPmc(std::string_view name) {
+  return std::make_unique<Material>(name, ElectroMagneticProperty::pmc());
 }
 
 std::string Material::toString() const {

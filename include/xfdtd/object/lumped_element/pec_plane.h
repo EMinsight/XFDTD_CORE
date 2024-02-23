@@ -21,8 +21,6 @@ class PecPlane : public Object {
 
   ~PecPlane() override = default;
 
-  void correctMaterialSpace() override;
-
   private:
 
 };

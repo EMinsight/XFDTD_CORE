@@ -23,7 +23,8 @@ class XFDTDGridSpaceException : public XFDTDException {
 
 class Grid {
  public:
-  Grid(std::size_t i, std::size_t j, std::size_t k);
+  Grid(std::size_t i, std::size_t j, std::size_t k,
+       std::size_t material_index = -1);
 
   Grid(const Grid&) = default;
 
@@ -45,8 +46,12 @@ class Grid {
 
   std::size_t k() const;
 
+  std::size_t materialIndex() const;
+
+  void setMaterialIndex(std::size_t index);
+
  private:
-  std::size_t _i, _j, _k;
+  std::size_t _i, _j, _k, _material_index;
 };
 
 class GridBox {
@@ -110,6 +115,8 @@ class GridSpace {
   double minDy() const;
 
   double minDz() const;
+
+  auto& grid() const { return _grid; }
 
   const xt::xarray<double>& eNodeX() const;
 
