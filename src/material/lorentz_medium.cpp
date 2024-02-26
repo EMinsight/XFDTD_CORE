@@ -1,5 +1,6 @@
-
 #include <complex>
+#include <cstddef>
+#include <numeric>
 #include <utility>
 
 #include "material/dispersive_solver_common.h"
@@ -8,6 +9,16 @@
 #include "xfdtd/util/constant.h"
 
 namespace xfdtd {
+
+template <typename T, typename F>
+static auto lorentzSusceptibility(const T& omega_p, const T& eps_delta,
+                                  const T& nv, const F& freq) {
+  using namespace std::complex_literals;
+  auto omega = 2 * constant::PI * freq;
+
+  return (eps_delta * omega_p * omega_p) /
+         (omega_p * omega_p + 2i * nv * omega - omega * omega);
+}
 
 LorentzMedium::LorentzMedium(std::string_view name, double eps_inf,
                              xt::xarray<double> eps_static,
@@ -26,26 +37,26 @@ LorentzMedium::LorentzMedium(std::string_view name, double eps_inf,
 
 xt::xarray<std::complex<double>> LorentzMedium::relativePermittivity(
     const xt::xarray<double>& freq) const {
-  if (numberOfPoles() != 1) {
-    throw std::runtime_error(
-        "LorentzMedium::relativePermittivity: "
-        "numberOfPoles() != 1");
-  }
+  return xt::make_lambda_xfunction(
+      [this](const auto& f) {
+        std::complex<double> sum{0, 0};
+        for (std::size_t p = 0; p < numberOfPoles(); ++p) {
+          sum += susceptibility(f, p);
+        }
+        return _eps_inf + sum;
+      },
+      freq);
+}
 
-  using namespace std::complex_literals;
-  xt::xarray<std::complex<double>> eps_r =
-      xt::zeros<std::complex<double>>({freq.size()});
-  for (std::size_t i = 0; i < freq.size(); ++i) {
-    const auto& omega = 2 * constant::PI * freq(i);
-    const auto& eps_inf = _eps_inf;
-    const auto& eps_static = _eps_static(0);  // Careful: Change this
-    const auto& omega_p = _omega_p(0);        // Careful: Change this
-    const auto& nv = _nv(0);                  // Careful: Change this
-    eps_r(i) = eps_inf +
-               ((eps_static - eps_inf) * omega_p * omega_p) /
-                   (omega_p * omega_p + 2.0 * 1i * nv * omega - omega * omega);
+std::complex<double> LorentzMedium::susceptibility(double freq,
+                                                   size_t p) const {
+  if (numberOfPoles() <= p) {
+    throw std::runtime_error(
+        "LorentzMedium::susceptibility: "
+        "p is out of range");
   }
-  return eps_r;
+  return lorentzSusceptibility(_omega_p(p), (_eps_static(p) - _eps_inf), _nv(p),
+                               freq);
 }
 
 void LorentzMedium::calculateCoeff(const GridSpace* grid_space,

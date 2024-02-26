@@ -167,14 +167,61 @@ void Object::handleDispersion() {
     const auto& dy = _grid_space->basedDy();
     const auto& dz = _grid_space->basedDz();
     xt::filter(cexe, mask) = c2;
-    xt::filter(cexhy, mask) = -c3 / dz;  // check this
+    xt::filter(cexhy, mask) = -c3 / dz;
     xt::filter(cexhz, mask) = c3 / dy;
     xt::filter(ceye, mask) = c2;
-    xt::filter(ceyhz, mask) = -c3 / dx;  // check this
+    xt::filter(ceyhz, mask) = -c3 / dx;
     xt::filter(ceyhx, mask) = c3 / dz;
     xt::filter(ceze, mask) = c2;
-    xt::filter(cezhx, mask) = -c3 / dy;  // check this
+    xt::filter(cezhx, mask) = -c3 / dy;
     xt::filter(cezhy, mask) = c3 / dx;
+    return;
+  }
+
+  if (auto drude_medium = dynamic_cast<DrudeMedium*>(_material.get());
+      drude_medium != nullptr) {
+    drude_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
+                                 emfPtr());
+
+    const auto& a = drude_medium->coeffForADE()._a;
+    const auto& b = drude_medium->coeffForADE()._b;
+    const auto& dx = _grid_space->basedDx();
+    const auto& dy = _grid_space->basedDy();
+    const auto& dz = _grid_space->basedDz();
+
+    xt::filter(cexe, mask) = a;
+    xt::filter(cexhy, mask) = -b / dz;
+    xt::filter(cexhz, mask) = b / dy;
+    xt::filter(ceye, mask) = a;
+    xt::filter(ceyhz, mask) = -b / dx;
+    xt::filter(ceyhx, mask) = b / dz;
+    xt::filter(ceze, mask) = a;
+    xt::filter(cezhx, mask) = -b / dy;
+    xt::filter(cezhy, mask) = b / dx;
+    return;
+  }
+
+  if (auto debye_medium = dynamic_cast<DebyeMedium*>(_material.get());
+      debye_medium != nullptr) {
+    debye_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
+                                 emfPtr());
+
+    const auto& a = debye_medium->coeffForADE()._a;
+    const auto& b = debye_medium->coeffForADE()._b;
+    const auto& dx = _grid_space->basedDx();
+    const auto& dy = _grid_space->basedDy();
+    const auto& dz = _grid_space->basedDz();
+
+    xt::filter(cexe, mask) = a;
+    xt::filter(cexhy, mask) = -b / dz;
+    xt::filter(cexhz, mask) = b / dy;
+    xt::filter(ceye, mask) = a;
+    xt::filter(ceyhz, mask) = -b / dx;
+    xt::filter(ceyhx, mask) = b / dz;
+    xt::filter(ceze, mask) = a;
+    xt::filter(cezhx, mask) = -b / dy;
+    xt::filter(cezhy, mask) = b / dx;
+    return;
   }
 }
 

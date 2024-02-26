@@ -16,11 +16,25 @@ struct LorentzCoeff {
   double _c3;
 };
 
-struct DrudeCoeff {};
+struct DrudeCoeff {
+  xt::xarray<double> _k;
+  xt::xarray<double> _beta;
+
+  double _a;
+  double _b;
+};
+
+struct DebyCoeff {
+  xt::xarray<double> _k;
+  xt::xarray<double> _beta;
+
+  double _a;
+  double _b;
+};
 
 }  // namespace ade
 
-namespace z {}
+namespace z_transfer {}
 
 }  // namespace xfdtd
 

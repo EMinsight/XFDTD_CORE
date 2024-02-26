@@ -21,6 +21,8 @@ class PecPlane : public Object {
 
   ~PecPlane() override = default;
 
+  void correctMaterialSpace(std::size_t index) override;
+
   private:
 
 };

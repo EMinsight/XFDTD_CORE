@@ -81,6 +81,70 @@ class LorentzADEUpdator : public LinearDispersiveMaterialADEUpdator {
   void allocate();
 };
 
+class DrudeADEUpdator : public LinearDispersiveMaterialADEUpdator {
+ public:
+  DrudeADEUpdator(std::shared_ptr<const GridSpace> grid_space,
+                  std::shared_ptr<const CalculationParam> calculation_param,
+                  std::shared_ptr<EMF> emf);
+
+  DrudeADEUpdator(const DrudeADEUpdator&) = delete;
+
+  DrudeADEUpdator(DrudeADEUpdator&&) noexcept = default;
+
+  DrudeADEUpdator& operator=(const DrudeADEUpdator&) = delete;
+
+  DrudeADEUpdator& operator=(DrudeADEUpdator&&) noexcept = default;
+
+  ~DrudeADEUpdator() override = default;
+
+  void updateE() override;
+
+ private:
+  struct DrudeADERecord {
+    xt::xtensor<double, 4> _jx, _jy, _jz;
+  };
+
+  std::unordered_map<std::size_t, std::size_t> _drude_map;
+  std::vector<std::shared_ptr<DrudeMedium>> _drude_mediums;
+  std::vector<ade::DrudeCoeff> _coeff;
+  std::vector<DrudeADERecord> _j_record;
+
+  void init();
+
+  void allocate();
+};
+
+class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
+ public:
+  DebyeADEUpdator(std::shared_ptr<const GridSpace> grid_space,
+                  std::shared_ptr<const CalculationParam> calculation_param,
+                  std::shared_ptr<EMF> emf);
+
+  DebyeADEUpdator(const DebyeADEUpdator&) = delete;
+
+  DebyeADEUpdator(DebyeADEUpdator&&) noexcept = default;
+
+  DebyeADEUpdator& operator=(const DebyeADEUpdator&) = delete;
+
+  DebyeADEUpdator& operator=(DebyeADEUpdator&&) noexcept = default;
+
+  ~DebyeADEUpdator() override = default;
+
+  void updateE() override;
+
+ private:
+  struct DebyeADERecord {
+    xt::xtensor<double, 4> _jx, _jy, _jz;
+  };
+
+  std::unordered_map<std::size_t, std::size_t> _debye_map;
+  std::vector<std::shared_ptr<DebyeMedium>> _debye_mediums;
+  std::vector<ade::DebyCoeff> _coeff;
+  std::vector<DebyeADERecord> _j_record;
+
+  void init();
+};
+
 }  // namespace xfdtd
 
 #endif  // _XFDTD_LIB_DISPERSIVE_MATERIAL_UPDATOR_H_

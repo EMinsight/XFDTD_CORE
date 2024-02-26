@@ -55,6 +55,3 @@ install(
   DESTINATION ${XFDTD_INSTALL_PREFIX}/include)
 
 install(DIRECTORY ${XFDTD_LIB_PUBLIC_INCLUDE_DIR}/xfdtd DESTINATION ${XFDTD_INSTALL_PREFIX}/include)
-
-add_executable(main m.cpp)
-target_link_libraries(main ${XFDTD_LIB_THIRD_PARTY_LIB})

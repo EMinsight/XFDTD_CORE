@@ -10,6 +10,7 @@
 #include "updator/updator.h"
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/grid_space/grid_space.h"
+#include "xfdtd/material/dispersive_material.h"
 #include "xfdtd/object/lumped_element/pec_plane.h"
 
 namespace xfdtd {
@@ -339,7 +340,44 @@ void Simulation::setUpdator() {
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
     _updator = std::make_unique<LorentzADEUpdator>(_grid_space,
                                                    _calculation_param, _emf);
-    return;
+    for (const auto& m : _calculation_param->materialParam()->materialArray()) {
+      if (!m->dispersion()) {
+        continue;
+      }
+
+      auto dispersion_material =
+          std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
+      if (!dispersion_material) {
+        break;
+      }
+
+      if (auto lorentz_material =
+              std::dynamic_pointer_cast<LorentzMedium>(dispersion_material);
+          lorentz_material != nullptr) {
+        _updator = std::make_unique<LorentzADEUpdator>(
+            _grid_space, _calculation_param, _emf);
+        std::cout << "\nDecide to use LorentzADEUpdator\n";
+        return;
+      }
+
+      if (auto drude_material =
+              std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
+          drude_material != nullptr) {
+        _updator = std::make_unique<DrudeADEUpdator>(_grid_space,
+                                                     _calculation_param, _emf);
+        std::cout << "\nDecide to use DrudeADEUpdator\n";
+        return;
+      }
+
+      if (auto debye_material =
+              std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
+          debye_material != nullptr) {
+        _updator = std::make_unique<DebyeADEUpdator>(_grid_space,
+                                                     _calculation_param, _emf);
+        std::cout << "\nDecide to use DebyeADEUpdator\n";
+        return;
+      }
+    }
   }
 
   throw XFDTDSimulationException("don't support this type of updator yet.");

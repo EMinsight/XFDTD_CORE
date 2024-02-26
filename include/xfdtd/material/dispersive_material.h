@@ -3,6 +3,7 @@
 
 #include <xfdtd/material/material.h>
 
+#include <complex>
 #include <string_view>
 
 #include "material/dispersive_solver_common.h"
@@ -14,7 +15,7 @@ namespace xfdtd {
 
 class LinearDispersiveMaterial : public Material {
  public:
-  enum class Type { UNKNOW, DEBY, DRUDE, LORENTZ };
+  enum class Type { UNKNOW, DEBYE, DRUDE, LORENTZ };
 
   explicit LinearDispersiveMaterial(
       std::string_view name, Type type,
@@ -41,7 +42,9 @@ class LinearDispersiveMaterial : public Material {
                               const CalculationParam* calculation_param,
                               const EMF* emf) = 0;
 
- protected:
+  virtual std::complex<double> susceptibility(double freq,
+                                              std::size_t p) const = 0;
+
  private:
   Type _type;
 };
@@ -77,6 +80,9 @@ class LorentzMedium : public LinearDispersiveMaterial {
   xt::xarray<std::complex<double>> relativePermittivity(
       const xt::xarray<double>& freq) const override;
 
+  std::complex<double> susceptibility(double freq,
+                                      std::size_t p) const override;
+
   void calculateCoeff(const GridSpace* grid_space,
                       const CalculationParam* calculation_param,
                       const EMF* emf) override;
@@ -87,6 +93,74 @@ class LorentzMedium : public LinearDispersiveMaterial {
   ade::LorentzCoeff _coeff_for_ade;
 
   void calculateCoeffForADE(const CalculationParam* calculation_param);
+};
+
+class DrudeMedium : public LinearDispersiveMaterial {
+ public:
+  DrudeMedium(std::string_view name, double eps_inf, xt::xarray<double> omega_p,
+              xt::xarray<double> gamma);
+
+  ~DrudeMedium() override = default;
+
+  auto numberOfPoles() const { return _omega_p.size(); }
+
+  auto epsInf() const { return _eps_inf; }
+
+  auto omegaP() const { return _omega_p; }
+
+  auto gamma() const { return _gamma; }
+
+  const auto& coeffForADE() const { return _coeff_for_ade; }
+
+  xt::xarray<std::complex<double>> relativePermittivity(
+      const xt::xarray<double>& freq) const override;
+
+  std::complex<double> susceptibility(double freq,
+                                      std::size_t p) const override;
+
+  void calculateCoeff(const GridSpace* grid_space,
+                      const CalculationParam* calculation_param,
+                      const EMF* emf) override;
+
+ private:
+  double _eps_inf;
+  xt::xarray<double> _omega_p, _gamma;
+  ade::DrudeCoeff _coeff_for_ade;
+
+  void calculateCoeffForADE(const CalculationParam* calculation_param);
+};
+
+class DebyeMedium : public LinearDispersiveMaterial {
+ public:
+  DebyeMedium(std::string_view name, double eps_inf,
+              xt::xarray<double> eps_static, xt::xarray<double> tau);
+
+  ~DebyeMedium() override = default;
+
+  auto numberOfPoles() const { return _tau.size(); }
+
+  auto tau() const { return _tau; }
+
+  auto epsInf() const { return _eps_inf; }
+
+  const auto& epsStatic() const { return _eps_static; }
+
+  const auto& coeffForADE() const { return _coeff_for_ade; }
+
+  xt::xarray<std::complex<double>> relativePermittivity(
+      const xt::xarray<double>& freq) const override;
+
+  std::complex<double> susceptibility(double freq,
+                                      std::size_t p) const override;
+
+  void calculateCoeff(const GridSpace* grid_space,
+                      const CalculationParam* calculation_param,
+                      const EMF* emf) override;
+
+ private:
+  double _eps_inf;
+  xt::xarray<double> _eps_static, _tau;
+  ade::DebyCoeff _coeff_for_ade;
 };
 
 }  // namespace xfdtd
