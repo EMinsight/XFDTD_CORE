@@ -5,6 +5,7 @@
 #include <xfdtd/grid_space/grid_space.h>
 
 #include <memory>
+#include <vector>
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
 
@@ -51,6 +52,8 @@ class TimeParam {
   std::size_t _current_time_step;
 };
 
+// forward declare
+class Material;
 class MaterialParam {
  public:
   enum class Attribute { EPSILON, MU, SIGMA_E, SIGMA_M };
@@ -116,6 +119,8 @@ class MaterialParam {
 
   const xt::xarray<double>& property(Attribute attribute, Axis::XYZ xyz) const;
 
+  const auto& materialArray() const;
+
   xt::xarray<double>& epsX();
 
   xt::xarray<double>& epsY();
@@ -144,6 +149,10 @@ class MaterialParam {
 
   xt::xarray<double>& property(Attribute attribute, Axis::XYZ xyz);
 
+  auto&& materialArray();
+
+  void addMaterial(std::shared_ptr<Material> material);
+
  private:
   xt::xarray<double> _eps_x;
   xt::xarray<double> _eps_y;
@@ -157,7 +166,13 @@ class MaterialParam {
   xt::xarray<double> _sigma_m_x;
   xt::xarray<double> _sigma_m_y;
   xt::xarray<double> _sigma_m_z;
+
+  std::vector<std::shared_ptr<Material>> _materials;
 };
+
+inline const auto& MaterialParam::materialArray() const { return _materials; }
+
+inline auto&& MaterialParam::materialArray() { return _materials; }
 
 class FDTDUpdateCoefficient {
  public:

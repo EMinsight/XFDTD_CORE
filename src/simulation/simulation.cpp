@@ -5,14 +5,20 @@
 #include <xtensor/xnpy.hpp>
 
 #include "grid_space/grid_space_generator.h"
+#include "updator/basic_updator.h"
+#include "updator/dispersive_material_updator.h"
+#include "updator/updator.h"
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/grid_space/grid_space.h"
+#include "xfdtd/material/dispersive_material.h"
 #include "xfdtd/object/lumped_element/pec_plane.h"
 
 namespace xfdtd {
 
 Simulation::Simulation(double dx, double dy, double dz, double cfl)
     : _dx{dx}, _dy{dy}, _dz{dz}, _cfl{cfl}, _time_step{0} {}
+
+Simulation::~Simulation() = default;
 
 void Simulation::addObject(std::shared_ptr<xfdtd::Object> object) {
   _objects.emplace_back(std::move(object));
@@ -53,8 +59,7 @@ void Simulation::run(std::size_t time_step) {
   _start_time = std::chrono::high_resolution_clock::now();
   std::cout << "Simulation start..."
             << "\n";
-  _time_step = time_step;
-  init();
+  init(time_step);
 
   // xt::dump_npy("./data/check/cexe.npy",
   //              _calculation_param->fdtdCoefficient()->cexe());
@@ -113,7 +118,7 @@ void Simulation::run(std::size_t time_step) {
 
   while (_calculation_param->timeParam()->currentTimeStep() <
          _calculation_param->timeParam()->endTimeStep()) {
-              updateE();
+    updateE();
     correctE();
     updateH();
     correctH();
@@ -137,13 +142,44 @@ void Simulation::run(std::size_t time_step) {
             << "\n";
 }
 
-void Simulation::init() {
+void Simulation::init(std::size_t time_step) {
+  _time_step = time_step;
+  // First: generate grid space
   generateGridSpace();
 
+  // Second: allocate the basic concept: space,param,emf
   _calculation_param = std::make_shared<CalculationParam>(_grid_space.get(), 0,
                                                           _time_step, _cfl);
-
   _emf = std::make_shared<EMF>();
+
+  // Third: init all the objects
+  for (const auto& o : _objects) {
+    o->init(_grid_space, _calculation_param, _emf);
+  }
+  for (const auto& b : _boundaries) {
+    b->init(_grid_space, _calculation_param, _emf);
+  }
+  for (const auto& s : _waveform_sources) {
+    s->init(_grid_space, _calculation_param, _emf);
+  }
+
+  // correct material space: param
+  correctMaterialSpace();
+  _calculation_param->calculateCoefficient(_grid_space.get());
+  correctUpdateCoefficient();
+
+  // init monitor
+  for (const auto& m : _monitors) {
+    m->init(_grid_space, _calculation_param, _emf);
+  }
+  for (const auto& n : _networks) {
+    n->init(_grid_space, _calculation_param, _emf);
+  }
+  for (const auto& n : _nfffts) {
+    n->init(_grid_space, _calculation_param, _emf);
+  }
+
+  setUpdator();
 
   _emf->allocateEx(_grid_space->sizeX(), _grid_space->sizeY() + 1,
                    _grid_space->sizeZ() + 1);
@@ -157,46 +193,6 @@ void Simulation::init() {
                    _grid_space->sizeZ());
   _emf->allocateHz(_grid_space->sizeX(), _grid_space->sizeY(),
                    _grid_space->sizeZ() + 1);
-
-  for (const auto& o : _objects) {
-    o->init(_grid_space, _calculation_param, _emf);
-  }
-
-  for (const auto& b : _boundaries) {
-    b->init(_grid_space, _calculation_param, _emf);
-  }
-
-  for (const auto& s : _waveform_sources) {
-    s->init(_grid_space, _calculation_param, _emf);
-  }
-
-  correctMaterialSpace();
-
-  _calculation_param->calculateCoefficient(_grid_space.get());
-
-  correctUpdateCoefficient();
-
-  if (_grid_space->dimension() == GridSpace::Dimension::THREE) {
-    _updator =
-        std::make_unique<BasicUpdator3D>(_grid_space, _calculation_param, _emf);
-  } else if (_grid_space->dimension() == GridSpace::Dimension::TWO) {
-    _updator =
-        std::make_unique<BasicUpdatorTE>(_grid_space, _calculation_param, _emf);
-  } else {
-    throw std::runtime_error("Invalid dimension");
-  }
-
-  for (const auto& m : _monitors) {
-    m->init(_grid_space, _calculation_param, _emf);
-  }
-
-  for (const auto& n : _networks) {
-    n->init(_grid_space, _calculation_param, _emf);
-  }
-
-  for (const auto& n : _nfffts) {
-    n->init(_grid_space, _calculation_param, _emf);
-  }
 }
 
 void Simulation::updateE() {
@@ -275,11 +271,15 @@ void Simulation::generateGridSpace() {
 }
 
 void Simulation::correctMaterialSpace() {
+  std::size_t m_index = {0};
   for (auto&& o : _objects) {
     if (std::dynamic_pointer_cast<PecPlane>(o) != nullptr) {
       continue;
     }
-    o->correctMaterialSpace();
+
+    o->correctMaterialSpace(m_index);
+    _calculation_param->materialParam()->addMaterial(o->material());
+    ++m_index;
   }
 
   for (auto&& b : _boundaries) {
@@ -295,7 +295,8 @@ void Simulation::correctMaterialSpace() {
     if (std::dynamic_pointer_cast<PecPlane>(o) == nullptr) {
       continue;
     }
-    o->correctMaterialSpace();
+    // for pec plane
+    o->correctMaterialSpace(-1);
   }
 }
 
@@ -311,6 +312,75 @@ void Simulation::correctUpdateCoefficient() {
   for (auto&& s : _waveform_sources) {
     s->correctUpdateCoefficient();
   }
+}
+
+void Simulation::setUpdator() {
+  bool dispersion = false;
+  for (const auto& m : _calculation_param->materialParam()->materialArray()) {
+    if (m->dispersion()) {
+      dispersion = true;
+      break;
+    }
+  }
+
+  if (!dispersion) {
+    if (_grid_space->dimension() == GridSpace::Dimension::THREE) {
+      _updator = std::make_unique<BasicUpdator3D>(_grid_space,
+                                                  _calculation_param, _emf);
+    } else if (_grid_space->dimension() == GridSpace::Dimension::TWO) {
+      _updator = std::make_unique<BasicUpdatorTE>(_grid_space,
+                                                  _calculation_param, _emf);
+    } else {
+      throw std::runtime_error("Invalid dimension");
+    }
+    return;
+  }
+
+  // Contains linear dispersive material
+  if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
+    _updator = std::make_unique<LorentzADEUpdator>(_grid_space,
+                                                   _calculation_param, _emf);
+    for (const auto& m : _calculation_param->materialParam()->materialArray()) {
+      if (!m->dispersion()) {
+        continue;
+      }
+
+      auto dispersion_material =
+          std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
+      if (!dispersion_material) {
+        break;
+      }
+
+      if (auto lorentz_material =
+              std::dynamic_pointer_cast<LorentzMedium>(dispersion_material);
+          lorentz_material != nullptr) {
+        _updator = std::make_unique<LorentzADEUpdator>(
+            _grid_space, _calculation_param, _emf);
+        std::cout << "\nDecide to use LorentzADEUpdator\n";
+        return;
+      }
+
+      if (auto drude_material =
+              std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
+          drude_material != nullptr) {
+        _updator = std::make_unique<DrudeADEUpdator>(_grid_space,
+                                                     _calculation_param, _emf);
+        std::cout << "\nDecide to use DrudeADEUpdator\n";
+        return;
+      }
+
+      if (auto debye_material =
+              std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
+          debye_material != nullptr) {
+        _updator = std::make_unique<DebyeADEUpdator>(_grid_space,
+                                                     _calculation_param, _emf);
+        std::cout << "\nDecide to use DebyeADEUpdator\n";
+        return;
+      }
+    }
+  }
+
+  throw XFDTDSimulationException("don't support this type of updator yet.");
 }
 
 }  // namespace xfdtd

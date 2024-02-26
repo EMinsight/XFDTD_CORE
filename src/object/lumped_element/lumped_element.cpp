@@ -24,7 +24,7 @@ void LumpedElement::init(std::shared_ptr<const GridSpace> grid_space,
   _ke = grid_box->end().k();
 }
 
-void LumpedElement::correctMaterialSpace() {}
+// void LumpedElement::correctMaterialSpace(std::size_t index) {}
 
 Axis::XYZ LumpedElement::xyz() const { return _xyz; }
 

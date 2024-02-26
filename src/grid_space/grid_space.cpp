@@ -10,7 +10,9 @@
 
 namespace xfdtd {
 
-Grid::Grid(std::size_t i, std::size_t j, std::size_t k) : _i{i}, _j{j}, _k{k} {}
+Grid::Grid(std::size_t i, std::size_t j, std::size_t k,
+           std::size_t material_index)
+    : _i{i}, _j{j}, _k{k}, _material_index{material_index} {}
 
 Grid Grid::operator+(const Grid& grid) const {
   return {_i + grid._i, _j + grid._j, _k + grid._k};
@@ -25,6 +27,10 @@ std::size_t Grid::i() const { return _i; }
 std::size_t Grid::j() const { return _j; }
 
 std::size_t Grid::k() const { return _k; }
+
+std::size_t Grid::materialIndex() const { return _material_index; }
+
+void Grid::setMaterialIndex(std::size_t index) { _material_index = index; }
 
 GridBox::GridBox(Grid origin, Grid size) : _origin{origin}, _size{size} {}
 
@@ -277,7 +283,7 @@ void GridSpace::setMinDy(double min_dy) { _min_dy = min_dy; }
 void GridSpace::setMinDz(double min_dz) { _min_dz = min_dz; }
 
 void GridSpace::generateGrid(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _grid.resize({nx, ny, nz});
+  _grid = xt::xarray<std::shared_ptr<Grid>>::from_shape({nx, ny, nz});
   for (auto i{0}; i < nx; ++i) {
     for (auto j{0}; j < ny; ++j) {
       for (auto k{0}; k < nz; ++k) {

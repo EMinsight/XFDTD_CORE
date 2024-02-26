@@ -8,7 +8,7 @@
 
 #include <complex>
 #include <memory>
-#include <string>
+#include <string_view>
 
 namespace xfdtd {
 
@@ -68,7 +68,7 @@ class ElectroMagneticProperty {
 
 class Material {
  public:
-  Material(std::string name, ElectroMagneticProperty em_property,
+  Material(std::string_view name, ElectroMagneticProperty em_property,
            bool dispersion = false);
 
   Material(const Material &) = default;
@@ -82,13 +82,13 @@ class Material {
   virtual ~Material() = default;
 
   static std::unique_ptr<Material> createAir(
-      std::string name = "xfdtd_default_air_material");
+      std::string_view name = "xfdtd_default_air_material");
 
   static std::unique_ptr<Material> createPec(
-      std::string name = "xfdtd_default_pec_material");
+      std::string_view name = "xfdtd_default_pec_material");
 
   static std::unique_ptr<Material> createPmc(
-      std::string name = "xfdtd_default_pmc_material");
+      std::string_view name = "xfdtd_default_pmc_material");
 
   virtual std::string toString() const;
 

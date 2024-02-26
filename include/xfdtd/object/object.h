@@ -3,6 +3,7 @@
 
 #include <xfdtd/grid_space/grid_space.h>
 
+#include <cstddef>
 #include <memory>
 
 #include "xfdtd/calculation_param/calculation_param.h"
@@ -21,7 +22,7 @@ class XFDTDObjectException : public XFDTDException {
 class Object {
  public:
   Object(std::string name, std::unique_ptr<Shape> shape,
-         std::unique_ptr<Material> material);
+         std::shared_ptr<Material> material);
 
   Object(const Object&) = delete;
 
@@ -39,7 +40,7 @@ class Object {
                     std::shared_ptr<CalculationParam> calculation_param,
                     std::shared_ptr<EMF> emf);
 
-  virtual void correctMaterialSpace();
+  virtual void correctMaterialSpace(std::size_t index);
 
   virtual void correctUpdateCoefficient();
 
@@ -51,10 +52,12 @@ class Object {
 
   const std::unique_ptr<Shape>& shape() const;
 
-  const std::unique_ptr<Material>& material() const;
+  const auto& material() const;
+
+  auto&& material();
 
  protected:
-  void defaultCorrectMaterialSpace();
+  void defaultCorrectMaterialSpace(std::size_t index = -1);
 
   Shape* shapePtr();
 
@@ -73,7 +76,7 @@ class Object {
  private:
   std::string _name;
   std::unique_ptr<Shape> _shape;
-  std::unique_ptr<Material> _material;
+  std::shared_ptr<Material> _material;
 
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
@@ -81,6 +84,10 @@ class Object {
 
   std::unique_ptr<GridBox> _grid_box;
 };
+
+inline const auto& Object::material() const { return _material; }
+
+inline auto&& Object::material() { return _material; }
 
 }  // namespace xfdtd
 

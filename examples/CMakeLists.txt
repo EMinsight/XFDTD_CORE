@@ -1,52 +1,21 @@
-# exe to bin
-add_executable(simple_circuit simple_circuit.cpp)
+file(GLOB_RECURSE XFDTD_EXAMPLE_SOURCES "${PROJECT_SOURCE_DIR}/examples/*/*.cpp" "${PROJECT_SOURCE_DIR}/examples/*.cpp")
 
-target_link_libraries(simple_circuit xfdtd)
+add_custom_target(build-examples COMMAND ${CMAKE_COMMAND} -E echo "Build all examples")
 
-add_executable(simple_capacitor simple_capacitor.cpp)
+set(XFDTD_EXAMPLES_LIST "")
 
-target_link_libraries(simple_capacitor xfdtd)
+# make example xxx
+foreach(xfdtd_example_source ${XFDTD_EXAMPLE_SOURCES})
+    get_filename_component(xfdtd_example_file_name ${xfdtd_example_source} NAME)
+    string(REPLACE ".cpp" "" xfdtd_example_name ${xfdtd_example_file_name})
+    add_executable(${xfdtd_example_name} EXCLUDE_FROM_ALL ${xfdtd_example_source})
+    set(XFDTD_EXAMPLES_LIST ${XFDTD_EXAMPLES_LIST} ${xfdtd_example_name})
 
-add_executable(rlc_circuit rlc_circuit.cpp)
+    target_link_libraries(${xfdtd_example_name} xfdtd)
+    # Set properties for the target
+    set_target_properties(${xfdtd_example_name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
+        COMMAND ${xfdtd_example_name} )
 
-target_link_libraries(rlc_circuit xfdtd)
-
-add_executable(microstrip_low_pass microstrip_low_pass.cpp)
-
-target_link_libraries(microstrip_low_pass xfdtd)
-
-add_executable(quarter_wave_transformer quarter_wave_transformer.cpp)
-
-target_link_libraries(quarter_wave_transformer xfdtd)
-
-add_executable(inverted_f_antenna inverted_f_antenna.cpp)
-
-target_link_libraries(inverted_f_antenna xfdtd)
-
-add_executable(microstrip_branch_line_coupler microstrip_branch_line_coupler.cpp)
-
-target_link_libraries(microstrip_branch_line_coupler xfdtd)
-
-add_executable(microstrip_line microstrip_line.cpp)
-
-target_link_libraries(microstrip_line xfdtd)
-
-add_executable(dielectric_resonator_antenna dielectric_resonator_antenna.cpp)
-
-target_link_libraries(dielectric_resonator_antenna xfdtd)
-
-add_executable(half_wave_dipole half_wave_dipole.cpp)
-
-target_link_libraries(half_wave_dipole xfdtd)
-
-add_executable(dielectric_sphere_scatter dielectric_sphere_scatter.cpp)
-
-target_link_libraries(dielectric_sphere_scatter xfdtd)
-
-add_executable(dielectric_cube_scatter dielectric_cube_scatter.cpp)
-
-target_link_libraries(dielectric_cube_scatter xfdtd)
-
-add_executable(cylinder_scatter_2d cylinder_scatter_2d.cpp)
-
-target_link_libraries(cylinder_scatter_2d xfdtd)
+    add_dependencies(build-examples ${xfdtd_example_name})
+endforeach()

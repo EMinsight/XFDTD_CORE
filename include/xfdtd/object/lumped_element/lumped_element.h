@@ -32,7 +32,7 @@ class LumpedElement : public Object {
 
   Axis::XYZ xyz() const;
 
-  void correctMaterialSpace() override;
+  // void correctMaterialSpace(std::size_t index) override;
 
   void init(std::shared_ptr<const GridSpace> grid_space,
             std::shared_ptr<CalculationParam> calculation_param,

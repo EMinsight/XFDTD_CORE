@@ -9,7 +9,7 @@ namespace xfdtd {
 PecPlane::PecPlane(std::string name, std::unique_ptr<Cube> cube)
     : Object{std::move(name), std::move(cube), Material::createPec()} {}
 
-void PecPlane::correctMaterialSpace() {
+void PecPlane::correctMaterialSpace(std::size_t index) {
   auto grid_box{gridBoxPtr()};
   auto em_property{materialPtr()->emProperty()};
   auto eps{em_property.epsilon()};
@@ -65,5 +65,6 @@ void PecPlane::correctMaterialSpace() {
 
   throw XFDTDObjectException(name() + " PecPlane is not a plane!");
 }
+
 
 }  // namespace xfdtd

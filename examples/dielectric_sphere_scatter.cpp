@@ -1,4 +1,3 @@
-#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <xtensor/xnpy.hpp>
@@ -72,7 +71,7 @@ void dielectricSphereScatter() {
   s.addBoundary(std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::ZP));
   //   s.addMonitor(movie_xz);
   //   s.addMonitor(movie_yz);
-  s.run(2800);
+  s.run(2300);
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,
