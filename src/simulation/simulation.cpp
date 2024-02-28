@@ -4,6 +4,7 @@
 #include <memory>
 #include <xtensor/xnpy.hpp>
 
+#include "divider/divider.h"
 #include "grid_space/grid_space_generator.h"
 #include "updator/basic_updator.h"
 #include "updator/dispersive_material_updator.h"
@@ -193,6 +194,21 @@ void Simulation::init(std::size_t time_step) {
                    _grid_space->sizeZ());
   _emf->allocateHz(_grid_space->sizeX(), _grid_space->sizeY(),
                    _grid_space->sizeZ() + 1);
+
+  for (auto &&o:_objects) {
+  }
+
+  for (auto&& b : _boundaries) {
+    auto c = b->generateDomainCorrector(
+        Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
+                                   {0, _grid_space->sizeY()},
+                                   {0, _grid_space->sizeZ()}});
+    if (c == nullptr) {
+      continue;
+    }
+
+    _correctors.emplace_back(std::move(c));
+  }
 }
 
 void Simulation::updateE() {
@@ -218,8 +234,14 @@ void Simulation::correctE() {
     o->correctE();
   }
 
-  for (const auto& b : _boundaries) {
-    b->correctE();
+  // for (const auto& b : _boundaries) {
+  //   if(auto p =std::dynamic_pointer_cast<PML>(b); p == nullptr||  Axis::formDirectionToXYZ(p->direction()) != Axis::XYZ::X){
+  //     continue;
+  //   }
+  //   b->correctE();
+  // }
+  for (auto&& c : _correctors) {
+    c->correctE();
   }
 }
 
@@ -232,8 +254,14 @@ void Simulation::correctH() {
     o->correctH();
   }
 
-  for (const auto& b : _boundaries) {
-    b->correctH();
+  // for (const auto& b : _boundaries) {
+  //   if(auto p =std::dynamic_pointer_cast<PML>(b); p == nullptr||  Axis::formDirectionToXYZ(p->direction()) != Axis::XYZ::X){
+  //     continue;
+  //   }
+  //   b->correctH();
+  // }
+  for (auto&& c : _correctors) {
+    c->correctH();
   }
 }
 

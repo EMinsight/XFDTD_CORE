@@ -6,6 +6,7 @@
 #include <memory>
 #include <xtensor/xview.hpp>
 
+#include "corrector/corrector.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 
 namespace xfdtd {
@@ -68,6 +69,9 @@ class PML : public Boundary {
 
   const xt::xarray<double>& hSize() const;
 
+  std::unique_ptr<Corrector> generateDomainCorrector(
+      const Divider::Task<std::size_t>& task) override;
+
  private:
   int _thickness;
   std::size_t _n;
@@ -100,6 +104,8 @@ class PML : public Boundary {
   xt::xarray<double> _ha_psi_eb;
   xt::xarray<double> _c_hb_psi_ea;
   xt::xarray<double> _hb_psi_ea;
+
+  bool taskContainPML(const Divider::Task<std::size_t>& task) const;
 
   xt::xarray<double>& eaF();
 

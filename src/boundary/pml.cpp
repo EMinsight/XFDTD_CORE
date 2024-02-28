@@ -1,14 +1,22 @@
 #include <xfdtd/boundary/pml.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
+#include <memory>
+#include <tuple>
 #include <utility>
 #include <xtensor.hpp>
 
+#include "boundary/pml_corrector.h"
+#include "boundary/pml_scheme.h"
+#include "corrector/corrector.h"
+#include "divider/divider.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/util/constant.h"
+#include "xfdtd/util/transform.h"
 
 namespace xfdtd {
 
@@ -211,19 +219,17 @@ void PML::correctE() {
         auto ii{i - eNodeStartIndexMainAxis()};
         for (std::size_t j{0}; j < _na; ++j) {
           for (std::size_t k{0}; k < _nb + 1; ++k) {
-            _ea_psi_hb(ii, j, k) =
-                _coeff_b_e(ii) * _ea_psi_hb(ii, j, k) +
-                _coeff_a_e(ii) * (hb(i, j, k) - hb(i - 1, j, k));
-            ea(i, j, k) += _c_ea_psi_hb(ii, j, k) * _ea_psi_hb(ii, j, k);
+            correctPML(ea(i, j, k), _ea_psi_hb(ii, j, k), _coeff_a_e(ii),
+                       _coeff_b_e(ii), hb(i, j, k), hb(i - 1, j, k),
+                       _c_ea_psi_hb(ii, j, k));
           }
         }
 
         for (std::size_t j{0}; j < _na + 1; ++j) {
           for (std::size_t k{0}; k < _nb; ++k) {
-            _eb_psi_ha(ii, j, k) =
-                _coeff_b_e(ii) * _eb_psi_ha(ii, j, k) +
-                _coeff_a_e(ii) * (ha(i, j, k) - ha(i - 1, j, k));
-            eb(i, j, k) += _c_eb_psi_ha(ii, j, k) * _eb_psi_ha(ii, j, k);
+            correctPML(eb(i, j, k), _eb_psi_ha(ii, j, k), _coeff_a_e(ii),
+                       _coeff_b_e(ii), ha(i, j, k), ha(i - 1, j, k),
+                       _c_eb_psi_ha(ii, j, k));
           }
         }
       }
@@ -235,10 +241,13 @@ void PML::correctE() {
              j < eNodeStartIndexMainAxis() + n(); ++j) {
           for (std::size_t k{0}; k < _na; ++k) {
             auto jj{j - eNodeStartIndexMainAxis()};
-            _ea_psi_hb(i, jj, k) =
-                _coeff_b_e(jj) * _ea_psi_hb(i, jj, k) +
-                _coeff_a_e(jj) * (hb(i, j, k) - hb(i, j - 1, k));
-            ea(i, j, k) += _c_ea_psi_hb(i, jj, k) * _ea_psi_hb(i, jj, k);
+            // _ea_psi_hb(i, jj, k) =
+            //     _coeff_b_e(jj) * _ea_psi_hb(i, jj, k) +
+            //     _coeff_a_e(jj) * (hb(i, j, k) - hb(i, j - 1, k));
+            // ea(i, j, k) += _c_ea_psi_hb(i, jj, k) * _ea_psi_hb(i, jj, k);
+            correctPML(ea(i, j, k), _ea_psi_hb(i, jj, k), _coeff_a_e(jj),
+                       _coeff_b_e(jj), hb(i, j, k), hb(i, j - 1, k),
+                       _c_ea_psi_hb(i, jj, k));
           }
         }
       }
@@ -248,10 +257,13 @@ void PML::correctE() {
              j < eNodeStartIndexMainAxis() + n(); ++j) {
           for (std::size_t k{0}; k < _na + 1; ++k) {
             auto jj{j - eNodeStartIndexMainAxis()};
-            _eb_psi_ha(i, jj, k) =
-                _coeff_b_e(jj) * _eb_psi_ha(i, jj, k) +
-                _coeff_a_e(jj) * (ha(i, j, k) - ha(i, j - 1, k));
-            eb(i, j, k) += _c_eb_psi_ha(i, jj, k) * _eb_psi_ha(i, jj, k);
+            // _eb_psi_ha(i, jj, k) =
+            //     _coeff_b_e(jj) * _eb_psi_ha(i, jj, k) +
+            //     _coeff_a_e(jj) * (ha(i, j, k) - ha(i, j - 1, k));
+            // eb(i, j, k) += _c_eb_psi_ha(i, jj, k) * _eb_psi_ha(i, jj, k);
+            correctPML(eb(i, j, k), _eb_psi_ha(i, jj, k), _coeff_a_e(jj),
+                       _coeff_b_e(jj), ha(i, j, k), ha(i, j - 1, k),
+                       _c_eb_psi_ha(i, jj, k));
           }
         }
       }
@@ -263,10 +275,13 @@ void PML::correctE() {
           for (std::size_t k{eNodeStartIndexMainAxis()};
                k < eNodeStartIndexMainAxis() + n(); ++k) {
             auto kk{k - eNodeStartIndexMainAxis()};
-            _ea_psi_hb(i, j, kk) =
-                _coeff_b_e(kk) * _ea_psi_hb(i, j, kk) +
-                _coeff_a_e(kk) * (hb(i, j, k) - hb(i, j, k - 1));
-            ea(i, j, k) += _c_ea_psi_hb(i, j, kk) * _ea_psi_hb(i, j, kk);
+            // _ea_psi_hb(i, j, kk) =
+            //     _coeff_b_e(kk) * _ea_psi_hb(i, j, kk) +
+            //     _coeff_a_e(kk) * (hb(i, j, k) - hb(i, j, k - 1));
+            // ea(i, j, k) += _c_ea_psi_hb(i, j, kk) * _ea_psi_hb(i, j, kk);
+            correctPML(ea(i, j, k), _ea_psi_hb(i, j, kk), _coeff_a_e(kk),
+                       _coeff_b_e(kk), hb(i, j, k), hb(i, j, k - 1),
+                       _c_ea_psi_hb(i, j, kk));
           }
         }
       }
@@ -275,10 +290,13 @@ void PML::correctE() {
           for (std::size_t k{eNodeStartIndexMainAxis()};
                k < eNodeStartIndexMainAxis() + n(); ++k) {
             auto kk{k - eNodeStartIndexMainAxis()};
-            _eb_psi_ha(i, j, kk) =
-                _coeff_b_e(kk) * _eb_psi_ha(i, j, kk) +
-                _coeff_a_e(kk) * (ha(i, j, k) - ha(i, j, k - 1));
-            eb(i, j, k) += _c_eb_psi_ha(i, j, kk) * _eb_psi_ha(i, j, kk);
+            // _eb_psi_ha(i, j, kk) =
+            //     _coeff_b_e(kk) * _eb_psi_ha(i, j, kk) +
+            //     _coeff_a_e(kk) * (ha(i, j, k) - ha(i, j, k - 1));
+            // eb(i, j, k) += _c_eb_psi_ha(i, j, kk) * _eb_psi_ha(i, j, kk);
+            correctPML(eb(i, j, k), _eb_psi_ha(i, j, kk), _coeff_a_e(kk),
+                       _coeff_b_e(kk), ha(i, j, k), ha(i, j, k - 1),
+                       _c_eb_psi_ha(i, j, kk));
           }
         }
       }
@@ -303,19 +321,17 @@ void PML::correctH() {
         auto ii{i - hNodeStartIndexMainAxis()};
         for (std::size_t j{0}; j < _na + 1; ++j) {
           for (std::size_t k{0}; k < _nb; ++k) {
-            _ha_psi_eb(ii, j, k) =
-                _coeff_b_h(ii) * _ha_psi_eb(ii, j, k) +
-                _coeff_a_h(ii) * (eb(i + 1, j, k) - eb(i, j, k));
-            ha(i, j, k) += _c_ha_psi_eb(ii, j, k) * _ha_psi_eb(ii, j, k);
+            correctPML(ha(i, j, k), _ha_psi_eb(ii, j, k), _coeff_a_h(ii),
+                       _coeff_b_h(ii), eb(i + 1, j, k), eb(i, j, k),
+                       _c_ha_psi_eb(ii, j, k));
           }
         }
 
         for (std::size_t j{0}; j < _na; ++j) {
           for (std::size_t k{0}; k < _nb + 1; ++k) {
-            _hb_psi_ea(ii, j, k) =
-                _coeff_b_h(ii) * _hb_psi_ea(ii, j, k) +
-                _coeff_a_h(ii) * (ea(i + 1, j, k) - ea(i, j, k));
-            hb(i, j, k) += _c_hb_psi_ea(ii, j, k) * _hb_psi_ea(ii, j, k);
+            correctPML(hb(i, j, k), _hb_psi_ea(ii, j, k), _coeff_a_h(ii),
+                       _coeff_b_h(ii), ea(i + 1, j, k), ea(i, j, k),
+                       _c_hb_psi_ea(ii, j, k));
           }
         }
       }
@@ -327,10 +343,9 @@ void PML::correctH() {
              j < hNodeStartIndexMainAxis() + n(); ++j) {
           for (std::size_t k{0}; k < _na + 1; ++k) {
             auto jj{j - hNodeStartIndexMainAxis()};
-            _ha_psi_eb(i, jj, k) =
-                _coeff_b_h(jj) * _ha_psi_eb(i, jj, k) +
-                _coeff_a_h(jj) * (eb(i, j + 1, k) - eb(i, j, k));
-            ha(i, j, k) += _c_ha_psi_eb(i, jj, k) * _ha_psi_eb(i, jj, k);
+            correctPML(ha(i, j, k), _ha_psi_eb(i, jj, k), _coeff_a_h(jj),
+                       _coeff_b_h(jj), eb(i, j + 1, k), eb(i, j, k),
+                       _c_ha_psi_eb(i, jj, k));
           }
         }
       }
@@ -340,10 +355,13 @@ void PML::correctH() {
              j < hNodeStartIndexMainAxis() + n(); ++j) {
           for (std::size_t k{0}; k < _na; ++k) {
             auto jj{j - hNodeStartIndexMainAxis()};
-            _hb_psi_ea(i, jj, k) =
-                _coeff_b_h(jj) * _hb_psi_ea(i, jj, k) +
-                _coeff_a_h(jj) * (ea(i, j + 1, k) - ea(i, j, k));
-            hb(i, j, k) += _c_hb_psi_ea(i, jj, k) * _hb_psi_ea(i, jj, k);
+            // _hb_psi_ea(i, jj, k) =
+            //     _coeff_b_h(jj) * _hb_psi_ea(i, jj, k) +
+            //     _coeff_a_h(jj) * (ea(i, j + 1, k) - ea(i, j, k));
+            // hb(i, j, k) += _c_hb_psi_ea(i, jj, k) * _hb_psi_ea(i, jj, k);
+            correctPML(hb(i, j, k), _hb_psi_ea(i, jj, k), _coeff_a_h(jj),
+                       _coeff_b_h(jj), ea(i, j + 1, k), ea(i, j, k),
+                       _c_hb_psi_ea(i, jj, k));
           }
         }
       }
@@ -355,10 +373,9 @@ void PML::correctH() {
           for (std::size_t k{hNodeStartIndexMainAxis()};
                k < hNodeStartIndexMainAxis() + n(); ++k) {
             auto kk{k - hNodeStartIndexMainAxis()};
-            _ha_psi_eb(i, j, kk) =
-                _coeff_b_h(kk) * _ha_psi_eb(i, j, kk) +
-                _coeff_a_h(i, j, kk) * (eb(i, j, k + 1) - eb(i, j, k));
-            ha(i, j, k) += _c_ha_psi_eb(i, j, kk) * _ha_psi_eb(i, j, kk);
+            correctPML(ha(i, j, k), _ha_psi_eb(i, j, kk), _coeff_a_h(kk),
+                       _coeff_b_h(kk), eb(i, j, k + 1), eb(i, j, k),
+                       _c_ha_psi_eb(i, j, kk));
           }
         }
       }
@@ -367,10 +384,9 @@ void PML::correctH() {
           for (std::size_t k{hNodeStartIndexMainAxis()};
                k < hNodeStartIndexMainAxis() + n(); ++k) {
             auto kk{k - hNodeStartIndexMainAxis()};
-            _hb_psi_ea(i, j, kk) =
-                _coeff_b_h(kk) * _hb_psi_ea(i, j, kk) +
-                _coeff_a_h(i, j, kk) * (ea(i, j, k + 1) - ea(i, j, k));
-            hb(i, j, k) += _c_hb_psi_ea(i, j, kk) * _hb_psi_ea(i, j, kk);
+            correctPML(hb(i, j, k), _hb_psi_ea(i, j, kk), _coeff_a_h(kk),
+                       _coeff_b_h(kk), ea(i, j, k + 1), ea(i, j, k),
+                       _c_hb_psi_ea(i, j, kk));
           }
         }
       }
@@ -379,6 +395,64 @@ void PML::correctH() {
     default:
       throw XFDTDPMLException("Invalid direction");
   }
+}
+
+std::unique_ptr<Corrector> PML::generateDomainCorrector(
+    const Divider::Task<std::size_t>& task) {
+  if (!taskContainPML(task)) {
+    return nullptr;
+  }
+
+  auto t_abc = transform::xYZToABC(
+      std::make_tuple(task._x_range, task._y_range, task._z_range), mainAxis());
+  auto a_s = std::get<0>(t_abc)(0);
+  auto a_n = std::get<0>(t_abc)(1) - a_s;
+  auto b_s = std::get<1>(t_abc)(0);
+  auto b_n = std::get<1>(t_abc)(1) - b_s;
+  auto c_s = std::max(std::get<2>(t_abc)(0), hNodeStartIndexMainAxis());
+  auto c_e = std::min((std::get<2>(t_abc)(0) + std::get<2>(t_abc)(1)),
+                      hNodeStartIndexMainAxis() + n());
+  auto c_n = c_e - c_s;
+  auto c_s_e = (Axis::directionNegative(direction())) ? (c_s + 1) : (c_s);
+
+  switch (mainAxis()) {
+    case Axis::XYZ::X:
+      return std::make_unique<PMLCorrectorX>(
+          _e_start_index, _h_start_index, a_s, a_n, b_s, b_n, c_s_e, c_n, c_s,
+          c_n, _coeff_a_e, _coeff_b_e, _coeff_a_h, _coeff_b_h, _c_ea_psi_hb,
+          _c_eb_psi_ha, _c_ha_psi_eb, _c_hb_psi_ea, _ea_psi_hb, _eb_psi_ha,
+          _ha_psi_eb, _hb_psi_ea, eaF(), ebF(), haF(), hbF());
+    case Axis::XYZ::Y:
+      return std::make_unique<PMLCorrectorY>(
+          _e_start_index, _h_start_index, a_s, a_n, b_s, b_n, c_s_e, c_n, c_s,
+          c_n, _coeff_a_e, _coeff_b_e, _coeff_a_h, _coeff_b_h, _c_ea_psi_hb,
+          _c_eb_psi_ha, _c_ha_psi_eb, _c_hb_psi_ea, _ea_psi_hb, _eb_psi_ha,
+          _ha_psi_eb, _hb_psi_ea, eaF(), ebF(), haF(), hbF());
+    case Axis::XYZ::Z:
+      return std::make_unique<PMLCorrectorZ>(
+          _e_start_index, _h_start_index, a_s, a_n, b_s, b_n, c_s_e, c_n, c_s,
+          c_n, _coeff_a_e, _coeff_b_e, _coeff_a_h, _coeff_b_h, _c_ea_psi_hb,
+          _c_eb_psi_ha, _c_ha_psi_eb, _c_hb_psi_ea, _ea_psi_hb, _eb_psi_ha,
+          _ha_psi_eb, _hb_psi_ea, eaF(), ebF(), haF(), hbF());
+    default:
+      throw XFDTDPMLException("Invalid direction");
+  }
+}
+
+bool PML::taskContainPML(const Divider::Task<std::size_t>& task) const {
+  auto t_abc = transform::xYZToABC(
+      std::make_tuple(task._x_range, task._y_range, task._z_range), mainAxis());
+  auto a = std::get<0>(t_abc);
+  auto b = std::get<1>(t_abc);
+  auto c = std::get<2>(t_abc);
+
+  auto task_c_start = c(0);
+  auto task_c_end = c(1);
+
+  auto pml_start = hNodeStartIndexMainAxis();
+  auto pml_end = hNodeStartIndexMainAxis() + n();
+
+  return task_c_end > pml_start && task_c_start < pml_end;
 }
 
 void PML::correctCoefficientX() {
@@ -554,7 +628,7 @@ void PML::correctCoefficientZ() {
   }
 
   for (std::size_t i{0}; i < _na; ++i) {
-    for (std::size_t j{0}; j < _nb+1; ++j) {
+    for (std::size_t j{0}; j < _nb + 1; ++j) {
       for (std::size_t k{hNodeStartIndexMainAxis()};
            k < hNodeStartIndexMainAxis() + n(); ++k) {
         auto kk{k - hNodeStartIndexMainAxis()};

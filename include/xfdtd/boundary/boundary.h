@@ -5,11 +5,17 @@
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 
+#include <cstddef>
+
+#include "corrector/corrector.h"
+#include "divider/divider.h"
+
 namespace xfdtd {
 
 class XFDTDBoundaryException : public XFDTDException {
  public:
-  explicit XFDTDBoundaryException(std::string message = "XFDTD Boundary Exception")
+  explicit XFDTDBoundaryException(
+      std::string message = "XFDTD Boundary Exception")
       : XFDTDException(std::move(message)) {}
 };
 
@@ -38,6 +44,9 @@ class Boundary {
   virtual void correctE() = 0;
 
   virtual void correctH() = 0;
+
+  virtual std::unique_ptr<Corrector> generateDomainCorrector(
+      const Divider::Task<std::size_t>& task) = 0;
 
  protected:
   void defaultInit(std::shared_ptr<const GridSpace> grid_space,

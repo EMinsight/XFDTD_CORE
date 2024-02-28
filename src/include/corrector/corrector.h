@@ -5,11 +5,11 @@ namespace xfdtd {
 
 class Corrector {
  public:
-  Corrector() = default;
-
   virtual ~Corrector() = default;
 
-  virtual void correct() = 0;
+  virtual void correctE() = 0;
+
+  virtual void correctH() = 0;
 };
 
 }  // namespace xfdtd

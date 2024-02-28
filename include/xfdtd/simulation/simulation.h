@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "corrector/corrector.h"
 #include "xfdtd/boundary/boundary.h"
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -87,6 +88,7 @@ class Simulation {
   std::shared_ptr<EMF> _emf;
 
   std::unique_ptr<Updator> _updator;
+  std::vector<std::unique_ptr<Corrector>> _correctors;
 
   void generateGridSpace();
 

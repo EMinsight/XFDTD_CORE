@@ -2,6 +2,8 @@
 
 #include <xtensor.hpp>
 
+#include "common/fdtd.h"
+
 namespace xfdtd {
 
 BasicUpdator::BasicUpdator(
@@ -36,17 +38,17 @@ void BasicUpdator::updateH() {
   for (std::size_t i{0}; i < nx; ++i) {
     for (std::size_t j{0}; j < ny; ++j) {
       for (std::size_t k{0}; k < nz; ++k) {
-        hx(i, j, k) = chxh(i, j, k) * hx(i, j, k) +
-                      chxez(i, j, k) * (ez(i, j + 1, k) - ez(i, j, k)) +
-                      chxey(i, j, k) * (ey(i, j, k + 1) - ey(i, j, k));
+        hx(i, j, k) =
+            hNext(chxh(i, j, k), hx(i, j, k), chxey(i, j, k), ey(i, j, k + 1),
+                  ey(i, j, k), chxez(i, j, k), ez(i, j + 1, k), ez(i, j, k));
 
-        hy(i, j, k) = chyh(i, j, k) * hy(i, j, k) +
-                      chyez(i, j, k) * (ez(i + 1, j, k) - ez(i, j, k)) +
-                      chyex(i, j, k) * (ex(i, j, k + 1) - ex(i, j, k));
+        hy(i, j, k) =
+            hNext(chyh(i, j, k), hy(i, j, k), chyez(i, j, k), ez(i + 1, j, k),
+                  ez(i, j, k), chyex(i, j, k), ex(i, j, k + 1), ex(i, j, k));
 
-        hz(i, j, k) = chzh(i, j, k) * hz(i, j, k) +
-                      chzex(i, j, k) * (ex(i, j + 1, k) - ex(i, j, k)) +
-                      chzey(i, j, k) * (ey(i + 1, j, k) - ey(i, j, k));
+        hz(i, j, k) =
+            hNext(chzh(i, j, k), hz(i, j, k), chzex(i, j, k), ex(i, j + 1, k),
+                  ex(i, j, k), chzey(i, j, k), ey(i + 1, j, k), ey(i, j, k));
       }
     }
   }
@@ -69,8 +71,8 @@ void BasicUpdatorTEM::updateE() {
   auto& ex{_emf->ex()};
 
   for (std::size_t k{0}; k < nz; ++k) {
-    ex(0, 0, k) = cexe(0, 0, k) * ex(0, 0, k) +
-                  cexhy(0, 0, k) * (hy(0, 0, k) - hy(0, 0, k - 1));
+    ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
+                        hy(0, 0, k - 1), 0.0, 0.0, 0.0);
   }
 }
 
@@ -99,9 +101,9 @@ void BasicUpdatorTE::updateE() {
   for (std::size_t i{1}; i < nx; ++i) {
     for (std::size_t j{1}; j < ny; ++j) {
       for (std::size_t k{0}; k < nz; ++k) {
-        ez(i, j, k) = ceze(i, j, k) * ez(i, j, k) +
-                      cezhx(i, j, k) * (hx(i, j, k) - hx(i, j - 1, k)) +
-                      cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
+        ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
+                            hx(i, j, k), hx(i, j - 1, k), cezhy(i, j, k),
+                            hy(i, j, k), hy(i - 1, j, k));
       }
     }
   }
@@ -139,9 +141,9 @@ void BasicUpdator3D::updateE() {
   for (std::size_t i{0}; i < nx; ++i) {
     for (std::size_t j{1}; j < ny; ++j) {
       for (std::size_t k{1}; k < nz; ++k) {
-        ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
-                      cexhy(i, j, k) * (hy(i, j, k) - hy(i, j, k - 1)) +
-                      cexhz(i, j, k) * (hz(i, j, k) - hz(i, j - 1, k));
+        ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
+                            hy(i, j, k), hy(i, j, k - 1), cexhz(i, j, k),
+                            hz(i, j, k), hz(i, j - 1, k));
       }
     }
   }
@@ -149,9 +151,9 @@ void BasicUpdator3D::updateE() {
   for (std::size_t i{1}; i < nx; ++i) {
     for (std::size_t j{0}; j < ny; ++j) {
       for (std::size_t k{1}; k < nz; ++k) {
-        ey(i, j, k) = ceye(i, j, k) * ey(i, j, k) +
-                      ceyhz(i, j, k) * (hz(i, j, k) - hz(i - 1, j, k)) +
-                      ceyhx(i, j, k) * (hx(i, j, k) - hx(i, j, k - 1));
+        ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
+                            hz(i, j, k), hz(i - 1, j, k), ceyhx(i, j, k),
+                            hx(i, j, k), hx(i, j, k - 1));
       }
     }
   }
@@ -159,9 +161,9 @@ void BasicUpdator3D::updateE() {
   for (std::size_t i{1}; i < nx; ++i) {
     for (std::size_t j{1}; j < ny; ++j) {
       for (std::size_t k{0}; k < nz; ++k) {
-        ez(i, j, k) = ceze(i, j, k) * ez(i, j, k) +
-                      cezhx(i, j, k) * (hx(i, j, k) - hx(i, j - 1, k)) +
-                      cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k));
+        ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
+                            hx(i, j, k), hx(i, j - 1, k), cezhy(i, j, k),
+                            hy(i, j, k), hy(i - 1, j, k));
       }
     }
   }
