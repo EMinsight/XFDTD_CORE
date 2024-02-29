@@ -256,4 +256,16 @@ void simpleCircuitZ() {
   circuit_v_monitor->output();
 }
 
-int main() { simpleCircuitZ(); }
+int main(int argc, char* argv[]) {
+  if (argc > 1) {
+    if (std::string(argv[1]) == "x") {
+      simpleCircuitX();
+    } else if (std::string(argv[1]) == "y") {
+      simpleCircuitY();
+    } else if (std::string(argv[1]) == "z") {
+      simpleCircuitZ();
+    }
+  } else {
+    simpleCircuitZ();
+  }
+}

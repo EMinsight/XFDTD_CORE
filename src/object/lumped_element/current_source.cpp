@@ -1,6 +1,7 @@
 #include <xfdtd/object/lumped_element/current_source.h>
 
 #include <xtensor.hpp>
+#include "object/lumped_element_corrector.h"
 
 namespace xfdtd {
 
@@ -191,5 +192,31 @@ void CurrentSource::correctE() {
 }
 
 void CurrentSource::correctH() {}
+
+std::unique_ptr<Corrector> CurrentSource::generateCorrector(
+    const Divider::Task<std::size_t> &task) {
+  if (!taskContainLumpedElement(task)) {
+    return nullptr;
+  }
+
+  auto domain = makeIndexTask();
+  auto intersection = Divider::taskIntersection(task, domain);
+
+  if (!intersection.has_value()) {
+    return nullptr;
+  }
+
+  auto local_task = Divider::makeTask(
+      Divider::makeRange(intersection->_x_range[0] - domain._x_range[0],
+                         intersection->_x_range[1] - domain._x_range[0]),
+      Divider::makeRange(intersection->_y_range[0] - domain._y_range[0],
+                         intersection->_y_range[1] - domain._y_range[0]),
+      Divider::makeRange(intersection->_z_range[0] - domain._z_range[0],
+                         intersection->_z_range[1] - domain._z_range[0]));
+
+  return std::make_unique<CurrentSourceCorrector>(
+      intersection.value(), local_task, calculationParam(),
+      fieldMainAxis(EMF::Attribute::E), _coff_i, waveform()->value());
+}
 
 }  // namespace xfdtd

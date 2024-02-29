@@ -33,6 +33,9 @@ class Inductor : public LumpedElement {
 
   void correctH() override;
 
+  std::unique_ptr<Corrector> generateCorrector(
+      const Divider::Task<std::size_t>& task) override;
+
  private:
   double _inductance;
   double _inductance_factor;
@@ -40,6 +43,7 @@ class Inductor : public LumpedElement {
   xt::xarray<double> _da, _db, _dc;
   xt::xarray<double> _beta;
   xt::xarray<double> _cecjc, _cjcec;
+  xt::xarray<double> _j;
 };
 
 }  // namespace xfdtd

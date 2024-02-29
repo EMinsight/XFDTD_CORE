@@ -195,7 +195,20 @@ void Simulation::init(std::size_t time_step) {
   _emf->allocateHz(_grid_space->sizeX(), _grid_space->sizeY(),
                    _grid_space->sizeZ() + 1);
 
-  for (auto &&o:_objects) {
+  for (auto&& o : _objects) {
+    // if (auto v = std::dynamic_pointer_cast<Inductor>(o); v != nullptr) {
+    //   continue;
+    // }
+
+    auto c = o->generateCorrector(
+        Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
+                                   {0, _grid_space->sizeY()},
+                                   {0, _grid_space->sizeZ()}});
+    if (c == nullptr) {
+      continue;
+    }
+
+    _correctors.emplace_back(std::move(c));
   }
 
   for (auto&& b : _boundaries) {
@@ -230,16 +243,6 @@ void Simulation::correctE() {
     s->correctE();
   }
 
-  for (const auto& o : _objects) {
-    o->correctE();
-  }
-
-  // for (const auto& b : _boundaries) {
-  //   if(auto p =std::dynamic_pointer_cast<PML>(b); p == nullptr||  Axis::formDirectionToXYZ(p->direction()) != Axis::XYZ::X){
-  //     continue;
-  //   }
-  //   b->correctE();
-  // }
   for (auto&& c : _correctors) {
     c->correctE();
   }
@@ -250,16 +253,6 @@ void Simulation::correctH() {
     s->correctH();
   }
 
-  for (const auto& o : _objects) {
-    o->correctH();
-  }
-
-  // for (const auto& b : _boundaries) {
-  //   if(auto p =std::dynamic_pointer_cast<PML>(b); p == nullptr||  Axis::formDirectionToXYZ(p->direction()) != Axis::XYZ::X){
-  //     continue;
-  //   }
-  //   b->correctH();
-  // }
   for (auto&& c : _correctors) {
     c->correctH();
   }

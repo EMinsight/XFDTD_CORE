@@ -2,6 +2,7 @@
 #define _XFDTD_LIB_DIVIDER_H_
 
 #include <cstddef>
+#include <optional>
 #include <sstream>
 #include <vector>
 #include <xtensor/xarray.hpp>
@@ -40,6 +41,49 @@ class Divider {
       return ss.str();
     }
   };
+
+  using IndexRange = Range<std::size_t>;
+
+  using IndexTask = Task<std::size_t>;
+
+  template <typename T>
+  static auto makeRange(T start, T end) {
+    return Range<T>{start, end};
+  }
+
+  template <typename T>
+  static auto makeTask(const Range<T>& x_range, const Range<T>& y_range,
+                       const Range<T>& z_range) {
+    return Task<T>{x_range, y_range, z_range};
+  }
+
+  template <typename T>
+  static bool intersected(const Range<T>& domain, const Range<T>& range) {
+    return !(range[1] <= domain[0] || domain[1] <= range[0]);
+  }
+
+  template <typename T>
+  static bool intersected(const Task<T>& task_1, const Task<T>& task_2) {
+    return intersected(task_1._x_range, task_2._x_range) &&
+           intersected(task_1._y_range, task_2._y_range) &&
+           intersected(task_1._z_range, task_2._z_range);
+  }
+
+  template <typename T>
+  static std::optional<Task<T>> taskIntersection(const Task<T>& task1,
+                                                 const Task<T>& task2) {
+    if (!intersected(task1, task2)) {
+      return {};
+    }
+
+    auto x_range = Range<T>{std::max(task1._x_range[0], task2._x_range[0]),
+                            std::min(task1._x_range[1], task2._x_range[1])};
+    auto y_range = Range<T>{std::max(task1._y_range[0], task2._y_range[0]),
+                            std::min(task1._y_range[1], task2._y_range[1])};
+    auto z_range = Range<T>{std::max(task1._z_range[0], task2._z_range[0]),
+                            std::min(task1._z_range[1], task2._z_range[1])};
+    return Task<T>{x_range, y_range, z_range};
+  }
 
   template <typename T>
   static auto divide(const Task<T>& problem, int num_procs, Type type) {

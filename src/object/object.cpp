@@ -6,6 +6,7 @@
 #include <utility>
 #include <xtensor.hpp>
 
+#include "corrector/corrector.h"
 #include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/material/dispersive_material.h"
 #include "xfdtd/shape/cube.h"
@@ -19,6 +20,8 @@ Object::Object(std::string name, std::unique_ptr<Shape> shape,
     : _name{std::move(name)},
       _shape{std::move(shape)},
       _material{std::move(material)} {}
+
+Object::~Object() = default;
 
 std::string Object::toString() const {
   return "Object{name: " + _name + ", shape: " + _shape->toString() +
@@ -50,6 +53,11 @@ void Object::correctUpdateCoefficient() {
 void Object::correctE() {}
 
 void Object::correctH() {}
+
+std::unique_ptr<Corrector> Object::generateCorrector(
+    const Divider::Task<std::size_t>& task) {
+  return nullptr;
+}
 
 std::string Object::name() const { return _name; }
 

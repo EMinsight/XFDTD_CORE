@@ -1,7 +1,10 @@
 #include <xfdtd/object/lumped_element/inductor.h>
 
+#include <memory>
 #include <xtensor.hpp>
 
+#include "corrector/corrector.h"
+#include "object/lumped_element_corrector.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 
 namespace xfdtd {
@@ -77,6 +80,7 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
   }
 
   _cjcec = dt * _dc / (_inductance_factor * _da * _db);
+  _j = xt::zeros<double>({nodeCountX(), nodeCountY(), nodeCountZ()});
 }
 
 void Inductor::correctUpdateCoefficient() {
@@ -140,5 +144,31 @@ void Inductor::correctE() {
 }
 
 void Inductor::correctH() {}
+
+std::unique_ptr<Corrector> Inductor::generateCorrector(
+    const Divider::Task<std::size_t>& task) {
+  if (!taskContainLumpedElement(task)) {
+    return nullptr;
+  }
+
+  auto domain = makeIndexTask();
+  auto intersection = Divider::taskIntersection(task, domain);
+
+  if (!intersection.has_value()) {
+    return nullptr;
+  }
+
+  auto local_task = Divider::makeTask(
+      Divider::makeRange(intersection->_x_range[0] - domain._x_range[0],
+                         intersection->_x_range[1] - domain._x_range[0]),
+      Divider::makeRange(intersection->_y_range[0] - domain._y_range[0],
+                         intersection->_y_range[1] - domain._y_range[0]),
+      Divider::makeRange(intersection->_z_range[0] - domain._z_range[0],
+                         intersection->_z_range[1] - domain._z_range[0]));
+
+  return std::make_unique<InductorCorrector>(
+      intersection.value(), local_task, calculationParam(),
+      fieldMainAxis(EMF::Attribute::E), _j, _cecjc, _cjcec);
+}
 
 }  // namespace xfdtd
