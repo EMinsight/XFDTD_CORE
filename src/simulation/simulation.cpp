@@ -12,6 +12,7 @@
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/material/dispersive_material.h"
+#include "xfdtd/nffft/nffft.h"
 #include "xfdtd/object/lumped_element/pec_plane.h"
 
 namespace xfdtd {
@@ -195,7 +196,7 @@ void Simulation::init(std::size_t time_step) {
   _emf->allocateHz(_grid_space->sizeX(), _grid_space->sizeY(),
                    _grid_space->sizeZ() + 1);
 
-  for(auto&& w: _waveform_sources){
+  for (auto&& w : _waveform_sources) {
     auto c = w->generateCorrector(
         Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
                                    {0, _grid_space->sizeY()},
@@ -354,11 +355,19 @@ void Simulation::setUpdator() {
 
   if (!dispersion) {
     if (_grid_space->dimension() == GridSpace::Dimension::THREE) {
-      _updator = std::make_unique<BasicUpdator3D>(_grid_space,
-                                                  _calculation_param, _emf);
+      _updator = std::make_unique<BasicUpdator3D>(
+          _grid_space, _calculation_param, _emf,
+          Divider::makeTask(
+              Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+              Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+              Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
     } else if (_grid_space->dimension() == GridSpace::Dimension::TWO) {
-      _updator = std::make_unique<BasicUpdatorTE>(_grid_space,
-                                                  _calculation_param, _emf);
+      _updator = std::make_unique<BasicUpdatorTE>(
+          _grid_space, _calculation_param, _emf,
+          Divider::makeTask(
+              Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+              Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+              Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
     } else {
       throw std::runtime_error("Invalid dimension");
     }
@@ -367,8 +376,12 @@ void Simulation::setUpdator() {
 
   // Contains linear dispersive material
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
-    _updator = std::make_unique<LorentzADEUpdator>(_grid_space,
-                                                   _calculation_param, _emf);
+    _updator = std::make_unique<LorentzADEUpdator>(
+        _grid_space, _calculation_param, _emf,
+        Divider::makeTask(
+            Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+            Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+            Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
     for (const auto& m : _calculation_param->materialParam()->materialArray()) {
       if (!m->dispersion()) {
         continue;
@@ -383,8 +396,19 @@ void Simulation::setUpdator() {
       if (auto lorentz_material =
               std::dynamic_pointer_cast<LorentzMedium>(dispersion_material);
           lorentz_material != nullptr) {
+        _emf->allocateExPrev(_grid_space->sizeX(), _grid_space->sizeY() + 1,
+                             _grid_space->sizeZ() + 1);
+        _emf->allocateEyPrev(_grid_space->sizeX() + 1, _grid_space->sizeY(),
+                             _grid_space->sizeZ() + 1);
+        _emf->allocateEzPrev(_grid_space->sizeX() + 1, _grid_space->sizeY() + 1,
+                             _grid_space->sizeZ());
+
         _updator = std::make_unique<LorentzADEUpdator>(
-            _grid_space, _calculation_param, _emf);
+            _grid_space, _calculation_param, _emf,
+            Divider::makeTask(
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
         std::cout << "\nDecide to use LorentzADEUpdator\n";
         return;
       }
@@ -392,8 +416,12 @@ void Simulation::setUpdator() {
       if (auto drude_material =
               std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
           drude_material != nullptr) {
-        _updator = std::make_unique<DrudeADEUpdator>(_grid_space,
-                                                     _calculation_param, _emf);
+        _updator = std::make_unique<DrudeADEUpdator>(
+            _grid_space, _calculation_param, _emf,
+            Divider::makeTask(
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
         std::cout << "\nDecide to use DrudeADEUpdator\n";
         return;
       }
@@ -401,8 +429,12 @@ void Simulation::setUpdator() {
       if (auto debye_material =
               std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
           debye_material != nullptr) {
-        _updator = std::make_unique<DebyeADEUpdator>(_grid_space,
-                                                     _calculation_param, _emf);
+        _updator = std::make_unique<DebyeADEUpdator>(
+            _grid_space, _calculation_param, _emf,
+            Divider::makeTask(
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+                Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
         std::cout << "\nDecide to use DebyeADEUpdator\n";
         return;
       }
