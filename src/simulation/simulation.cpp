@@ -195,11 +195,19 @@ void Simulation::init(std::size_t time_step) {
   _emf->allocateHz(_grid_space->sizeX(), _grid_space->sizeY(),
                    _grid_space->sizeZ() + 1);
 
-  for (auto&& o : _objects) {
-    // if (auto v = std::dynamic_pointer_cast<Inductor>(o); v != nullptr) {
-    //   continue;
-    // }
+  for(auto&& w: _waveform_sources){
+    auto c = w->generateCorrector(
+        Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
+                                   {0, _grid_space->sizeY()},
+                                   {0, _grid_space->sizeZ()}});
+    if (c == nullptr) {
+      continue;
+    }
 
+    _correctors.emplace_back(std::move(c));
+  }
+
+  for (auto&& o : _objects) {
     auto c = o->generateCorrector(
         Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
                                    {0, _grid_space->sizeY()},
@@ -239,9 +247,9 @@ void Simulation::updateH() {
 }
 
 void Simulation::correctE() {
-  for (const auto& s : _waveform_sources) {
-    s->correctE();
-  }
+  // for (const auto& s : _waveform_sources) {
+  //   s->correctE();
+  // }
 
   for (auto&& c : _correctors) {
     c->correctE();
@@ -249,9 +257,9 @@ void Simulation::correctE() {
 }
 
 void Simulation::correctH() {
-  for (const auto& s : _waveform_sources) {
-    s->correctH();
-  }
+  // for (const auto& s : _waveform_sources) {
+  //   s->correctH();
+  // }
 
   for (auto&& c : _correctors) {
     c->correctH();

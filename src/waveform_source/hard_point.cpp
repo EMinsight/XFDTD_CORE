@@ -32,15 +32,20 @@ void HardPoint::correctE() {
   ez(center.i(), center.j(), center.k()) +=
       waveform()
           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
-//   ex(center.i(), center.j(), center.k()) +=
-//       waveform()
-//           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+  //   ex(center.i(), center.j(), center.k()) +=
+  //       waveform()
+  //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
 
-//   ey(center.i(), center.j(), center.k()) +=
-//       waveform()
-//           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+  //   ey(center.i(), center.j(), center.k()) +=
+  //       waveform()
+  //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
 }
 
 void HardPoint::correctH() {}
+
+std::unique_ptr<Corrector> HardPoint::generateCorrector(
+    const Divider::IndexTask& task) {
+  throw std::runtime_error("Not implemented");
+}
 
 }  // namespace xfdtd

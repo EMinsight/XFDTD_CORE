@@ -56,13 +56,18 @@ void TFSF1D::correctH() {
   const auto rj{boxPtr()->end().j()};
   const auto rk{boxPtr()->end().k()};
 
-  auto &hy_zn{emfPtr()->hy()(0, 0, lk-1)};
+  auto &hy_zn{emfPtr()->hy()(0, 0, lk - 1)};
   auto ex_i{exInc(0, 0, lk)};
   hy_zn += cbx() * ex_i;
 
   auto &hy_zp{emfPtr()->hy()(0, 0, rk)};
   ex_i = exInc(0, 0, rk);
   hy_zp -= cbx() * ex_i;
+}
+
+std::unique_ptr<Corrector> TFSF1D::generateCorrector(
+    const Divider::IndexTask &task) {
+  throw std::runtime_error("Not implemented");
 }
 
 }  // namespace xfdtd

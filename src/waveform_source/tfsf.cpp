@@ -38,7 +38,7 @@ void TFSF::updateWaveformSourceE() {
   auto y{_e_inc(_e_inc.size() - 1)};
   _e_inc(0) = waveform()->value()(
       calculationParamPtr()->timeParam()->currentTimeStep());
-  for (std::size_t i{1}; i < _e_inc.size(); ++i) {
+  for (std::size_t i{1}; i < _e_inc.size()-1; ++i) {
     _e_inc(i) = _ceie * _e_inc(i) + _ceihi * (_h_inc(i) - _h_inc(i - 1));
   }
 

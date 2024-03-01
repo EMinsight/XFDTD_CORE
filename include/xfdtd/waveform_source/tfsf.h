@@ -88,6 +88,21 @@ class TFSF : public WaveformSource {
 
   double cbz();
 
+ protected:
+  xt::xarray<double> _projection_x_int;
+  xt::xarray<double> _projection_y_int;
+  xt::xarray<double> _projection_z_int;
+  xt::xarray<double> _projection_x_half;
+  xt::xarray<double> _projection_y_half;
+  xt::xarray<double> _projection_z_half;
+
+  xt::xarray<double> _ex_inc;
+  xt::xarray<double> _ey_inc;
+  xt::xarray<double> _ez_inc;
+  xt::xarray<double> _hx_inc;
+  xt::xarray<double> _hy_inc;
+  xt::xarray<double> _hz_inc;
+
  private:
   std::size_t _x, _y, _z;
   double _theta, _phi, _psi;
@@ -101,22 +116,10 @@ class TFSF : public WaveformSource {
   double _ratio_delta;
   std::size_t _auxiliary_size;
 
-  xt::xarray<double> _projection_x_int;
-  xt::xarray<double> _projection_y_int;
-  xt::xarray<double> _projection_z_int;
-  xt::xarray<double> _projection_x_half;
-  xt::xarray<double> _projection_y_half;
-  xt::xarray<double> _projection_z_half;
-
   // IFA
   xt::xarray<double> _e_inc;
   xt::xarray<double> _h_inc;
-  xt::xarray<double> _ex_inc;
-  xt::xarray<double> _ey_inc;
-  xt::xarray<double> _ez_inc;
-  xt::xarray<double> _hx_inc;
-  xt::xarray<double> _hy_inc;
-  xt::xarray<double> _hz_inc;
+
   double _scaled_dl;
   double _ceie;
   double _chih;
