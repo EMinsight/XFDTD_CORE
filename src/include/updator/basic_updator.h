@@ -25,6 +25,11 @@ class BasicUpdatorTEM : public BasicUpdator {
   ~BasicUpdatorTEM() override = default;
 
   void updateE() override;
+
+ protected:
+  void updateEEdge() override { throw std::runtime_error("Not implemented"); }
+
+  void updateHEdge() override { throw std::runtime_error("Not implemented"); }
 };
 
 class BasicUpdatorTE : public BasicUpdator {
@@ -36,6 +41,17 @@ class BasicUpdatorTE : public BasicUpdator {
   ~BasicUpdatorTE() override = default;
 
   void updateE() override;
+
+  std::string toString() const override;
+
+ protected:
+  void updateEEdge() override;
+
+  void updateHEdge() override{};
+
+  auto&& hxBuffer() { return hxBufferYN(); }
+
+  auto&& hyBuffer() { return hyBufferXN(); }
 };
 
 class BasicUpdator3D : public BasicUpdator {
@@ -46,7 +62,22 @@ class BasicUpdator3D : public BasicUpdator {
 
   ~BasicUpdator3D() override = default;
 
+  std::string toString() const override;
+
   void updateE() override;
+
+ protected:
+  void updateEEdge() override {
+    if (!containXNEdge() || !containYNEdge() || !containZNEdge()) {
+      throw std::runtime_error("Not implemented");
+    }
+  }
+
+  void updateHEdge() override {
+    if (!containXNEdge() || !containYNEdge() || !containZNEdge()) {
+      throw std::runtime_error("Not implemented");
+    }
+  }
 };
 
 }  // namespace xfdtd

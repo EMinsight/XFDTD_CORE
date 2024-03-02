@@ -24,7 +24,51 @@ class Divider {
   enum class Type { UNDEFINED, X, Y, Z, XY, XZ, YZ, XYZ };
 
   template <typename T>
-  using Range = xt::xtensor_fixed<T, xt::xshape<2>>;
+  class Range {
+   public:
+    Range() = default;
+    Range(std::size_t start, std::size_t end) : _start(start), _end(end) {}
+
+    auto operator[](std::size_t index) const {
+      if (index == 0) {
+        return _start;
+      }
+      return _end;
+    }
+
+    auto& operator[](std::size_t index) {
+      if (index == 0) {
+        return _start;
+      }
+      return _end;
+    }
+
+    auto operator+(T value) const {
+      return Range{_start + value, _end + value};
+    }
+
+    auto operator-(T value) const {
+      return Range{_start - value, _end - value};
+    }
+
+    auto start() const { return _start; }
+
+    auto end() const { return _end; }
+
+    auto size() const { return _end - _start; }
+
+    auto valid() const { return _start < _end; }
+
+    auto toString() const {
+      std::stringstream ss;
+      ss << "[" << _start << " " << _end << ")";
+      return ss.str();
+    }
+
+   private:
+    std::size_t _start{};
+    std::size_t _end{};
+  };
 
   template <typename T>
   struct Task {
@@ -32,14 +76,20 @@ class Divider {
     Range<T> _y_range;
     Range<T> _z_range;
 
-    auto toString() {
+    auto toString() const {
       std::stringstream ss;
       ss << "Task: ";
-      ss << "x: [" << _x_range[0] << " " << _x_range[1] << ") y: ["
-         << _y_range[0] << " " << _y_range[1] << ") z: [" << _z_range[0] << " "
-         << _z_range[1] << ")";
+      ss << "x: " << _x_range.toString() << " ";
+      ss << "y: " << _y_range.toString() << " ";
+      ss << "z: " << _z_range.toString();
       return ss.str();
     }
+
+    auto xRange() const { return _x_range; }
+
+    auto yRange() const { return _y_range; }
+
+    auto zRange() const { return _z_range; }
   };
 
   using IndexRange = Range<std::size_t>;
@@ -55,6 +105,16 @@ class Divider {
   static auto makeTask(const Range<T>& x_range, const Range<T>& y_range,
                        const Range<T>& z_range) {
     return Task<T>{x_range, y_range, z_range};
+  }
+
+  auto makeIndexRange(std::size_t start, std::size_t end) {
+    return makeRange(start, end);
+  }
+
+  auto makeIndexTask(const Range<std::size_t>& x_range,
+                     const Range<std::size_t>& y_range,
+                     const Range<std::size_t>& z_range) {
+    return makeTask(x_range, y_range, z_range);
   }
 
   template <typename T>
@@ -76,13 +136,55 @@ class Divider {
       return {};
     }
 
-    auto x_range = Range<T>{std::max(task1._x_range[0], task2._x_range[0]),
-                            std::min(task1._x_range[1], task2._x_range[1])};
-    auto y_range = Range<T>{std::max(task1._y_range[0], task2._y_range[0]),
-                            std::min(task1._y_range[1], task2._y_range[1])};
-    auto z_range = Range<T>{std::max(task1._z_range[0], task2._z_range[0]),
-                            std::min(task1._z_range[1], task2._z_range[1])};
+    // auto x_range = Range<T>{std::max(task1._x_range[0], task2._x_range[0]),
+    //                         std::min(task1._x_range[1], task2._x_range[1])};
+    // auto y_range = Range<T>{std::max(task1._y_range[0], task2._y_range[0]),
+    //                         std::min(task1._y_range[1], task2._y_range[1])};
+    // auto z_range = Range<T>{std::max(task1._z_range[0], task2._z_range[0]),
+    //                         std::min(task1._z_range[1], task2._z_range[1])};
+    auto x_range =
+        Range<T>{std::max(task1.xRange().start(), task2.xRange().start()),
+                 std::min(task1.xRange().end(), task2.xRange().end())};
+    auto y_range =
+        Range<T>{std::max(task1.yRange().start(), task2.yRange().start()),
+                 std::min(task1.yRange().end(), task2.yRange().end())};
+    auto z_range =
+        Range<T>{std::max(task1.zRange().start(), task2.zRange().start()),
+                 std::min(task1.zRange().end(), task2.zRange().end())};
     return Task<T>{x_range, y_range, z_range};
+  }
+
+  template <typename T>
+  static auto divide(const Task<T>& problem, int num_procs) {
+    std::vector<Task<std::size_t>> res;
+
+    auto x_start = problem._x_range[0];
+    auto x_end = problem._x_range[1];
+    auto y_start = problem._y_range[0];
+    auto y_end = problem._y_range[1];
+    auto z_start = problem._z_range[0];
+    auto z_end = problem._z_range[1];
+
+    if (x_end <= x_start || y_end <= y_start || z_end <= z_start) {
+      throw XFDTDDividerException("Invalid range");
+    }
+
+    auto x_size = x_end - x_start;
+    auto y_size = y_end - y_start;
+    auto z_size = z_end - z_start;
+
+    for (int i = 0; i < num_procs; ++i) {
+      auto x_task = divide(i, num_procs, x_size);
+      auto y_task = divide(i, num_procs, y_size);
+      auto z_task = divide(i, num_procs, z_size);
+
+      res.push_back(makeTask(
+          makeRange(x_task.start() + x_start, x_task.end() + x_start),
+          makeRange(y_task.start() + y_start, y_task.end() + y_start),
+          makeRange(z_task.start() + z_start, z_task.end() + z_start)));
+    }
+
+    return res;
   }
 
   template <typename T>
@@ -153,35 +255,6 @@ class Divider {
       default:
         throw XFDTDDividerException("Invalid type");
     }
-  }
-
-  template <typename T>
-  static auto divide(const Task<T>& problem, int num_procs) {
-    std::vector<Task<std::size_t>> res;
-
-    auto x_start = problem._x_range[0];
-    auto x_end = problem._x_range[1];
-    auto y_start = problem._y_range[0];
-    auto y_end = problem._y_range[1];
-    auto z_start = problem._z_range[0];
-    auto z_end = problem._z_range[1];
-
-    if (x_end <= x_start || y_end <= y_start || z_end <= z_start) {
-      throw XFDTDDividerException("Invalid range");
-    }
-
-    auto x_size = x_end - x_start;
-    auto y_size = y_end - y_start;
-    auto z_size = z_end - z_start;
-
-    for (int i = 0; i < num_procs; ++i) {
-      auto x_task = divide(i, num_procs, x_size);
-      auto y_task = divide(i, num_procs, y_size);
-      auto z_task = divide(i, num_procs, z_size);
-      res.push_back({x_task + x_start, y_task + y_start, z_task + z_start});
-    }
-
-    return res;
   }
 
   template <typename T>

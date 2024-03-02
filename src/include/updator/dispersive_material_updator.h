@@ -44,6 +44,11 @@ class LinearDispersiveMaterialADEUpdator : public BasicUpdator {
   //   auto linearDispersiveMaterialPtr() const { return
   //   _dispersive_martial.get(); }
 
+ protected:
+  void updateEEdge() override { throw std::runtime_error("Not implemented"); }
+
+  void updateHEdge() override { throw std::runtime_error("Not implemented"); }
+
  private:
   //   std::shared_ptr<LinearDispersiveMaterial> _dispersive_martial;
 };

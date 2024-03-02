@@ -1,6 +1,7 @@
 
 #include <memory>
 
+#include "divider/divider.h"
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
@@ -14,7 +15,8 @@
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
-void microstripLine() {
+
+void microstripLine(int num_thread, xfdtd::Divider::Type type) {
   constexpr double dx{0.203e-3};
   constexpr double dy{0.203e-3};
   constexpr double dz{0.1325e-3};
@@ -69,7 +71,7 @@ void microstripLine() {
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1},
       xt::linspace(2e7, 10e9, 500), "./data/microstrip_line")};
 
-  auto s{xfdtd::Simulation{dx, dy, dz, 0.9}};
+  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, num_thread, type}};
   s.addObject(domain);
   s.addObject(substrate);
   s.addObject(microstrip_0);
@@ -92,4 +94,20 @@ void microstripLine() {
   network->output();
 }
 
-int main() { microstripLine(); }
+int main(int argc, char *argv[]) {
+  int num_thread = 1;
+  xfdtd::Divider::Type divider_type = xfdtd::Divider::Type::X;
+  if (argc == 3) {
+    num_thread = std::stoi(argv[1]);
+    if (std::string(argv[2]) == "X") {
+      divider_type = xfdtd::Divider::Type::X;
+    }
+    if (std::string(argv[2]) == "Y") {
+      divider_type = xfdtd::Divider::Type::Y;
+    }
+    if (std::string(argv[2]) == "Z") {
+      divider_type = xfdtd::Divider::Type::Z;
+    }
+  }
+  microstripLine(num_thread, divider_type);
+}

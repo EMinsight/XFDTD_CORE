@@ -66,7 +66,7 @@ void VoltageMonitor::update() {
     for (size_t i{_is}; i < _ie; ++i) {
       for (size_t j{_js}; j < _je + 1; ++j) {
         for (size_t k{_ks}; k < _ke + 1; ++k) {
-          data()(1,t) += _coff(i - _is) * emf->ex()(i, j, k);
+          data()(1, t) += _coff(i - _is) * emf->ex()(i, j, k);
         }
       }
     }
@@ -76,7 +76,7 @@ void VoltageMonitor::update() {
     for (size_t i{_is}; i < _ie + 1; ++i) {
       for (size_t j{_js}; j < _je; ++j) {
         for (size_t k{_ks}; k < _ke + 1; ++k) {
-          data()(1,t) += _coff(j - _js) * emf->ey()(i, j, k);
+          data()(1, t) += _coff(j - _js) * emf->ey()(i, j, k);
         }
       }
     }
@@ -86,7 +86,7 @@ void VoltageMonitor::update() {
     for (size_t i{_is}; i < _ie + 1; ++i) {
       for (size_t j{_js}; j < _je + 1; ++j) {
         for (size_t k{_ks}; k < _ke; ++k) {
-          data()(1,t) += _coff(k - _ks) * emf->ez()(i, j, k);
+          data()(1, t) += _coff(k - _ks) * emf->ez()(i, j, k);
         }
       }
     }

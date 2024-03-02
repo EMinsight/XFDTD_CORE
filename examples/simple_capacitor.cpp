@@ -67,7 +67,7 @@ double exactSimpleCapacitorSolver(double c, double r, double t, double t_0) {
   return 1 - std::exp(-t / (r * c));
 }
 
-void capacitorX() {
+void capacitorX(int num_thread) {
   // X: C A B
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -109,7 +109,8 @@ void capacitorX() {
           xfdtd::Vector{V_MONITOR_L_C, V_MONITOR_L_A, V_MONITOR_L_B}),
       xfdtd::Axis::Direction::XP, "data/simple_capacitor")};
 
-  auto simulation{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98}};
+  auto simulation{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, num_thread,
+                                    xfdtd::Divider::Type::X}};
   simulation.addObject(domain);
   simulation.addObject(plane);
   simulation.addObject(plane2);
@@ -187,4 +188,10 @@ void capacitorZ() {
   xt::dump_npy("data/simple_capacitor/exact.npy", exact);
 }
 
-int main() { capacitorX(); }
+int main(int argc, char* argv[]) {
+  int num_thread = 1;
+  if (argc > 1) {
+    num_thread = std::stoi(argv[1]);
+  }
+  capacitorX(num_thread);
+}

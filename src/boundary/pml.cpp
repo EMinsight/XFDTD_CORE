@@ -405,12 +405,12 @@ std::unique_ptr<Corrector> PML::generateDomainCorrector(
 
   auto t_abc = transform::xYZToABC(
       std::make_tuple(task._x_range, task._y_range, task._z_range), mainAxis());
-  auto a_s = std::get<0>(t_abc)(0);
-  auto a_n = std::get<0>(t_abc)(1) - a_s;
-  auto b_s = std::get<1>(t_abc)(0);
-  auto b_n = std::get<1>(t_abc)(1) - b_s;
-  auto c_s = std::max(std::get<2>(t_abc)(0), hNodeStartIndexMainAxis());
-  auto c_e = std::min((std::get<2>(t_abc)(0) + std::get<2>(t_abc)(1)),
+  auto a_s = std::get<0>(t_abc).start();
+  auto a_n = std::get<0>(t_abc).end() - a_s;
+  auto b_s = std::get<1>(t_abc).start();
+  auto b_n = std::get<1>(t_abc).end() - b_s;
+  auto c_s = std::max(std::get<2>(t_abc).start(), hNodeStartIndexMainAxis());
+  auto c_e = std::min((std::get<2>(t_abc).start() + std::get<2>(t_abc).end()),
                       hNodeStartIndexMainAxis() + n());
   auto c_n = c_e - c_s;
   auto c_s_e = (Axis::directionNegative(direction())) ? (c_s + 1) : (c_s);
@@ -446,8 +446,8 @@ bool PML::taskContainPML(const Divider::Task<std::size_t>& task) const {
   auto b = std::get<1>(t_abc);
   auto c = std::get<2>(t_abc);
 
-  auto task_c_start = c(0);
-  auto task_c_end = c(1);
+  auto task_c_start = c.start();
+  auto task_c_end = c.end();
 
   auto pml_start = hNodeStartIndexMainAxis();
   auto pml_end = hNodeStartIndexMainAxis() + n();

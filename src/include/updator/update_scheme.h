@@ -1,17 +1,5 @@
-#ifndef __XFDTD_LIB_COMMON_FDTD_H__
-#define __XFDTD_LIB_COMMON_FDTD_H__
-
-/**
- * @file fdtd.h
- * @author xfdtd@franzero.net
- * @brief This file contains the FDTD scheme for updating the electric and
- * magnetic fields.
- * @version 0.1
- * @date 2024-02-26
- *
- * @copyright Copyright (c) 2024
- *
- */
+#ifndef _XFDTD_LIB_UPDATE_SCHEME_H_
+#define _XFDTD_LIB_UPDATE_SCHEME_H_
 
 #include <tuple>
 
@@ -35,8 +23,8 @@ namespace xfdtd {
  * @return The next time step value of the electric field.
  */
 template <typename T>
-inline auto eNext(const T& cece, const T& ec, const T& cecha, const T& ha_p,
-                  const T& ha_q, const T& cechb, const T& hb_p, const T& hb_q) {
+inline auto eNext(const T& cece, T ec, const T& cecha, T ha_p, T ha_q,
+                  const T& cechb, T hb_p, T hb_q) {
   auto&& result = cece * ec + cecha * (ha_p - ha_q) + cechb * (hb_p - hb_q);
   return result;
 }
@@ -59,8 +47,8 @@ inline auto eNext(const T& cece, const T& ec, const T& cecha, const T& ha_p,
  * @return The next time step value of the magnetic field.
  */
 template <typename T>
-inline auto hNext(const T& chch, const T& hc, const T& chcea, const T& ea_p,
-                  const T& ea_q, const T& chceb, const T& eb_p, const T& eb_q) {
+inline auto hNext(const T& chch, T hc, const T& chcea, T ea_p, T ea_q,
+                  const T& chceb, T eb_p, T eb_q) {
   auto&& result = chch * hc + chcea * (ea_p - ea_q) + chceb * (eb_p - eb_q);
   return result;
 }
@@ -209,6 +197,46 @@ inline auto hzNodeShape(const T& i_start, const T& i_end, const T& j_start,
   return std::make_tuple(nx, ny, nz);
 }
 
+template <typename Index, typename T>
+inline auto updateEzEdgeYZ(const Index i, const Index js, const Index je,
+                           const Index ks, const Index ke, const T& ceze,
+                           const T& cezhx, const T& cezhy, const T& hx,
+                           const T& hy, const T& hy_buffer, T& ez) {
+  for (Index j{js + 1}; j < je; ++j) {
+    for (Index k{ks}; k < ke; ++k) {
+      ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
+                          hx(i, j, k), hx(i, j - 1, k), cezhy(i, j, k),
+                          hy(i, j, k), hy_buffer(0, (j - js), k - ks));
+    }
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateEzEdgeXZ(const Index is, const Index ie, const Index j,
+                           const Index ks, const Index ke, const T& ceze,
+                           const T& cezhx, const T& cezhy, const T& hx,
+                           const T& hx_buffer, const T& hy, T& ez) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t k{ks}; k < ke; ++k) {
+      ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
+                          hx(i, j, k), hx_buffer(i - is, 0, k - ks),
+                          cezhy(i, j, k), hy(i, j, k), hy(i - 1, j, k));
+    }
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateEzCornerXY(const Index i, const Index j, const Index ks,
+                             const Index ke, const T& ceze, const T& cezhx,
+                             const T& cezhy, const T& hx, const T& hx_buffer,
+                             const T& hy, const T& hy_buffer, T& ez) {
+  for (std::size_t k{ks}; k < ke; ++k) {
+    ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k), hx(i, j, k),
+                        hx_buffer(0, 0, k - ks), cezhy(i, j, k), hy(i, j, k),
+                        hy_buffer(0, 0, k - ks));
+  }
+}
+
 }  // namespace xfdtd
 
-#endif  // __XFDTD_LIB_COMMON_FDTD_H__
+#endif  // _XFDTD_LIB_UPDATE_SCHEME_H_

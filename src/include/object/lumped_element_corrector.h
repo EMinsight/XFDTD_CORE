@@ -15,8 +15,8 @@ class LumpedElementCorrector : public Corrector {
   LumpedElementCorrector(Divider::IndexTask task, Divider::IndexTask local_task,
                          std::shared_ptr<CalculationParam> calculation_param,
                          xt::xarray<double>& e_field)
-      : _task{std::move(task)},
-        _local_task{std::move(local_task)},
+      : _task{task},
+        _local_task{local_task},
         _calculation_param{std::move(calculation_param)},
         _e_field{e_field} {}
 
@@ -35,8 +35,8 @@ class VoltageSourceCorrector : public LumpedElementCorrector {
                          xt::xarray<double>& e_field,
                          const xt::xarray<double>& coeff_v,
                          const xt::xarray<double>& waveform)
-      : LumpedElementCorrector{std::move(task), std::move(local_task),
-                               std::move(calculation_param), e_field},
+      : LumpedElementCorrector{task, local_task, std::move(calculation_param),
+                               e_field},
         _coeff_v{coeff_v},
         _waveform{waveform} {}
 
@@ -58,8 +58,8 @@ class CurrentSourceCorrector : public LumpedElementCorrector {
                          xt::xarray<double>& e_field,
                          const xt::xarray<double>& coeff_i,
                          const xt::xarray<double>& waveform)
-      : LumpedElementCorrector{std::move(task), std::move(local_task),
-                               std::move(calculation_param), e_field},
+      : LumpedElementCorrector{task, local_task, std::move(calculation_param),
+                               e_field},
         _coeff_i{coeff_i},
         _waveform{waveform} {}
 
@@ -82,8 +82,8 @@ class InductorCorrector : public LumpedElementCorrector {
                     xt::xarray<double>& e_field, xt::xarray<double>& j,
                     const xt::xarray<double>& cecjc,
                     const xt::xarray<double>& cjcec)
-      : LumpedElementCorrector{std::move(task), std::move(local_task),
-                               std::move(calculation_param), e_field},
+      : LumpedElementCorrector{task, local_task, std::move(calculation_param),
+                               e_field},
         _j{j},
         _cecjc{cecjc},
         _cjcec{cjcec} {}

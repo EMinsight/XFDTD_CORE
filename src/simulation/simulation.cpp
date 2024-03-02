@@ -2,9 +2,13 @@
 
 #include <chrono>
 #include <memory>
+#include <thread>
+#include <vector>
 #include <xtensor/xnpy.hpp>
 
+#include "corrector/corrector.h"
 #include "divider/divider.h"
+#include "domain/domain.h"
 #include "grid_space/grid_space_generator.h"
 #include "updator/basic_updator.h"
 #include "updator/dispersive_material_updator.h"
@@ -12,13 +16,22 @@
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/material/dispersive_material.h"
+#include "xfdtd/monitor/monitor.h"
 #include "xfdtd/nffft/nffft.h"
 #include "xfdtd/object/lumped_element/pec_plane.h"
+#include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
 
-Simulation::Simulation(double dx, double dy, double dz, double cfl)
-    : _dx{dx}, _dy{dy}, _dz{dz}, _cfl{cfl}, _time_step{0} {}
+Simulation::Simulation(double dx, double dy, double dz, double cfl,
+                       int num_thread, Divider::Type divider_type)
+    : _dx{dx},
+      _dy{dy},
+      _dz{dz},
+      _cfl{cfl},
+      _num_thread{num_thread},
+      _barrier(num_thread),
+      _divider_type{divider_type} {}
 
 Simulation::~Simulation() = default;
 
@@ -63,72 +76,32 @@ void Simulation::run(std::size_t time_step) {
             << "\n";
   init(time_step);
 
-  // xt::dump_npy("./data/check/cexe.npy",
-  //              _calculation_param->fdtdCoefficient()->cexe());
-  // xt::dump_npy("./data/check/cexhy.npy",
-  //              _calculation_param->fdtdCoefficient()->cexhy());
-  // xt::dump_npy("./data/check/cexhz.npy",
-  //              _calculation_param->fdtdCoefficient()->cexhz());
-  // xt::dump_npy("./data/check/ceye.npy",
-  //              _calculation_param->fdtdCoefficient()->ceye());
-  // xt::dump_npy("./data/check/ceyhz.npy",
-  //              _calculation_param->fdtdCoefficient()->ceyhz());
-  // xt::dump_npy("./data/check/ceyhx.npy",
-  //              _calculation_param->fdtdCoefficient()->ceyhx());
-  // xt::dump_npy("./data/check/ceze.npy",
-  //              _calculation_param->fdtdCoefficient()->ceze());
-  // xt::dump_npy("./data/check/cezhx.npy",
-  //              _calculation_param->fdtdCoefficient()->cezhx());
-  // xt::dump_npy("./data/check/cezhy.npy",
-  //              _calculation_param->fdtdCoefficient()->cezhy());
-  // xt::dump_npy("./data/check/chxh.npy",
-  //              _calculation_param->fdtdCoefficient()->chxh());
-  // xt::dump_npy("./data/check/chxey.npy",
-  //              _calculation_param->fdtdCoefficient()->chxey());
-  // xt::dump_npy("./data/check/chxez.npy",
-  //              _calculation_param->fdtdCoefficient()->chxez());
-  // xt::dump_npy("./data/check/chyh.npy",
-  //              _calculation_param->fdtdCoefficient()->chyh());
-  // xt::dump_npy("./data/check/chyex.npy",
-  //              _calculation_param->fdtdCoefficient()->chyex());
-  // xt::dump_npy("./data/check/chyez.npy",
-  //              _calculation_param->fdtdCoefficient()->chyez());
-  // xt::dump_npy("./data/check/chzh.npy",
-  //              _calculation_param->fdtdCoefficient()->chzh());
-  // xt::dump_npy("./data/check/chzex.npy",
-  //              _calculation_param->fdtdCoefficient()->chzex());
-  // xt::dump_npy("./data/check/chzey.npy",
-  //              _calculation_param->fdtdCoefficient()->chzey());
-  // xt::dump_npy("./data/check/eps_x.npy",
-  //              _calculation_param->materialParam()->epsX());
-  // xt::dump_npy("./data/check/sigma_e_x.npy",
-  //              _calculation_param->materialParam()->sigmaEX());
+  struct ThreadGuard {
+    ~ThreadGuard() {
+      for (auto& t : _threads) {
+        if (t.joinable()) {
+          t.join();
+        }
+      }
+    }
 
-  // const std::shared_ptr<const GridSpace> grid_space = _grid_space;
+    std::vector<std::thread> _threads;
+    std::chrono::high_resolution_clock::time_point _start_time;
+  };
 
-  // const auto& h_size_x{grid_space->hSizeX()};
-  // const auto& h_size_y{grid_space->hSizeY()};
-  // const auto& h_size_z{grid_space->hSizeZ()};
-  // const auto& e_size_x{grid_space->eSizeX()};
-  // const auto& e_size_y{grid_space->eSizeY()};
-  // const auto& e_size_z{grid_space->eSizeZ()};
+  {
+    std::vector<std::thread> threads;
+    for (std::size_t i = 1; i < _domains.size(); ++i) {
+      threads.emplace_back([&domain = _domains[i]]() { domain->run(); });
+    }
 
-  // auto e_x_size{xt::meshgrid(e_size_x, h_size_y, h_size_z)};
-  // xt::dump_npy("./data/check/dz.npy", std::get<2>(e_x_size));
-  // std::cout << _calculation_param->timeParam()->dt() << "\n";
-  // exit(0);
+    ThreadGuard tg{
+        ._threads = std::move(threads),
+    };
 
-  while (_calculation_param->timeParam()->currentTimeStep() <
-         _calculation_param->timeParam()->endTimeStep()) {
-    updateE();
-    correctE();
-    updateH();
-    correctH();
-
-    record();
-    printRunInfo();
-    _calculation_param->timeParam()->nextStep();
+    _domains[0]->run();
   }
+
   _end_time = std::chrono::high_resolution_clock::now();
   std::cout << "\n"
             << "Elapsed time: "
@@ -145,13 +118,12 @@ void Simulation::run(std::size_t time_step) {
 }
 
 void Simulation::init(std::size_t time_step) {
-  _time_step = time_step;
   // First: generate grid space
   generateGridSpace();
 
   // Second: allocate the basic concept: space,param,emf
-  _calculation_param = std::make_shared<CalculationParam>(_grid_space.get(), 0,
-                                                          _time_step, _cfl);
+  _calculation_param =
+      std::make_shared<CalculationParam>(_grid_space.get(), 0, time_step, _cfl);
   _emf = std::make_shared<EMF>();
 
   // Third: init all the objects
@@ -181,8 +153,6 @@ void Simulation::init(std::size_t time_step) {
     n->init(_grid_space, _calculation_param, _emf);
   }
 
-  setUpdator();
-
   _emf->allocateEx(_grid_space->sizeX(), _grid_space->sizeY() + 1,
                    _grid_space->sizeZ() + 1);
   _emf->allocateEy(_grid_space->sizeX() + 1, _grid_space->sizeY(),
@@ -195,93 +165,92 @@ void Simulation::init(std::size_t time_step) {
                    _grid_space->sizeZ());
   _emf->allocateHz(_grid_space->sizeX(), _grid_space->sizeY(),
                    _grid_space->sizeZ() + 1);
+  generateDomain();
+}
+
+void Simulation::generateDomain() {
+  if (_num_thread <= 1) {
+    _num_thread = 1;
+  }
+
+  if (std::thread::hardware_concurrency() < _num_thread) {
+    std::cout << "The number of threads is too large, set to the maximum "
+                 "number of threads: "
+              << std::thread::hardware_concurrency() << "\n";
+    _num_thread = std::thread::hardware_concurrency();
+  }
+
+  if (_num_thread == 1) {
+    std::cout << "Single thread mode\n";
+  }
+
+  Divider::IndexTask problem = Divider::makeTask(
+      Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+      Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+      Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()));
+
+  auto tasks = std::vector<Divider::IndexTask>{Divider::makeTask(
+      Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
+      Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
+      Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()))};
+
+  try {
+    tasks = Divider::divide(problem, _num_thread, _divider_type);
+  } catch (const XFDTDDividerException& e) {
+    std::cout << "Single thread mode\n";
+  }
+
+  // Corrector
+
+  std::vector<std::unique_ptr<Corrector>> correctors;
 
   for (auto&& w : _waveform_sources) {
-    auto c = w->generateCorrector(
-        Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
-                                   {0, _grid_space->sizeY()},
-                                   {0, _grid_space->sizeZ()}});
+    auto c = w->generateCorrector(problem);
     if (c == nullptr) {
       continue;
     }
 
-    _correctors.emplace_back(std::move(c));
+    correctors.emplace_back(std::move(c));
   }
 
   for (auto&& o : _objects) {
-    auto c = o->generateCorrector(
-        Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
-                                   {0, _grid_space->sizeY()},
-                                   {0, _grid_space->sizeZ()}});
+    auto c = o->generateCorrector(problem);
     if (c == nullptr) {
       continue;
     }
 
-    _correctors.emplace_back(std::move(c));
+    correctors.emplace_back(std::move(c));
   }
 
   for (auto&& b : _boundaries) {
-    auto c = b->generateDomainCorrector(
-        Divider::Task<std::size_t>{{0, _grid_space->sizeX()},
-                                   {0, _grid_space->sizeY()},
-                                   {0, _grid_space->sizeZ()}});
+    auto c = b->generateDomainCorrector(problem);
     if (c == nullptr) {
       continue;
     }
 
-    _correctors.emplace_back(std::move(c));
-  }
-}
-
-void Simulation::updateE() {
-  for (const auto& s : _waveform_sources) {
-    s->updateWaveformSourceE();
-  }
-  _updator->updateE();
-}
-
-void Simulation::updateH() {
-  for (const auto& s : _waveform_sources) {
-    s->updateWaveformSourceH();
-  }
-  _updator->updateH();
-}
-
-void Simulation::correctE() {
-  // for (const auto& s : _waveform_sources) {
-  //   s->correctE();
-  // }
-
-  for (auto&& c : _correctors) {
-    c->correctE();
-  }
-}
-
-void Simulation::correctH() {
-  // for (const auto& s : _waveform_sources) {
-  //   s->correctH();
-  // }
-
-  for (auto&& c : _correctors) {
-    c->correctH();
-  }
-}
-
-void Simulation::record() {
-  for (const auto& m : _monitors) {
-    m->update();
+    correctors.emplace_back(std::move(c));
   }
 
-  for (const auto& n : _nfffts) {
-    n->update();
+  bool master = true;
+  std::size_t id = {0};
+  for (const auto& t : tasks) {
+    auto updator = makeUpdator(t);
+    if (master) {
+      _domains.emplace_back(std::make_unique<Domain>(
+          id, t, _grid_space, _calculation_param, _emf, std::move(updator),
+          _waveform_sources, std::move(correctors), _monitors, _nfffts,
+          _barrier, master));
+      master = false;
+    } else {
+      _domains.emplace_back(std::make_unique<Domain>(
+          id, t, _grid_space, _calculation_param, _emf, std::move(updator),
+          std::vector<std::shared_ptr<WaveformSource>>{},
+          std::vector<std::unique_ptr<Corrector>>{},
+          std::vector<std::shared_ptr<Monitor>>{},
+          std::vector<std::shared_ptr<NFFFT>>{}, _barrier, master));
+    }
+    ++id;
   }
-}
-
-void Simulation::printRunInfo() {
-  std::cout << "\r";
-  std::cout << "Progress: "
-            << _calculation_param->timeParam()->currentTimeStep() + 1 << "/"
-            << _calculation_param->timeParam()->endTimeStep() << std::flush;
 }
 
 void Simulation::generateGridSpace() {
@@ -344,7 +313,8 @@ void Simulation::correctUpdateCoefficient() {
   }
 }
 
-void Simulation::setUpdator() {
+std::unique_ptr<Updator> Simulation::makeUpdator(
+    const Divider::IndexTask& task) {
   bool dispersion = false;
   for (const auto& m : _calculation_param->materialParam()->materialArray()) {
     if (m->dispersion()) {
@@ -355,33 +325,18 @@ void Simulation::setUpdator() {
 
   if (!dispersion) {
     if (_grid_space->dimension() == GridSpace::Dimension::THREE) {
-      _updator = std::make_unique<BasicUpdator3D>(
-          _grid_space, _calculation_param, _emf,
-          Divider::makeTask(
-              Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-              Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-              Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
-    } else if (_grid_space->dimension() == GridSpace::Dimension::TWO) {
-      _updator = std::make_unique<BasicUpdatorTE>(
-          _grid_space, _calculation_param, _emf,
-          Divider::makeTask(
-              Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-              Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-              Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
-    } else {
-      throw std::runtime_error("Invalid dimension");
+      return std::make_unique<BasicUpdator3D>(_grid_space, _calculation_param,
+                                              _emf, task);
     }
-    return;
+    if (_grid_space->dimension() == GridSpace::Dimension::TWO) {
+      return std::make_unique<BasicUpdatorTE>(_grid_space, _calculation_param,
+                                              _emf, task);
+    }
+    throw XFDTDSimulationException("Invalid dimension");
   }
 
   // Contains linear dispersive material
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
-    _updator = std::make_unique<LorentzADEUpdator>(
-        _grid_space, _calculation_param, _emf,
-        Divider::makeTask(
-            Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-            Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-            Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
     for (const auto& m : _calculation_param->materialParam()->materialArray()) {
       if (!m->dispersion()) {
         continue;
@@ -403,40 +358,22 @@ void Simulation::setUpdator() {
         _emf->allocateEzPrev(_grid_space->sizeX() + 1, _grid_space->sizeY() + 1,
                              _grid_space->sizeZ());
 
-        _updator = std::make_unique<LorentzADEUpdator>(
-            _grid_space, _calculation_param, _emf,
-            Divider::makeTask(
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
-        std::cout << "\nDecide to use LorentzADEUpdator\n";
-        return;
+        return std::make_unique<LorentzADEUpdator>(
+            _grid_space, _calculation_param, _emf, task);
       }
 
       if (auto drude_material =
               std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
           drude_material != nullptr) {
-        _updator = std::make_unique<DrudeADEUpdator>(
-            _grid_space, _calculation_param, _emf,
-            Divider::makeTask(
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
-        std::cout << "\nDecide to use DrudeADEUpdator\n";
-        return;
+        return std::make_unique<DrudeADEUpdator>(
+            _grid_space, _calculation_param, _emf, task);
       }
 
       if (auto debye_material =
               std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
           debye_material != nullptr) {
-        _updator = std::make_unique<DebyeADEUpdator>(
-            _grid_space, _calculation_param, _emf,
-            Divider::makeTask(
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-                Divider::makeRange<std::size_t>(0, _grid_space->sizeZ())));
-        std::cout << "\nDecide to use DebyeADEUpdator\n";
-        return;
+        return std::make_unique<DebyeADEUpdator>(
+            _grid_space, _calculation_param, _emf, task);
       }
     }
   }
