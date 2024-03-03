@@ -226,14 +226,94 @@ inline auto updateEzEdgeXZ(const Index is, const Index ie, const Index j,
 }
 
 template <typename Index, typename T>
-inline auto updateEzCornerXY(const Index i, const Index j, const Index ks,
-                             const Index ke, const T& ceze, const T& cezhx,
-                             const T& cezhy, const T& hx, const T& hx_buffer,
-                             const T& hy, const T& hy_buffer, T& ez) {
+inline auto updateEzLineZ(const Index i, const Index j, const Index ks,
+                          const Index ke, const T& ceze, const T& cezhx,
+                          const T& cezhy, const T& hx, const T& hx_buffer,
+                          const T& hy, const T& hy_buffer, T& ez) {
   for (std::size_t k{ks}; k < ke; ++k) {
     ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k), hx(i, j, k),
                         hx_buffer(0, 0, k - ks), cezhy(i, j, k), hy(i, j, k),
                         hy_buffer(0, 0, k - ks));
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateEyEdgeYZ(const Index i, const Index js, const Index je,
+                           const Index ks, const Index ke, const T& ceye,
+                           const T& ceyhz, const T& ceyhx, const T& hz,
+                           const T& hz_buffer, const T& hx, T& ey) {
+  for (Index j{js}; j < je; ++j) {
+    for (Index k{ks + 1}; k < ke; ++k) {
+      ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
+                          hz(i, j, k), hz_buffer(0, j - js, k - ks),
+                          ceyhx(i, j, k), hx(i, j, k), hx(i, j, k - 1));
+    }
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateExEdgeXZ(const Index is, const Index ie, const Index j,
+                           const Index ks, const Index ke, const T& cexe,
+                           const T& cexhy, const T& cexhz, const T& hy,
+                           const T& hz, const T& hz_buffer, T& ex) {
+  for (Index i{is}; i < ie; ++i) {
+    for (Index k{ks + 1}; k < ke; ++k) {
+      ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
+                          hy(i, j, k), hy(i, j, k - 1), cexhz(i, j, k),
+                          hz(i, j, k), hz_buffer(i - is, 0, k - ks));
+    }
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateExEdgeXY(const Index is, const Index ie, const Index js,
+                           const Index je, const Index k, const T& cexe,
+                           const T& cexhy, const T& cexhz, const T& hy,
+                           const T& hy_buffer, const T& hz, T& ex) {
+  for (Index i{is}; i < ie; ++i) {
+    for (Index j{js + 1}; j < je; ++j) {
+      ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
+                          hy(i, j, k), hy_buffer(i - is, j - js, 0),
+                          cexhz(i, j, k), hz(i, j, k), hz(i, j - 1, k));
+    }
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateEyEdgeXY(const Index is, const Index ie, const Index js,
+                           const Index je, const Index k, const T& ceye,
+                           const T& ceyhz, const T& ceyhx, const T& hz,
+                           const T& hx, const T& hx_buffer, T& ey) {
+  for (Index i{is + 1}; i < ie; ++i) {
+    for (Index j{js}; j < je; ++j) {
+      ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
+                          hz(i, j, k), hz(i - 1, j, k), ceyhx(i, j, k),
+                          hx(i, j, k), hx_buffer(i - is, j - js, 0));
+    }
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateEyLineY(const Index i, const Index js, const Index je,
+                          const Index k, const T& ceye, const T& ceyhz,
+                          const T& ceyhx, const T& hz, const T& hz_buffer,
+                          const T& hx, const T& hx_buffer, T& ey) {
+  for (auto j{js}; j < je; ++j) {
+    ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k), hz(i, j, k),
+                        hz_buffer(0, j - js, 0), ceyhx(i, j, k), hx(i, j, k),
+                        hx_buffer(0, j - js, 0));
+  }
+}
+
+template <typename Index, typename T>
+inline auto updateExLineX(const Index is, const Index ie, const Index j,
+                          const Index k, const T& cexe, const T& cexhy,
+                          const T& cexhz, const T& hy, const T& hy_buffer,
+                          const T& hz, const T& hz_buffer, T& ex) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k), hy(i, j, k),
+                        hy_buffer(i - is, 0, 0), cexhz(i, j, k), hz(i, j, k),
+                        hz_buffer(i - is, 0, 0));
   }
 }
 

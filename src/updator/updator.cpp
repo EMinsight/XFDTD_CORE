@@ -18,7 +18,7 @@ Updator::Updator(std::shared_ptr<const GridSpace> grid_space,
 std::string Updator::toString() const {
   std::stringstream ss;
   ss << "Updator: ";
-  ss << "Task: " << _task.toString() << "\n";
+  ss << _task.toString() << "\n";
   ss << "H field: " << _task.toString();
   return ss.str();
 }

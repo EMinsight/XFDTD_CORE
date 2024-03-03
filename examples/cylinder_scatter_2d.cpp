@@ -84,9 +84,6 @@ int main(int argc, char* argv[]) {
       if (type_str == "X") {
         type = xfdtd::Divider::Type::X;
       }
-      if (type_str == "XY") {
-        type = xfdtd::Divider::Type::XY;
-      }
     }
   }
   cylinderScatter2D(num_thread, type);

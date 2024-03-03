@@ -1,6 +1,7 @@
 #include <memory>
 #include <utility>
 
+#include "divider/divider.h"
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -18,7 +19,7 @@
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 
-void dielectricResonatorAntenna() {
+void dielectricResonatorAntenna(int num_thread, xfdtd::Divider::Type type) {
   constexpr double dx{0.715e-3};
   constexpr double dy{0.508e-3};
   constexpr double dz{0.5e-3};
@@ -90,7 +91,7 @@ void dielectricResonatorAntenna() {
       13, 13, 13, xt::xarray<double>{3.5e9, 4.3e9},
       "./data/dielectric_resonator_antenna")};
 
-  auto s{xfdtd::Simulation{dx, dy, dz, 0.9}};
+  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, num_thread, type}};
   s.addObject(domain);
   s.addObject(box);
   s.addObject(ground);
@@ -127,7 +128,22 @@ void dielectricResonatorAntenna() {
       {xfdtd::constant::PI * 0.5}, "yz_plane", domain_cube->center());
 }
 
-int main() {
-  dielectricResonatorAntenna();
+int main(int argc, char* argv[]) {
+  int num_thread = 1;
+  xfdtd::Divider::Type type = xfdtd::Divider::Type::X;
+  if (argc > 1) {
+    num_thread = std::stoi(argv[1]);
+    if (argc > 2) {
+      if (std::string(argv[2]) == "Y") {
+        type = xfdtd::Divider::Type::Y;
+      } else if (std::string(argv[2]) == "Z") {
+        type = xfdtd::Divider::Type::Z;
+      } else {
+        type = xfdtd::Divider::Type::X;
+      }
+    }
+  }
+
+  dielectricResonatorAntenna(num_thread, type);
   return 0;
 }

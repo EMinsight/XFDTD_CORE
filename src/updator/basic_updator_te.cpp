@@ -79,7 +79,7 @@ void BasicUpdatorTE::updateEEdge() {
   bool contain_yn_edge = containYNEdge();
 
   if (!contain_xn_edge && !contain_yn_edge) {
-    updateEzCornerXY(is, js, ks, ke, ceze, cezhx, cezhy, hx, hx_buffer, hy,
+    updateEzLineZ(is, js, ks, ke, ceze, cezhx, cezhy, hx, hx_buffer, hy,
                      hy_buffer, ez);
   }
 

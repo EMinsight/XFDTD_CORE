@@ -39,8 +39,8 @@ class Domain {
         _nfffts{std::move(nfffts)},
         _barrier{barrier},
         _master{master} {
-    std::cout << "Domain: " << _id << " task:" << _task.toString() << '\n';
-    std::cout << "Updator: " << _updator->toString() << '\n' << '\n';
+    std::cout << "Domain: " << _id << " " << _task.toString() << '\n';
+    std::cout << _updator->toString() << '\n' << '\n';
   }
 
   ~Domain() = default;

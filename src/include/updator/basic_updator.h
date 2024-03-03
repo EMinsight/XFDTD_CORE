@@ -67,17 +67,28 @@ class BasicUpdator3D : public BasicUpdator {
   void updateE() override;
 
  protected:
-  void updateEEdge() override {
-    if (!containXNEdge() || !containYNEdge() || !containZNEdge()) {
-      throw std::runtime_error("Not implemented");
-    }
-  }
+  void updateEEdge() override;
 
-  void updateHEdge() override {
-    if (!containXNEdge() || !containYNEdge() || !containZNEdge()) {
-      throw std::runtime_error("Not implemented");
-    }
-  }
+  void updateHEdge() override {}
+
+ private:
+  // void updateExYN();
+
+  // void updateExZN();
+
+  // void updateExCornerYZ();
+
+  // void updateEyZN();
+
+  // void updateEyXN();
+
+  // void updateEyCornerXZ();
+
+  // void updateEzXN();
+
+  // void updateEzYN();
+
+  // void updateEzCornerXY();
 };
 
 }  // namespace xfdtd
