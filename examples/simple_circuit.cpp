@@ -1,6 +1,7 @@
 #include <memory>
 #include <xtensor/xnpy.hpp>
 
+#include "divider/divider.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/monitor/current_monitor.h"
@@ -72,7 +73,7 @@ constexpr static double I_MONITOR_L_A{0 * SIZE};
 constexpr static double I_MONITOR_L_B{2 * SIZE};
 constexpr static double I_MONITOR_L_C{1 * SIZE};
 
-void simpleCircuitX() {
+void simpleCircuitX(int num_thread) {
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
       std::make_unique<xfdtd::Cube>(
@@ -119,7 +120,8 @@ void simpleCircuitX() {
           xfdtd::Vector{I_MONITOR_L_C, I_MONITOR_L_A, I_MONITOR_L_B}),
       xfdtd::Axis::Direction::YP, "./data/simple_circuit")};
 
-  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98}};
+  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, num_thread,
+                           xfdtd::Divider::Type::X}};
   s.addObject(domain);
   s.addObject(plane);
   s.addObject(plane2);
@@ -133,7 +135,7 @@ void simpleCircuitX() {
   circuit_v_monitor->output();
 }
 
-void simpleCircuitY() {
+void simpleCircuitY(int num_thread) {
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
       std::make_unique<xfdtd::Cube>(
@@ -180,7 +182,8 @@ void simpleCircuitY() {
           xfdtd::Vector{I_MONITOR_L_B, I_MONITOR_L_C, I_MONITOR_L_A}),
       xfdtd::Axis::Direction::ZP, "./data/simple_circuit")};
 
-  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.9}};
+  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.9, num_thread,
+                           xfdtd::Divider::Type::Y}};
   s.addObject(domain);
   s.addObject(plane);
   s.addObject(plane2);
@@ -194,7 +197,7 @@ void simpleCircuitY() {
   circuit_v_monitor->output();
 }
 
-void simpleCircuitZ() {
+void simpleCircuitZ(int num_thread) {
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
       std::make_unique<xfdtd::Cube>(
@@ -241,7 +244,8 @@ void simpleCircuitZ() {
           xfdtd::Vector{I_MONITOR_L_A, I_MONITOR_L_B, I_MONITOR_L_C}),
       xfdtd::Axis::Direction::XP, "./data/simple_circuit")};
 
-  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.90}};
+  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.90, num_thread,
+                           xfdtd::Divider::Type::Z}};
 
   s.addObject(domain);
   s.addObject(plane);
@@ -256,4 +260,21 @@ void simpleCircuitZ() {
   circuit_v_monitor->output();
 }
 
-int main() { simpleCircuitZ(); }
+int main(int argc, char* argv[]) {
+  int num_thread = 1;
+  if (argc > 1) {
+    if (argc == 3) {
+      num_thread = std::stoi(argv[2]);
+    }
+    if (std::string(argv[1]) == "X") {
+      simpleCircuitX(num_thread);
+    } else if (std::string(argv[1]) == "Y") {
+      simpleCircuitY(num_thread);
+    } else if (std::string(argv[1]) == "Z") {
+      simpleCircuitZ(num_thread);
+    }
+
+  } else {
+    simpleCircuitZ(num_thread);
+  }
+}

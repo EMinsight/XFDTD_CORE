@@ -15,13 +15,13 @@ class TimeParam {
  public:
   TimeParam(double dt, std::size_t size, std::size_t start_time_step = 0);
 
-  TimeParam(const TimeParam&) = default;
+  // TimeParam(const TimeParam&) = default;
 
-  TimeParam(TimeParam&&) noexcept = default;
+  // TimeParam(TimeParam&&) noexcept = default;
 
-  TimeParam& operator=(const TimeParam&) = default;
+  // TimeParam& operator=(const TimeParam&) = default;
 
-  TimeParam& operator=(TimeParam&&) noexcept = default;
+  // TimeParam& operator=(TimeParam&&) noexcept = default;
 
   virtual ~TimeParam() = default;
 

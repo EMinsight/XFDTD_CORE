@@ -5,6 +5,8 @@
 
 #include <memory>
 
+#include "corrector/corrector.h"
+#include "divider/divider.h"
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/waveform/waveform.h"
@@ -42,6 +44,15 @@ class WaveformSource {
   virtual void correctH() = 0;
 
   const std::unique_ptr<Waveform> &waveform();
+
+  virtual std::unique_ptr<Corrector> generateCorrector(
+      const Divider::IndexTask &task) = 0;
+
+  auto emf() const { return _emf; }
+
+  auto calculationParam() const { return _calculation_param; }
+
+  auto gridSpace() const { return _grid_space; }
 
  protected:
   virtual void defaultInit(std::shared_ptr<GridSpace> grid_space,

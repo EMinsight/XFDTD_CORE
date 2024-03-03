@@ -13,6 +13,7 @@ add_subdirectory(monitor)
 add_subdirectory(network)
 add_subdirectory(nffft)
 add_subdirectory(simulation)
+add_subdirectory(domain)
 
 add_library(xfdtd STATIC ${ALL_OBJECT_FILES})
 
@@ -32,7 +33,8 @@ set(XFDTD_LIBS
     xfdtd_monitor
     xfdtd_network
     xfdtd_nffft
-    xfdtd_simulation)
+    xfdtd_simulation
+    xfdtd_domain)
 
 target_link_libraries(
   xfdtd PUBLIC ${XFDTD_LIBS} ${XFDTD_LIB_THIRD_PARTY_LIB})

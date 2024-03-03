@@ -3,12 +3,15 @@
 
 #include <xfdtd/grid_space/grid_space.h>
 
+#include <barrier>
 #include <chrono>
 #include <cstddef>
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "divider/divider.h"
+#include "domain/domain.h"
 #include "xfdtd/boundary/boundary.h"
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -33,15 +36,8 @@ class XFDTDSimulationException : public XFDTDException {
 
 class Simulation {
  public:
-  Simulation(double dx, double dy, double dz, double cfl);
-
-  Simulation(const Simulation&) = delete;
-
-  Simulation(Simulation&&) noexcept = default;
-
-  Simulation& operator=(const Simulation&) = delete;
-
-  Simulation& operator=(Simulation&&) noexcept = default;
+  Simulation(double dx, double dy, double dz, double cfl, int num_thread = 1,
+             Divider::Type divider_type = Divider::Type::UNDEFINED);
 
   ~Simulation();
 
@@ -70,6 +66,9 @@ class Simulation {
  private:
   double _dx, _dy, _dz;
   double _cfl;
+  int _num_thread;
+  Divider::Type _divider_type;
+  std::barrier<> _barrier;
 
   std::vector<std::shared_ptr<xfdtd::Object>> _objects;
   std::vector<std::shared_ptr<WaveformSource>> _waveform_sources;
@@ -78,7 +77,6 @@ class Simulation {
   std::vector<std::shared_ptr<Network>> _networks;
   std::vector<std::shared_ptr<NFFFT>> _nfffts;
 
-  std::size_t _time_step;
   std::chrono::high_resolution_clock::time_point _start_time;
   std::chrono::high_resolution_clock::time_point _end_time;
 
@@ -86,7 +84,9 @@ class Simulation {
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
 
-  std::unique_ptr<Updator> _updator;
+  std::vector<std::unique_ptr<Domain>> _domains;
+
+  void generateDomain();
 
   void generateGridSpace();
 
@@ -94,7 +94,7 @@ class Simulation {
 
   void correctUpdateCoefficient();
 
-  void setUpdator();
+  std::unique_ptr<Updator> makeUpdator(const Divider::IndexTask& task);
 
   void updateE();
 

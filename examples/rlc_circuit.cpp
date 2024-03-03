@@ -1,8 +1,9 @@
 
 #include <memory>
-#include <xtensor/xnpy.hpp>
 #include <xtensor.hpp>
+#include <xtensor/xnpy.hpp>
 
+#include "divider/divider.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/monitor/voltage_monitor.h"
@@ -69,7 +70,7 @@ constexpr static double V_MONITOR_L_A{0 * SIZE};
 constexpr static double V_MONITOR_L_B{1 * SIZE};
 constexpr static double V_MONITOR_L_C{2 * SIZE};
 
-void rlcCircuit() {
+void rlcCircuit(int num_thread) {
   // Y : B C A
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -120,7 +121,8 @@ void rlcCircuit() {
           xfdtd::Vector{V_MONITOR_L_A, V_MONITOR_L_B, V_MONITOR_L_C}),
       xfdtd::Axis::Direction::ZP, "./data/rlc_circuit")};
 
-  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98}};
+  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, num_thread,
+                           xfdtd::Divider::Type::X}};
   s.addObject(domain);
   s.addObject(plane);
   s.addObject(plane1);
@@ -132,7 +134,14 @@ void rlcCircuit() {
 
   v_monitor->output();
   xt::dump_npy("./data/rlc_circuit/source.npy", v_source->waveform()->value());
-  xt::dump_npy("./data/rlc_circuit/time.npy", s.calculationParam()->timeParam()->hTime());
+  xt::dump_npy("./data/rlc_circuit/time.npy",
+               s.calculationParam()->timeParam()->hTime());
 }
 
-int main() { rlcCircuit(); }
+int main(int argc, char *argv[]) {
+  int num_thread = 1;
+  if (argc > 1) {
+    num_thread = std::stoi(argv[1]);
+  }
+  rlcCircuit(num_thread);
+}

@@ -27,6 +27,9 @@ class TFSF1D : public TFSF {
 
   std::size_t start() const;
 
+  std::unique_ptr<Corrector> generateCorrector(
+      const Divider::IndexTask &task) override;
+
  private:
   bool _forward;
   std::size_t _start;

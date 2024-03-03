@@ -14,7 +14,8 @@
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 #include "xfdtd/waveform_source/tfsf_3d.h"
-void dielectricSphereScatter() {
+
+void dielectricSphereScatter(int num_thread, xfdtd::Divider::Type type) {
   constexpr double dl{5e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
@@ -58,7 +59,7 @@ void dielectricSphereScatter() {
           xfdtd::Axis::XYZ::X, xfdtd::EMF::Field::EZ, "", ""),
       20, "movie_yz", "./data/dielectric_sphere_scatter/movie_yz")};
 
-  auto s{xfdtd::Simulation{dl, dl, dl, 0.9}};
+  auto s{xfdtd::Simulation{dl, dl, dl, 0.9, num_thread, type}};
   s.addObject(domain);
   s.addObject(dielectric_sphere);
   s.addWaveformSource(tfsf);
@@ -91,7 +92,21 @@ void dielectricSphereScatter() {
                incident_wave_data);
 }
 
-int main() {
-  dielectricSphereScatter();
+int main(int argc, char* argv[]) {
+  int num_thread = 1;
+  xfdtd::Divider::Type type = xfdtd::Divider::Type::X;
+  if (argc > 1) {
+    num_thread = std::stoi(argv[1]);
+    if (argc > 2) {
+      if (std::string(argv[2]) == "Y") {
+        type = xfdtd::Divider::Type::Y;
+      } else if (std::string(argv[2]) == "Z") {
+        type = xfdtd::Divider::Type::Z;
+      } else {
+        type = xfdtd::Divider::Type::X;
+      }
+    }
+  }
+  dielectricSphereScatter(num_thread, type);
   return 0;
 }

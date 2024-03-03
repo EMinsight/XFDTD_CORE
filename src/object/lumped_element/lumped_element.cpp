@@ -1,6 +1,8 @@
 #include <xfdtd/object/lumped_element/lumped_element.h>
 
+#include "divider/divider.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
+#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
@@ -105,6 +107,17 @@ xt::xarray<double>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
     default:
       throw std::runtime_error("Invalid xyz");
   }
+}
+
+bool LumpedElement::taskContainLumpedElement(
+    const Divider::Task<std::size_t>& task) const {
+  return Divider::intersected(task, makeIndexTask());
+}
+
+Divider::IndexTask LumpedElement::makeIndexTask() const {
+  return Divider::makeTask(Divider::makeRange(_is, _is + nodeCountX()),
+                           Divider::makeRange(_js, _js + nodeCountY()),
+                           Divider::makeRange(_ks, _ks + nodeCountZ()));
 }
 
 }  // namespace xfdtd

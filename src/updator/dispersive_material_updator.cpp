@@ -38,9 +38,9 @@ static void handleDispersiveMaterialADEUpdator(
 LinearDispersiveMaterialADEUpdator::LinearDispersiveMaterialADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf)
+    std::shared_ptr<EMF> emf, Divider::IndexTask task)
     : BasicUpdator(std::move(grid_space), std::move(calculation_param),
-                   std::move(emf)) {
+                   std::move(emf), std::move(task)) {
   if (_grid_space->type() != GridSpace::Type::UNIFORM) {
     throw std::runtime_error("Grid space type must be uniform");
   }
@@ -49,16 +49,20 @@ LinearDispersiveMaterialADEUpdator::LinearDispersiveMaterialADEUpdator(
 LorentzADEUpdator::LorentzADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf)
-    : LinearDispersiveMaterialADEUpdator{
-          std::move(grid_space), std::move(calculation_param), std::move(emf)} {
+    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
+                                         std::move(calculation_param),
+                                         std::move(emf), std::move(task)} {
   init();
 }
 
 void LorentzADEUpdator::updateE() {
-  const auto nx{_grid_space->sizeX()};
-  const auto ny{_grid_space->sizeY()};
-  const auto nz{_grid_space->sizeZ()};
+  const auto is = task()._x_range[0];
+  const auto ie = task()._x_range[1];
+  const auto js = task()._y_range[0];
+  const auto je = task()._y_range[1];
+  const auto ks = task()._z_range[0];
+  const auto ke = task()._z_range[1];
 
   auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
   auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
@@ -113,9 +117,9 @@ void LorentzADEUpdator::updateE() {
     }
   };
 
-  for (std::size_t i{0}; i < nx; ++i) {
-    for (std::size_t j{1}; j < ny; ++j) {
-      for (std::size_t k{1}; k < nz; ++k) {
+  for (std::size_t i{is}; i < ie; ++i) {
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
         if (m_index == -1 || _lorentz_map.find(m_index) == _lorentz_map.end()) {
           ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
@@ -126,8 +130,11 @@ void LorentzADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum =
-              get_j_sum(i, j, k, coeff_ade, j_record._jx, j_record._jx_prev);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum = get_j_sum(local_i, local_j, local_k, coeff_ade,
+                                   j_record._jx, j_record._jx_prev);
 
           const auto& c1 = coeff_ade._c1;
           const auto& c2 = coeff_ade._c2;
@@ -138,17 +145,17 @@ void LorentzADEUpdator::updateE() {
                         cexhz(i, j, k) * (hz(i, j, k) - hz(i, j - 1, k)) -
                         c3 * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ex(i, j, k), ex_prev(i, j, k),
-                   j_record._jx, j_record._jx_prev);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ex(i, j, k),
+                   ex_prev(i, j, k), j_record._jx, j_record._jx_prev);
           ex_prev(i, j, k) = e_prev_temp;
         }
       }
     }
   }
 
-  for (std::size_t i{1}; i < nx; ++i) {
-    for (std::size_t j{0}; j < ny; ++j) {
-      for (std::size_t k{1}; k < nz; ++k) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t j{js}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _lorentz_map.find(m_index) == _lorentz_map.end()) {
@@ -160,8 +167,11 @@ void LorentzADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum =
-              get_j_sum(i, j, k, coeff_ade, j_record._jy, j_record._jy_prev);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum = get_j_sum(local_i, local_j, local_k, coeff_ade,
+                                   j_record._jy, j_record._jy_prev);
 
           const auto& c1 = coeff_ade._c1;
           const auto& c2 = coeff_ade._c2;
@@ -173,17 +183,17 @@ void LorentzADEUpdator::updateE() {
                         ceyhx(i, j, k) * (hx(i, j, k) - hx(i, j, k - 1)) -
                         c3 * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ey(i, j, k), ey_prev(i, j, k),
-                   j_record._jy, j_record._jy_prev);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ey(i, j, k),
+                   ey_prev(i, j, k), j_record._jy, j_record._jy_prev);
           ey_prev(i, j, k) = e_prev_temp;
         }
       }
     }
   }
 
-  for (std::size_t i{1}; i < nx; ++i) {
-    for (std::size_t j{1}; j < ny; ++j) {
-      for (std::size_t k{0}; k < nz; ++k) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _lorentz_map.find(m_index) == _lorentz_map.end()) {
@@ -195,8 +205,11 @@ void LorentzADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum =
-              get_j_sum(i, j, k, coeff_ade, j_record._jz, j_record._jz_prev);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum = get_j_sum(local_i, local_j, local_k, coeff_ade,
+                                   j_record._jz, j_record._jz_prev);
 
           const auto& c1 = coeff_ade._c1;
           const auto& c2 = coeff_ade._c2;
@@ -208,8 +221,8 @@ void LorentzADEUpdator::updateE() {
                         cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k)) -
                         c3 * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ez(i, j, k), ez_prev(i, j, k),
-                   j_record._jz, j_record._jz_prev);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ez(i, j, k),
+                   ez_prev(i, j, k), j_record._jz, j_record._jz_prev);
           ez_prev(i, j, k) = e_prev_temp;
         }
       }
@@ -220,20 +233,15 @@ void LorentzADEUpdator::updateE() {
 void LorentzADEUpdator::init() { allocate(); }
 
 void LorentzADEUpdator::allocate() {
-  const auto& nx = _grid_space->sizeX();
-  const auto& ny = _grid_space->sizeY();
-  const auto& nz = _grid_space->sizeZ();
-
-  _emf->allocateExPrev(nx, ny + 1, nz + 1);
-  _emf->allocateEyPrev(nx + 1, ny, nz + 1);
-  _emf->allocateEzPrev(nx + 1, ny + 1, nz);
-
   _lorentz_map = {};
   _lorentz_mediums = {};
   handleDispersiveMaterialADEUpdator(
       _lorentz_map, _lorentz_mediums,
       _calculation_param->materialParam()->materialArray());
 
+  const auto& nx = task()._x_range[1] - task()._x_range[0];
+  const auto& ny = task()._y_range[1] - task()._y_range[0];
+  const auto& nz = task()._z_range[1] - task()._z_range[0];
   const auto& nm = _lorentz_mediums.size();
   _coeff.resize(nm);
   _j_record.resize(nm);
@@ -257,18 +265,19 @@ void LorentzADEUpdator::allocate() {
 DrudeADEUpdator::DrudeADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf)
-    : LinearDispersiveMaterialADEUpdator{
-          std::move(grid_space), std::move(calculation_param), std::move(emf)} {
+    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
+                                         std::move(calculation_param),
+                                         std::move(emf), std::move(task)} {
   init();
 }
 
 void DrudeADEUpdator::init() { allocate(); }
 
 void DrudeADEUpdator::allocate() {
-  const auto& nx = _grid_space->sizeX();
-  const auto& ny = _grid_space->sizeY();
-  const auto& nz = _grid_space->sizeZ();
+  const auto& nx = task()._x_range[1] - task()._x_range[0];
+  const auto& ny = task()._y_range[1] - task()._y_range[0];
+  const auto& nz = task()._z_range[1] - task()._z_range[0];
 
   _drude_map = {};
   _drude_mediums = {};
@@ -290,9 +299,12 @@ void DrudeADEUpdator::allocate() {
 }
 
 void DrudeADEUpdator::updateE() {
-  const auto nx{_grid_space->sizeX()};
-  const auto ny{_grid_space->sizeY()};
-  const auto nz{_grid_space->sizeZ()};
+  const auto is = task()._x_range[0];
+  const auto ie = task()._x_range[1];
+  const auto js = task()._y_range[0];
+  const auto je = task()._y_range[1];
+  const auto ks = task()._z_range[0];
+  const auto ke = task()._z_range[1];
 
   auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
   auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
@@ -337,9 +349,9 @@ void DrudeADEUpdator::updateE() {
     }
   };
 
-  for (std::size_t i{0}; i < nx; ++i) {
-    for (std::size_t j{1}; j < ny; ++j) {
-      for (std::size_t k{1}; k < nz; ++k) {
+  for (std::size_t i{is}; i < ie; ++i) {
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
         if (m_index == -1 || _drude_map.find(m_index) == _drude_map.end()) {
           ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
@@ -350,7 +362,11 @@ void DrudeADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum = get_j_sum(i, j, k, coeff_ade, j_record._jx);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum =
+              get_j_sum(local_i, local_j, local_k, coeff_ade, j_record._jx);
 
           const auto& b = coeff_ade._b;
           const auto e_cur = ex(i, j, k);
@@ -359,15 +375,16 @@ void DrudeADEUpdator::updateE() {
                         cexhz(i, j, k) * (hz(i, j, k) - hz(i, j - 1, k)) -
                         b * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ex(i, j, k), e_cur, j_record._jx);
+          update_j(local_i, local_i, local_k, coeff_ade, dt, ex(i, j, k), e_cur,
+                   j_record._jx);
         }
       }
     }
   }
 
-  for (std::size_t i{1}; i < nx; ++i) {
-    for (std::size_t j{0}; j < ny; ++j) {
-      for (std::size_t k{1}; k < nz; ++k) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t j{js}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _drude_map.find(m_index) == _drude_map.end()) {
@@ -379,7 +396,11 @@ void DrudeADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum = get_j_sum(i, j, k, coeff_ade, j_record._jy);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum =
+              get_j_sum(local_i, local_j, local_k, coeff_ade, j_record._jy);
 
           const auto& b = coeff_ade._b;
           const auto e_cur = ey(i, j, k);
@@ -389,15 +410,16 @@ void DrudeADEUpdator::updateE() {
                         ceyhx(i, j, k) * (hx(i, j, k) - hx(i, j, k - 1)) -
                         b * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ey(i, j, k), e_cur, j_record._jy);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ey(i, j, k), e_cur,
+                   j_record._jy);
         }
       }
     }
   }
 
-  for (std::size_t i{1}; i < nx; ++i) {
-    for (std::size_t j{1}; j < ny; ++j) {
-      for (std::size_t k{0}; k < nz; ++k) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _drude_map.find(m_index) == _drude_map.end()) {
@@ -409,7 +431,11 @@ void DrudeADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum = get_j_sum(i, j, k, coeff_ade, j_record._jz);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum =
+              get_j_sum(local_i, local_j, local_k, coeff_ade, j_record._jz);
 
           const auto& b = coeff_ade._b;
           const auto e_prev_temp = ez(i, j, k);
@@ -419,8 +445,8 @@ void DrudeADEUpdator::updateE() {
                         cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k)) -
                         b * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ez(i, j, k), e_prev_temp,
-                   j_record._jz);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ez(i, j, k),
+                   e_prev_temp, j_record._jz);
         }
       }
     }
@@ -430,16 +456,17 @@ void DrudeADEUpdator::updateE() {
 DebyeADEUpdator::DebyeADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf)
-    : LinearDispersiveMaterialADEUpdator{
-          std::move(grid_space), std::move(calculation_param), std::move(emf)} {
+    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
+                                         std::move(calculation_param),
+                                         std::move(emf), std::move(task)} {
   init();
 }
 
 void DebyeADEUpdator::init() {
-  const auto& nx = _grid_space->sizeX();
-  const auto& ny = _grid_space->sizeY();
-  const auto& nz = _grid_space->sizeZ();
+  const auto& nx = task()._x_range[1] - task()._x_range[0];
+  const auto& ny = task()._y_range[1] - task()._y_range[0];
+  const auto& nz = task()._z_range[1] - task()._z_range[0];
 
   _debye_map = {};
   _debye_mediums = {};
@@ -460,9 +487,12 @@ void DebyeADEUpdator::init() {
 }
 
 void DebyeADEUpdator::updateE() {
-  const auto nx{_grid_space->sizeX()};
-  const auto ny{_grid_space->sizeY()};
-  const auto nz{_grid_space->sizeZ()};
+  const auto is = task()._x_range[0];
+  const auto ie = task()._x_range[1];
+  const auto js = task()._y_range[0];
+  const auto je = task()._y_range[1];
+  const auto ks = task()._z_range[0];
+  const auto ke = task()._z_range[1];
   const auto dt = _calculation_param->timeParam()->dt();
 
   auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
@@ -506,9 +536,9 @@ void DebyeADEUpdator::updateE() {
     }
   };
 
-  for (std::size_t i{0}; i < nx; ++i) {
-    for (std::size_t j{1}; j < ny; ++j) {
-      for (std::size_t k{1}; k < nz; ++k) {
+  for (std::size_t i{is}; i < ie; ++i) {
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
         if (m_index == -1 || _debye_map.find(m_index) == _debye_map.end()) {
           ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
@@ -519,7 +549,11 @@ void DebyeADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum = get_j_sum(i, j, k, coeff_ade, j_record._jx);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum =
+              get_j_sum(local_i, local_j, local_k, coeff_ade, j_record._jx);
 
           const auto& b = coeff_ade._b;
           const auto e_cur = ex(i, j, k);
@@ -528,15 +562,16 @@ void DebyeADEUpdator::updateE() {
                         cexhz(i, j, k) * (hz(i, j, k) - hz(i, j - 1, k)) -
                         b * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ex(i, j, k), e_cur, j_record._jx);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ex(i, j, k), e_cur,
+                   j_record._jx);
         }
       }
     }
   }
 
-  for (std::size_t i{1}; i < nx; ++i) {
-    for (std::size_t j{0}; j < ny; ++j) {
-      for (std::size_t k{1}; k < nz; ++k) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t j{js}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _debye_map.find(m_index) == _debye_map.end()) {
@@ -548,7 +583,11 @@ void DebyeADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum = get_j_sum(i, j, k, coeff_ade, j_record._jy);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum =
+              get_j_sum(local_i, local_j, local_k, coeff_ade, j_record._jy);
 
           const auto& b = coeff_ade._b;
           const auto e_cur = ey(i, j, k);
@@ -558,15 +597,16 @@ void DebyeADEUpdator::updateE() {
                         ceyhx(i, j, k) * (hx(i, j, k) - hx(i, j, k - 1)) -
                         b * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ey(i, j, k), e_cur, j_record._jy);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ey(i, j, k), e_cur,
+                   j_record._jy);
         }
       }
     }
   }
 
-  for (std::size_t i{1}; i < nx; ++i) {
-    for (std::size_t j{1}; j < ny; ++j) {
-      for (std::size_t k{0}; k < nz; ++k) {
+  for (std::size_t i{is + 1}; i < ie; ++i) {
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks}; k < ke; ++k) {
         auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _debye_map.find(m_index) == _debye_map.end()) {
@@ -578,7 +618,11 @@ void DebyeADEUpdator::updateE() {
           const auto& coeff_ade = _coeff[l_index];
           auto& j_record = _j_record[l_index];
 
-          double j_sum = get_j_sum(i, j, k, coeff_ade, j_record._jz);
+          auto local_i = i - is;
+          auto local_j = j - js;
+          auto local_k = k - ks;
+          double j_sum =
+              get_j_sum(local_i, local_j, local_k, coeff_ade, j_record._jz);
 
           const auto& b = coeff_ade._b;
           const auto e_prev_temp = ez(i, j, k);
@@ -588,8 +632,8 @@ void DebyeADEUpdator::updateE() {
                         cezhy(i, j, k) * (hy(i, j, k) - hy(i - 1, j, k)) -
                         b * j_sum;
 
-          update_j(i, j, k, coeff_ade, dt, ez(i, j, k), e_prev_temp,
-                   j_record._jz);
+          update_j(local_i, local_j, local_k, coeff_ade, dt, ez(i, j, k),
+                   e_prev_temp, j_record._jz);
         }
       }
     }

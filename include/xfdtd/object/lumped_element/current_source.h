@@ -35,6 +35,9 @@ class CurrentSource : public LumpedElement {
 
   void correctH() override;
 
+  std::unique_ptr<Corrector> generateCorrector(
+      const Divider::Task<std::size_t> &task) override;
+
   Axis::Direction direction() const;
 
   double resistance() const;

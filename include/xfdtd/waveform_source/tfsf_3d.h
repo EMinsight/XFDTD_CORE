@@ -24,6 +24,9 @@ class TFSF3D : public TFSF {
 
   void correctH() override;
 
+  std::unique_ptr<Corrector> generateCorrector(
+      const Divider::IndexTask &task) override;
+
  private:
 };
 
