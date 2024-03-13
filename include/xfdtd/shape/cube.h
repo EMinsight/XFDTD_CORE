@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_CUBE_H_
-#define _XFDTD_LIB_CUBE_H_
+#ifndef _XFDTD_CORE_CUBE_H_
+#define _XFDTD_CORE_CUBE_H_
 
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/shape/shape.h>
@@ -64,7 +64,7 @@ class Cube : public Shape {
 
   bool isInside(const Vector& vector) const override;
 
-  Cube wrappedCube() const override;
+  std::unique_ptr<Cube> wrappedCube() const override;
 
  private:
   Vector _origin{};
@@ -78,4 +78,4 @@ class Cube : public Shape {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_CUBE_H_
+#endif  // _XFDTD_CORE_CUBE_H_

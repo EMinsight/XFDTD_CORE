@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_TFSF_H_
-#define _XFDTD_LIB_TFSF_H_
+#ifndef _XFDTD_CORE_TFSF_H_
+#define _XFDTD_CORE_TFSF_H_
 
 #include <xfdtd/grid_space/grid_space.h>
 
@@ -8,6 +8,7 @@
 #include <xtensor/xtensor.hpp>
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/divider/divider.h"
 #include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
@@ -26,6 +27,8 @@ class TFSF : public WaveformSource {
   void correctMaterialSpace() override;
 
   void correctUpdateCoefficient() override;
+
+  void initTimeDependentVariable() override;
 
   void updateWaveformSourceE() override;
 
@@ -57,12 +60,48 @@ class TFSF : public WaveformSource {
 
   Vector k() const;
 
+  GridBox globalBox() const;
+
+  Divider::IndexTask taskXN() const;
+
+  Divider::IndexTask taskXP() const;
+
+  Divider::IndexTask taskYN() const;
+
+  Divider::IndexTask taskYP() const;
+
+  Divider::IndexTask taskZN() const;
+
+  Divider::IndexTask taskZP() const;
+
+  Divider::IndexTask globalEyTaskXN() const;
+
+  Divider::IndexTask globalEzTaskXN() const;
+
+  Divider::IndexTask globalEyTaskXP() const;
+
+  Divider::IndexTask globalEzTaskXP() const;
+
+  Divider::IndexTask globalEzTaskYN() const;
+
+  Divider::IndexTask globalExTaskYN() const;
+
+  Divider::IndexTask globalEzTaskYP() const;
+
+  Divider::IndexTask globalExTaskYP() const;
+
+  Divider::IndexTask globalExTaskZN() const;
+
+  Divider::IndexTask globalEyTaskZN() const;
+
+  Divider::IndexTask globalExTaskZP() const;
+
+  Divider::IndexTask globalEyTaskZP() const;
+
  protected:
   void defaultInit(std::shared_ptr<GridSpace> grid_space,
                    std::shared_ptr<CalculationParam> calculation_param,
                    std::shared_ptr<EMF> emf) override;
-
-  const GridBox *boxPtr() const;
 
   double exInc(std::size_t i, std::size_t j, std::size_t k);
 
@@ -88,6 +127,30 @@ class TFSF : public WaveformSource {
 
   double cbz();
 
+  Divider::IndexTask nodeEyTaskXN(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEzTaskXN(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEyTaskXP(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEzTaskXP(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeExTaskYN(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEzTaskYN(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeExTaskYP(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEzTaskYP(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeExTaskZN(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEyTaskZN(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeExTaskZP(const Divider::IndexTask &task) const;
+
+  Divider::IndexTask nodeEyTaskZP(const Divider::IndexTask &task) const;
+
  protected:
   xt::xarray<double> _projection_x_int;
   xt::xarray<double> _projection_y_int;
@@ -112,7 +175,8 @@ class TFSF : public WaveformSource {
   Vector _k_e;
   xt::xarray<double> _transform_e, _transform_h;
 
-  std::unique_ptr<GridBox> _box;
+  //   std::unique_ptr<GridBox> _box;
+  GridBox _global_box;
   double _ratio_delta;
   std::size_t _auxiliary_size;
 
@@ -137,4 +201,4 @@ class TFSF : public WaveformSource {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_TFSF_H_
+#endif  // _XFDTD_CORE_TFSF_H_

@@ -31,9 +31,9 @@ bool Sphere::isInside(const Vector& vector) const {
                       FloatCompareOperator::LessEqual);
 }
 
-Cube Sphere::wrappedCube() const {
-  return Cube{_center - Vector{_radius, _radius, _radius},
-              Vector{_radius * 2, _radius * 2, _radius * 2}};
+std::unique_ptr<Cube> Sphere::wrappedCube() const {
+  return std::make_unique<Cube>(_center - Vector{_radius, _radius, _radius},
+                                Vector{_radius * 2, _radius * 2, _radius * 2});
 }
 
 Vector Sphere::center() const { return _center; }

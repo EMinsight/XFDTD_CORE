@@ -1,16 +1,15 @@
-#ifndef _XFDTD_LIB_BOUNDARY_H_
-#define _XFDTD_LIB_BOUNDARY_H_
+#ifndef _XFDTD_CORE_BOUNDARY_H_
+#define _XFDTD_CORE_BOUNDARY_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/divider/divider.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
 
-#include <cstddef>
-
-#include "corrector/corrector.h"
-#include "divider/divider.h"
-
 namespace xfdtd {
+
+class Corrector;
 
 class XFDTDBoundaryException : public XFDTDException {
  public:
@@ -67,4 +66,4 @@ class Boundary {
 
 };  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_BOUNDARY_H_
+#endif  // _XFDTD_CORE_BOUNDARY_H_

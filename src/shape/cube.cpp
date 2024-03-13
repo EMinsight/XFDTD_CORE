@@ -69,7 +69,9 @@ bool Cube::isInside(const Vector& vector) const {
   return isInside(vector.x(), vector.y(), vector.z());
 }
 
-Cube Cube::wrappedCube() const { return *this; }
+std::unique_ptr<Cube> Cube::wrappedCube() const {
+  return std::make_unique<Cube>(*this);
+}
 
 void Cube::updateEnd() {
   _end = _origin + _size;

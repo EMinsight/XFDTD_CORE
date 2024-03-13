@@ -1,7 +1,7 @@
-#ifndef _XFDTD_LIB_TFSF_1D_H_
-#define _XFDTD_LIB_TFSF_1D_H_
+#ifndef _XFDTD_CORE_TFSF_1D_H_
+#define _XFDTD_CORE_TFSF_1D_H_
 
-#include "xfdtd/waveform_source/tfsf.h"
+#include <xfdtd/waveform_source/tfsf.h>
 
 namespace xfdtd {
 
@@ -19,10 +19,6 @@ class TFSF1D : public TFSF {
             std::shared_ptr<CalculationParam> calculation_param,
             std::shared_ptr<EMF> emf) override;
 
-  void correctE() override;
-
-  void correctH() override;
-
   bool forward() const;
 
   std::size_t start() const;
@@ -37,4 +33,4 @@ class TFSF1D : public TFSF {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_TFSF_1D_H_
+#endif  // _XFDTD_CORE_TFSF_1D_H_

@@ -1,7 +1,7 @@
-#ifndef _XFDTD_LIB_HARD_POINT_H_
-#define _XFDTD_LIB_HARD_POINT_H_
+#ifndef _XFDTD_CORE_HARD_POINT_H_
+#define _XFDTD_CORE_HARD_POINT_H_
 
-#include "xfdtd/waveform_source/waveform_source.h"
+#include <xfdtd/waveform_source/waveform_source.h>
 namespace xfdtd {
 
 class HardPoint : public WaveformSource {
@@ -22,14 +22,10 @@ class HardPoint : public WaveformSource {
 
   void updateWaveformSourceH() override;
 
-  void correctE() override;
-
-  void correctH() override;
-
   std::unique_ptr<Corrector> generateCorrector(
       const Divider::IndexTask &task) override;
 };
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_HARD_POINT_H_
+#endif  // _XFDTD_CORE_HARD_POINT_H_

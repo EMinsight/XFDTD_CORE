@@ -52,10 +52,6 @@ void VoltageMonitor::init(
       _coff *= -1.0;
     }
   }
-
-  data() = xt::zeros<double>({calculationParamPtr()->timeParam()->size()});
-  data() = xt::stack(
-      xt::xtuple(calculationParamPtr()->timeParam()->eTime(), data()));
 }
 
 void VoltageMonitor::update() {
@@ -91,6 +87,12 @@ void VoltageMonitor::update() {
       }
     }
   }
+}
+
+void VoltageMonitor::initTimeDependentVariable() {
+  data() = xt::zeros<double>({calculationParamPtr()->timeParam()->size()});
+  data() = xt::stack(
+      xt::xtuple(calculationParamPtr()->timeParam()->eTime(), data()));
 }
 
 }  // namespace xfdtd

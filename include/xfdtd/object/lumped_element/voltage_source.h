@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_VOLTAGE_SOURCE_H_
-#define _XFDTD_LIB_VOLTAGE_SOURCE_H_
+#ifndef _XFDTD_CORE_VOLTAGE_SOURCE_H_
+#define _XFDTD_CORE_VOLTAGE_SOURCE_H_
 
 #include <memory>
 
@@ -34,6 +34,8 @@ class VoltageSource : public LumpedElement {
 
   void correctUpdateCoefficient() override;
 
+  void initTimeDependentVariable() override;
+
   void correctE() override;
 
   void correctH() override;
@@ -61,4 +63,4 @@ class VoltageSource : public LumpedElement {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_VOLTAGE_SOURCE_H_
+#endif  // _XFDTD_CORE_VOLTAGE_SOURCE_H_

@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_GRID_SPACE_H_
-#define _XFDTD_LIB_GRID_SPACE_H_
+#ifndef _XFDTD_CORE_GRID_SPACE_H_
+#define _XFDTD_CORE_GRID_SPACE_H_
 
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/exception/exception.h>
@@ -23,6 +23,8 @@ class XFDTDGridSpaceException : public XFDTDException {
 
 class Grid {
  public:
+  Grid() = default;
+
   Grid(std::size_t i, std::size_t j, std::size_t k,
        std::size_t material_index = -1);
 
@@ -51,11 +53,13 @@ class Grid {
   void setMaterialIndex(std::size_t index);
 
  private:
-  std::size_t _i, _j, _k, _material_index;
+  std::size_t _i{0}, _j{0}, _k{0}, _material_index{static_cast<size_t>(-1)};
 };
 
 class GridBox {
  public:
+  GridBox() = default;
+
   GridBox(Grid origin, Grid size);
 
   GridBox(const GridBox&) = default;
@@ -116,7 +120,9 @@ class GridSpace {
 
   double minDz() const;
 
-  auto& grid() const { return _grid; }
+  auto& gridWithMaterial() const { return _grid_with_material; }
+
+  std::shared_ptr<GridSpace> globalGridSpace() const;
 
   const xt::xarray<double>& eNodeX() const;
 
@@ -164,7 +170,7 @@ class GridSpace {
 
   auto getShapeMask(const Shape* shape) const;
 
-  auto getGridView(const xt::xarray<bool>& mask);
+  auto getGridWithMaterialView(const xt::xarray<bool>& mask);
 
   GridBox getGridBox(const Shape* shape) const;
 
@@ -172,12 +178,41 @@ class GridSpace {
 
   void extendGridSpace(Axis::Direction direction, std::size_t num, double dl);
 
+  virtual std::unique_ptr<GridSpace> subGridSpace(
+      std::size_t start_i, std::size_t start_j, std::size_t start_k,
+      std::size_t end_i, std::size_t end_j, std::size_t end_k) const = 0;
+
+  GridBox getGridBoxWithoutCheck(const Shape* shape) const;
+
+  Grid getGridWithoutCheck(const Vector& vector) const;
+
+  void generateMaterialGrid(std::size_t nx, std::size_t ny, std::size_t nz);
+
+  void setGlobalGridSpace(std::weak_ptr<GridSpace> global_grid_space);
+
+  GridBox validGridBoxEx() const;
+
+  GridBox validGridBoxEy() const;
+
+  GridBox validGridBoxEz() const;
+
+  GridBox globalBox() const;
+
  protected:
   GridSpace(GridSpaceRegion region, double dx, double dy, double dz,
             Dimension dimension, xt::xarray<double> e_node_x,
             xt::xarray<double> e_node_y, xt::xarray<double> e_node_z);
 
-  void generateGrid(std::size_t nx, std::size_t ny, std::size_t nz);
+  // for subGridSpace
+  GridSpace(Dimension dimension, Type type, GridSpaceRegion region,
+            GridBox global_box, double based_dx, double based_dy,
+            double based_dz, double min_dx, double min_dy, double min_dz,
+            xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
+            xt::xarray<double> e_node_z, xt::xarray<double> h_node_x,
+            xt::xarray<double> h_node_y, xt::xarray<double> h_node_z,
+            xt::xarray<double> e_size_x, xt::xarray<double> e_size_y,
+            xt::xarray<double> e_size_z, xt::xarray<double> h_size_x,
+            xt::xarray<double> h_size_y, xt::xarray<double> h_size_z);
 
   xt::xarray<double>& eNodeX();
 
@@ -219,12 +254,17 @@ class GridSpace {
 
   virtual std::size_t handleTransformZ(double z) const;
 
+  virtual std::size_t handleTransformXWithoutCheck(double x) const;
+
+  virtual std::size_t handleTransformYWithoutCheck(double y) const;
+
+  virtual std::size_t handleTransformZWithoutCheck(double z) const;
+
   void correctGridSpaceForOne(double dl, const xt::xarray<double>& e_node,
                               xt::xarray<double>& h_node,
                               xt::xarray<double>& e_size,
                               xt::xarray<double>& h_size);
 
-  std::size_t _nx, _ny, _nz;
   double _min_x, _min_y, _min_z;
   double _max_x, _max_y, _max_z;
 
@@ -239,7 +279,12 @@ class GridSpace {
   xt::xarray<double> _h_node_x, _h_node_y, _h_node_z;
   xt::xarray<double> _e_size_x, _e_size_y, _e_size_z;
   xt::xarray<double> _h_size_x, _h_size_y, _h_size_z;
-  xt::xarray<std::shared_ptr<Grid>> _grid;
+
+  xt::xarray<std::shared_ptr<Grid>> _grid_with_material;
+
+  std::weak_ptr<GridSpace> _global_grid_space;
+
+  GridBox _global_box;
 
   xt::xarray<double> calculateHNode(const xt::xarray<double>& e_node);
 
@@ -255,14 +300,14 @@ inline auto GridSpace::getShapeMask(const Shape* shape) const {
       [shape, this](auto&& g) {
         return shape->isInside(getGridCenterVector(*g));
       },
-      _grid)};
+      _grid_with_material)};
   return mask;
 }
 
-inline auto GridSpace::getGridView(const xt::xarray<bool>& mask) {
-  return xt::filter(_grid, mask);
+inline auto GridSpace::getGridWithMaterialView(const xt::xarray<bool>& mask) {
+  return xt::filter(_grid_with_material, mask);
 }
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_GRID_SPACE_H_
+#endif  // _XFDTD_CORE_GRID_SPACE_H_

@@ -124,51 +124,87 @@ void BasicUpdator3D::updateEEdge() {
   bool contain_zn_edge = containZNEdge();
 
   if (!contain_yn_edge && !contain_zn_edge) {
-    const auto& hy_buffer = hyBufferZN();
-    const auto& hz_buffer = hzBufferYN();
-    updateExLineX(is, ie, js, ks, cexe, cexhy, cexhz, hy, hy_buffer, hz,
-                  hz_buffer, ex);
+    auto j = js;
+    auto k = ks;
+    for (std::size_t i{is}; i < ie; ++i) {
+      ex(i, j, k) =
+          eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k), hy(i, j, k),
+                hy(i, j, k - 1), cexhz(i, j, k), hz(i, j, k), hz(i, j - 1, k));
+    }
   }
 
   if (!contain_xn_edge && !contain_zn_edge) {
-    const auto& hz_buffer = hzBufferXN();
-    const auto& hx_buffer = hxBufferZN();
-    updateEyLineY(is, js, je, ks, ceye, ceyhz, ceyhx, hz, hz_buffer, hx,
-                  hx_buffer, ey);
+    auto i = is;
+    auto k = ks;
+    for (std::size_t j{js}; j < je; ++j) {
+      ey(i, j, k) =
+          eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k), hz(i, j, k),
+                hz(i - 1, j, k), ceyhx(i, j, k), hx(i, j, k), hx(i, j, k - 1));
+    }
   }
 
   if (!contain_xn_edge && !contain_yn_edge) {
-    const auto& hx_buffer = hxBufferYN();
-    const auto& hy_buffer = hyBufferXN();
-    updateEzLineZ(is, js, ke, ks, ceze, cezhx, cezhy, hx, hx_buffer, hy,
-                  hy_buffer, ez);
+    auto i = is;
+    auto j = js;
+    for (std::size_t k{ks}; k < ke; ++k) {
+      ez(i, j, k) =
+          eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k), hx(i, j, k),
+                hx(i, j - 1, k), cezhy(i, j, k), hy(i, j, k), hy(i - 1, j, k));
+    }
   }
 
   if (!contain_xn_edge) {
-    const auto& hy_buffer = hyBufferXN();
-    const auto& hz_buffer = hzBufferXN();
-    updateEyEdgeYZ(is, js, je, ks, ke, ceye, ceyhz, ceyhx, hz, hz_buffer, hx,
-                   ey);
-    updateEzEdgeYZ(is, js, je, ks, ke, ceze, cezhx, cezhy, hx, hy, hy_buffer,
-                   ez);
+    auto i = is;
+    for (std::size_t j{js}; j < je; ++j) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
+        ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
+                            hz(i, j, k), hz(i - 1, j, k), ceyhx(i, j, k),
+                            hx(i, j, k), hx(i, j, k - 1));
+      }
+    }
+    for (std::size_t j{js + 1}; j < je; ++j) {
+      for (std::size_t k{ks}; k < ke; ++k) {
+        ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
+                            hx(i, j, k), hx(i, j - 1, k), cezhy(i, j, k),
+                            hy(i, j, k), hy(i - 1, j, k));
+      }
+    }
   }
 
   if (!contain_yn_edge) {
-    const auto& hz_buffer = hzBufferYN();
-    const auto& hx_buffer = hxBufferYN();
-    updateEzEdgeXZ(is, ie, js, ks, ke, ceze, cezhx, cezhy, hx, hx_buffer, hy,
-                   ez);
-    updateExEdgeXZ(is, ie, js, ks, ke, cexe, cexhy, cexhz, hy, hz, hz_buffer,
-                   ex);
+    auto j = js;
+    for (std::size_t i{is + 1}; i < ie; ++i) {
+      for (std::size_t k{ks}; k < ke; ++k) {
+        ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
+                            hx(i, j, k), hx(i, j - 1, k), cezhy(i, j, k),
+                            hy(i, j, k), hy(i - 1, j, k));
+      }
+    }
+    for (std::size_t i{is}; i < ie; ++i) {
+      for (std::size_t k{ks + 1}; k < ke; ++k) {
+        ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
+                            hy(i, j, k), hy(i, j, k - 1), cexhz(i, j, k),
+                            hz(i, j, k), hz(i, j - 1, k));
+      }
+    }
   }
 
   if (!contain_zn_edge) {
-    const auto& hy_buffer = hyBufferZN();
-    const auto& hx_buffer = hxBufferZN();
-    updateExEdgeXY(is, ie, js, je, ks, cexe, cexhy, cexhz, hy, hy_buffer, hz,
-                   ex);
-    updateEyEdgeXY(is, ie, js, je, ks, ceye, ceyhz, ceyhx, hz, hx, hx_buffer,
-                   ey);
+    auto k = ks;
+    for (std::size_t i{is}; i < ie; ++i) {
+      for (std::size_t j{js + 1}; j < je; ++j) {
+        ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
+                            hy(i, j, k), hy(i, j, k - 1), cexhz(i, j, k),
+                            hz(i, j, k), hz(i, j - 1, k));
+      }
+    }
+    for (std::size_t i{is + 1}; i < ie; ++i) {
+      for (std::size_t j{js}; j < je; ++j) {
+        ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
+                            hz(i, j, k), hz(i - 1, j, k), ceyhx(i, j, k),
+                            hx(i, j, k), hx(i, j, k - 1));
+      }
+    }
   }
 }
 

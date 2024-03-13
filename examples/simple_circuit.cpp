@@ -1,7 +1,7 @@
 #include <memory>
 #include <xtensor/xnpy.hpp>
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/monitor/current_monitor.h"

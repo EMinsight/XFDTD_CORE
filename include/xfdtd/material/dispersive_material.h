@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_DISPERSIVE_MATERIAL_H_
-#define _XFDTD_LIB_DISPERSIVE_MATERIAL_H_
+#ifndef _XFDTD_CORE_DISPERSIVE_MATERIAL_H_
+#define _XFDTD_CORE_DISPERSIVE_MATERIAL_H_
 
 #include <xfdtd/material/material.h>
 
@@ -165,4 +165,4 @@ class DebyeMedium : public LinearDispersiveMaterial {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_DISPERSIVE_MATERIAL_H_
+#endif  // _XFDTD_CORE_DISPERSIVE_MATERIAL_H_

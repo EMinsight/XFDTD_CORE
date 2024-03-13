@@ -1,11 +1,11 @@
-#ifndef _XFDTD_LIB_FIELD_MONITOR_H_
-#define _XFDTD_LIB_FIELD_MONITOR_H_
+#ifndef _XFDTD_CORE_FIELD_MONITOR_H_
+#define _XFDTD_CORE_FIELD_MONITOR_H_
+
+#include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/monitor/monitor.h>
 
 #include <memory>
-
-#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
-#include "xfdtd/coordinate_system/coordinate_system.h"
-#include "xfdtd/monitor/monitor.h"
 
 namespace xfdtd {
 
@@ -44,4 +44,4 @@ class FieldMonitor : public Monitor {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_FIELD_MONITOR_H_
+#endif  // _XFDTD_CORE_FIELD_MONITOR_H_

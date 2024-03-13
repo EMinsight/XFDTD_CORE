@@ -86,7 +86,7 @@ void capacitorX(int num_thread) {
                       xfdtd::Vector{PLANE1_O_C, PLANE1_O_A, PLANE1_O_B},
                       xfdtd::Vector{PLANE1_L_C, PLANE1_L_A, PLANE1_L_B}))};
 
-  auto dt{xfdtd::CalculationParam::calculateDt(0.98, SIZE, SIZE, SIZE)};
+  auto dt{xfdtd::TimeParam::calculateDt(0.98, SIZE, SIZE, SIZE)};
   auto v_source{std::make_shared<xfdtd::VoltageSource>(
       "v",
       std::make_unique<xfdtd::Cube>(
@@ -146,7 +146,7 @@ void capacitorZ() {
       "zp_plane", std::make_unique<xfdtd::Cube>(
                       xfdtd::Vector{PLANE1_O_A, PLANE1_O_B, PLANE1_O_C},
                       xfdtd::Vector{PLANE1_L_A, PLANE1_L_B, PLANE1_L_C}))};
-  auto dt{xfdtd::CalculationParam::calculateDt(0.98, SIZE, SIZE, SIZE)};
+  auto dt{xfdtd::TimeParam::calculateDt(0.98, SIZE, SIZE, SIZE)};
   auto v_source{std::make_shared<xfdtd::VoltageSource>(
       "v",
       std::make_unique<xfdtd::Cube>(

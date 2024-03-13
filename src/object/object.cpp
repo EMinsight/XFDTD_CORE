@@ -9,7 +9,6 @@
 #include "corrector/corrector.h"
 #include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
 #include "xfdtd/util/constant.h"
 
@@ -35,7 +34,8 @@ void Object::init(std::shared_ptr<const GridSpace> grid_space,
   _calculation_param = std::move(calculation_param);
   _emf = std::move(emf);
 
-  _grid_box = std::make_unique<GridBox>(_grid_space->getGridBox(_shape.get()));
+  _grid_box = std::make_unique<GridBox>(
+      _grid_space->getGridBoxWithoutCheck(_shape.get()));
 }
 
 void Object::correctMaterialSpace(std::size_t index) {
@@ -87,45 +87,48 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
   // remove const
   auto g_variety = std::const_pointer_cast<GridSpace>(_grid_space);
 
-  auto&& g_view = g_variety->getGridView(mask);
+  auto&& g_view = g_variety->getGridWithMaterialView(mask);
   std::for_each(g_view.begin(), g_view.end(),
                 [index](auto&& g) { g->setMaterialIndex(index); });
 
-  if (dynamic_cast<Cube*>(shape) != nullptr) {
-    auto box{_grid_space->getGridBox(shape)};
-    auto is{box.origin().i()};
-    auto js{box.origin().j()};
-    auto ks{box.origin().k()};
-    auto ie{box.end().i()};
-    auto je{box.end().j()};
-    auto ke{box.end().k()};
-    xt::view(eps_x, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-        eps;
-    xt::view(eps_y, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-        eps;
-    xt::view(eps_z, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-        eps;
+  // if (dynamic_cast<Cube*>(shape) != nullptr) {
+  //   auto box{_grid_space->getGridBox(shape)};
+  //   auto is{box.origin().i()};
+  //   auto js{box.origin().j()};
+  //   auto ks{box.origin().k()};
+  //   auto ie{box.end().i()};
+  //   auto je{box.end().j()};
+  //   auto ke{box.end().k()};
+  //   xt::view(eps_x, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke))
+  //   =
+  //       eps;
+  //   xt::view(eps_y, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke))
+  //   =
+  //       eps;
+  //   xt::view(eps_z, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke))
+  //   =
+  //       eps;
 
-    xt::view(mu_x, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-        mu;
-    xt::view(mu_y, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-        mu;
-    xt::view(mu_z, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-        mu;
-    xt::view(sigma_e_x, xt::range(is, ie), xt::range(js, je),
-             xt::range(ks, ke)) = sigma_e;
-    xt::view(sigma_e_y, xt::range(is, ie), xt::range(js, je),
-             xt::range(ks, ke)) = sigma_e;
-    xt::view(sigma_e_z, xt::range(is, ie), xt::range(js, je),
-             xt::range(ks, ke)) = sigma_e;
-    xt::view(sigma_m_x, xt::range(is, ie), xt::range(js, je),
-             xt::range(ks, ke)) = sigma_m;
-    xt::view(sigma_m_y, xt::range(is, ie), xt::range(js, je),
-             xt::range(ks, ke)) = sigma_m;
-    xt::view(sigma_m_z, xt::range(is, ie), xt::range(js, je),
-             xt::range(ks, ke)) = sigma_m;
-    return;
-  }
+  //   xt::view(mu_x, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
+  //       mu;
+  //   xt::view(mu_y, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
+  //       mu;
+  //   xt::view(mu_z, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
+  //       mu;
+  //   xt::view(sigma_e_x, xt::range(is, ie), xt::range(js, je),
+  //            xt::range(ks, ke)) = sigma_e;
+  //   xt::view(sigma_e_y, xt::range(is, ie), xt::range(js, je),
+  //            xt::range(ks, ke)) = sigma_e;
+  //   xt::view(sigma_e_z, xt::range(is, ie), xt::range(js, je),
+  //            xt::range(ks, ke)) = sigma_e;
+  //   xt::view(sigma_m_x, xt::range(is, ie), xt::range(js, je),
+  //            xt::range(ks, ke)) = sigma_m;
+  //   xt::view(sigma_m_y, xt::range(is, ie), xt::range(js, je),
+  //            xt::range(ks, ke)) = sigma_m;
+  //   xt::view(sigma_m_z, xt::range(is, ie), xt::range(js, je),
+  //            xt::range(ks, ke)) = sigma_m;
+  //   return;
+  // }
 
   xt::filter(eps_x, mask) = eps;
   xt::filter(eps_y, mask) = eps;
@@ -232,6 +235,8 @@ void Object::handleDispersion() {
     return;
   }
 }
+
+void Object::initTimeDependentVariable() {}
 
 const GridSpace* Object::gridSpacePtr() const { return _grid_space.get(); }
 

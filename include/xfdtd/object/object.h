@@ -1,12 +1,12 @@
-#ifndef _XFDTD_LIB_OBJECT_H_
-#define _XFDTD_LIB_OBJECT_H_
+#ifndef _XFDTD_CORE_OBJECT_H_
+#define _XFDTD_CORE_OBJECT_H_
 
 #include <xfdtd/grid_space/grid_space.h>
 
 #include <cstddef>
 #include <memory>
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/material/material.h"
@@ -46,6 +46,8 @@ class Object {
   virtual void correctMaterialSpace(std::size_t index);
 
   virtual void correctUpdateCoefficient();
+
+  virtual void initTimeDependentVariable();
 
   virtual void correctE();
 
@@ -107,4 +109,4 @@ inline auto&& Object::material() { return _material; }
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_OBJECT_H_
+#endif  // _XFDTD_CORE_OBJECT_H_

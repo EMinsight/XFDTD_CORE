@@ -4,7 +4,7 @@
 #include <xtensor.hpp>
 
 #include "updator/update_scheme.h"
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 #include "updator/updator.h"
 
 namespace xfdtd {

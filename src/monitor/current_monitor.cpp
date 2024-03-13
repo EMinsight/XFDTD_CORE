@@ -56,10 +56,6 @@ void CurrentMonitor::init(
       _positive = -1.0;
     }
   }
-
-  data() = xt::zeros<double>({calculationParamPtr()->timeParam()->size()});
-  data() = xt::stack(
-      xt::xtuple(calculationParamPtr()->timeParam()->hTime(), data()));
 }
 
 void CurrentMonitor::update() {
@@ -114,6 +110,12 @@ void CurrentMonitor::update() {
     data()(1, t) = _positive * (integral_x + integral_y);
     return;
   }
+}
+
+void CurrentMonitor::initTimeDependentVariable() {
+  data() = xt::zeros<double>({calculationParamPtr()->timeParam()->size()});
+  data() = xt::stack(
+      xt::xtuple(calculationParamPtr()->timeParam()->hTime(), data()));
 }
 
 }  // namespace xfdtd

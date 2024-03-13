@@ -1,14 +1,12 @@
-#ifndef _XFDTD_LIB_DIVIDER_H_
-#define _XFDTD_LIB_DIVIDER_H_
+#ifndef _XFDTD_CORE_DIVIDER_H_
+#define _XFDTD_CORE_DIVIDER_H_
+
+#include <xfdtd/exception/exception.h>
 
 #include <cstddef>
 #include <optional>
 #include <sstream>
 #include <vector>
-#include <xtensor/xarray.hpp>
-#include <xtensor/xfixed.hpp>
-
-#include "xfdtd/exception/exception.h"
 
 namespace xfdtd {
 
@@ -27,7 +25,7 @@ class Divider {
   class Range {
    public:
     Range() = default;
-    Range(std::size_t start, std::size_t end) : _start(start), _end(end) {}
+    Range(T start, T end) : _start(start), _end(end) {}
 
     auto operator[](std::size_t index) const {
       if (index == 0) {
@@ -66,8 +64,8 @@ class Divider {
     }
 
    private:
-    std::size_t _start{};
-    std::size_t _end{};
+    T _start{};
+    T _end{};
   };
 
   template <typename T>
@@ -90,6 +88,10 @@ class Divider {
     auto yRange() const { return _y_range; }
 
     auto zRange() const { return _z_range; }
+
+    auto valid() const {
+      return _x_range.valid() && _y_range.valid() && _z_range.valid();
+    }
   };
 
   using IndexRange = Range<std::size_t>;
@@ -107,13 +109,13 @@ class Divider {
     return Task<T>{x_range, y_range, z_range};
   }
 
-  auto makeIndexRange(std::size_t start, std::size_t end) {
+  static auto makeIndexRange(std::size_t start, std::size_t end) {
     return makeRange(start, end);
   }
 
-  auto makeIndexTask(const Range<std::size_t>& x_range,
-                     const Range<std::size_t>& y_range,
-                     const Range<std::size_t>& z_range) {
+  static auto makeIndexTask(const Range<std::size_t>& x_range,
+                            const Range<std::size_t>& y_range,
+                            const Range<std::size_t>& z_range) {
     return makeTask(x_range, y_range, z_range);
   }
 
@@ -136,12 +138,6 @@ class Divider {
       return {};
     }
 
-    // auto x_range = Range<T>{std::max(task1._x_range[0], task2._x_range[0]),
-    //                         std::min(task1._x_range[1], task2._x_range[1])};
-    // auto y_range = Range<T>{std::max(task1._y_range[0], task2._y_range[0]),
-    //                         std::min(task1._y_range[1], task2._y_range[1])};
-    // auto z_range = Range<T>{std::max(task1._z_range[0], task2._z_range[0]),
-    //                         std::min(task1._z_range[1], task2._z_range[1])};
     auto x_range =
         Range<T>{std::max(task1.xRange().start(), task2.xRange().start()),
                  std::min(task1.xRange().end(), task2.xRange().end())};
@@ -155,106 +151,93 @@ class Divider {
   }
 
   template <typename T>
-  static auto divide(const Task<T>& problem, int num_procs) {
-    std::vector<Task<std::size_t>> res;
-
-    auto x_start = problem._x_range[0];
-    auto x_end = problem._x_range[1];
-    auto y_start = problem._y_range[0];
-    auto y_end = problem._y_range[1];
-    auto z_start = problem._z_range[0];
-    auto z_end = problem._z_range[1];
-
-    if (x_end <= x_start || y_end <= y_start || z_end <= z_start) {
-      throw XFDTDDividerException("Invalid range");
-    }
-
-    auto x_size = x_end - x_start;
-    auto y_size = y_end - y_start;
-    auto z_size = z_end - z_start;
-
-    for (int i = 0; i < num_procs; ++i) {
-      auto x_task = divide(i, num_procs, x_size);
-      auto y_task = divide(i, num_procs, y_size);
-      auto z_task = divide(i, num_procs, z_size);
-
-      res.push_back(makeTask(
-          makeRange(x_task.start() + x_start, x_task.end() + x_start),
-          makeRange(y_task.start() + y_start, y_task.end() + y_start),
-          makeRange(z_task.start() + z_start, z_task.end() + z_start)));
-    }
-
-    return res;
-  }
-
-  template <typename T>
   static auto divide(const Task<T>& problem, int num_procs, Type type) {
+    if (num_procs <= 1) {
+      return std::vector<Task<T>>{problem};
+    }
+
+    auto res = std::vector<Task<T>>{};
     switch (type) {
       case Type::X: {
-        auto new_problem = problem;
-        new_problem._y_range = {0, 1};
-        new_problem._z_range = {0, 1};
-        auto res = divide(new_problem, num_procs);
-        for (auto&& r : res) {
-          r._y_range = problem._y_range;
-          r._z_range = problem._z_range;
+        auto x_ranges = divide(problem.xRange(), num_procs);
+        for (int i = 0; i < num_procs; ++i) {
+          res.emplace_back(
+              makeTask(x_ranges[i], problem.yRange(), problem.zRange()));
         }
         return res;
       }
       case Type::Y: {
-        auto new_problem = problem;
-        new_problem._x_range = {0, 1};
-        new_problem._z_range = {0, 1};
-        auto res = divide(new_problem, num_procs);
-        for (auto&& r : res) {
-          r._x_range = problem._x_range;
-          r._z_range = problem._z_range;
+        auto y_ranges = divide(problem.yRange(), num_procs);
+        for (int i = 0; i < num_procs; ++i) {
+          res.emplace_back(
+              makeTask(problem.xRange(), y_ranges[i], problem.zRange()));
         }
         return res;
       }
       case Type::Z: {
-        auto new_problem = problem;
-        new_problem._x_range = {0, 1};
-        new_problem._y_range = {0, 1};
-        auto res = divide(new_problem, num_procs);
-        for (auto&& r : res) {
-          r._x_range = problem._x_range;
-          r._y_range = problem._y_range;
+        auto z_ranges = divide(problem.zRange(), num_procs);
+        for (int i = 0; i < num_procs; ++i) {
+          res.emplace_back(
+              makeTask(problem.xRange(), problem.yRange(), z_ranges[i]));
         }
         return res;
       }
       case Type::XY: {
-        auto new_problem = problem;
-        new_problem._z_range = {0, 1};
-        auto res = divide(new_problem, num_procs);
-        for (auto&& r : res) {
-          r._z_range = problem._z_range;
+        if (num_procs == 2) {
+          auto x_ranges = divide(problem.xRange(), 2);
+          return std::vector<Task<T>>{
+              makeTask(x_ranges[0], problem.yRange(), problem.zRange()),
+              makeTask(x_ranges[1], problem.yRange(), problem.zRange())};
         }
+
+        if (num_procs == 3) {
+          auto x_ranges = divide(problem.xRange(), 2);
+          auto l_y_ranges = divide(problem.yRange(), 2);
+          return std::vector<Task<T>>{
+              makeTask(x_ranges[0], l_y_ranges[0], problem.zRange()),
+              makeTask(x_ranges[1], problem.yRange(), problem.zRange()),
+              makeTask(x_ranges[0], l_y_ranges[1], problem.zRange())};
+        }
+
+        auto temp = divide<int>(makeRange<int>(0, num_procs), 4);
+        auto x_ranges = divide(problem.xRange(), 2);
+        auto y_ranges = divide(problem.yRange(), 2);
+        for (int i = 0; i < 4; ++i) {
+          auto x = i % 2;
+          auto y = i / 2;
+          auto unit =
+              divide(makeIndexTask(x_ranges[x], y_ranges[y], problem.zRange()),
+                     temp[i].size(), type);
+          res.insert(res.end(), unit.begin(), unit.end());
+        }
+
         return res;
       }
-      case Type::XZ: {
-        auto new_problem = problem;
-        new_problem._y_range = {0, 1};
-        auto res = divide(new_problem, num_procs);
-        for (auto&& r : res) {
-          r._y_range = problem._y_range;
-        }
-        return res;
-      }
-      case Type::YZ: {
-        auto new_problem = problem;
-        new_problem._x_range = {0, 1};
-        auto res = divide(new_problem, num_procs);
-        for (auto&& r : res) {
-          r._x_range = problem._x_range;
-        }
-        return res;
-      }
-      case Type::XYZ:
-        return divide(problem, num_procs);
       default:
         throw XFDTDDividerException("Invalid type");
     }
+  }
+
+  template <typename T>
+  static auto divide(const Range<T>& problem, int num_procs)
+      -> std::vector<Range<T>> {
+    std::vector<Range<T>> res;
+
+    auto start = problem.start();
+    auto end = problem.end();
+
+    if (end <= start) {
+      throw XFDTDDividerException("Invalid range");
+    }
+
+    auto size = end - start;
+
+    for (int i = 0; i < num_procs; ++i) {
+      auto task = divide(i, num_procs, size);
+      res.push_back(task + start);
+    }
+
+    return res;
   }
 
   template <typename T>
@@ -262,6 +245,11 @@ class Divider {
     if (num_procs <= 0) {
       throw XFDTDDividerException(
           "Number of processes is less than or equal to zero");
+    }
+
+    if (problem_size < num_procs) {
+      throw XFDTDDividerException(
+          "Problem size is less than number of processes");
     }
 
     auto quotient = problem_size / num_procs;
@@ -290,4 +278,4 @@ class Divider {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_DIVIDER_H_
+#endif  // _XFDTD_CORE_DIVIDER_H_

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <utility>
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 
 namespace xfdtd {
 

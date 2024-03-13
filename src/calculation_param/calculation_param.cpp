@@ -10,38 +10,10 @@ XFDTDCalculationParamException::XFDTDCalculationParamException(
     std::string message)
     : XFDTDException{std::move(message)} {}
 
-CalculationParam::CalculationParam(const GridSpace* grid_space,
-                                   std::size_t start_time_step,
-                                   std::size_t time_size, double cfl)
-    : _cfl{cfl} {
-  if (_cfl <= 0.0 || 1.0 < _cfl) {
-    throw XFDTDCalculationParamException{"CFL must be in (0, 1]"};
-  }
-
-  double dt{0};
-  switch (grid_space->dimension()) {
-    case GridSpace::Dimension::ONE:
-      dt = CalculationParam::calculateDt(_cfl, 0, 0, grid_space->minDz());
-      break;
-    case GridSpace::Dimension::TWO:
-      dt = CalculationParam::calculateDt(_cfl, grid_space->minDx(),
-                                         grid_space->minDy(), 0);
-      break;
-    case GridSpace::Dimension::THREE:
-      dt = CalculationParam::calculateDt(
-          _cfl, grid_space->minDx(), grid_space->minDy(), grid_space->minDz());
-      break;
-    default:
-      throw XFDTDCalculationParamException{"Invalid dimension"};
-  }
-
-  _time_param = std::make_unique<TimeParam>(dt, time_size, start_time_step);
-  _material_param = std::make_unique<MaterialParam>();
-  _fdtd_coefficient = std::make_unique<FDTDUpdateCoefficient>();
-  allocate(grid_space);
-}
-
-double CalculationParam::cfl() const { return _cfl; }
+CalculationParam::CalculationParam()
+    : _time_param{nullptr},
+      _material_param{nullptr},
+      _fdtd_coefficient{std::make_unique<FDTDUpdateCoefficient>()} {}
 
 const std::unique_ptr<TimeParam>& CalculationParam::timeParam() const {
   return _time_param;
@@ -66,23 +38,6 @@ std::unique_ptr<MaterialParam>& CalculationParam::materialParam() {
 
 std::unique_ptr<FDTDUpdateCoefficient>& CalculationParam::fdtdCoefficient() {
   return _fdtd_coefficient;
-}
-
-double CalculationParam::calculateDt(double cfl, double dx, double dy,
-                                     double dz) {
-  double dt{0};
-  if (dx != 0 && dy != 0 && dz != 0) {
-    dt = cfl / (constant::C_0 *
-                std::sqrt(1.0 / (dx * dx) + 1.0 / (dy * dy) + 1.0 / (dz * dz)));
-  }
-  if (dx != 0 && dy != 0 && dz == 0) {
-    dt = cfl / (constant::C_0 * std::sqrt(1.0 / (dx * dx) + 1.0 / (dy * dy)));
-  }
-  if (dx == 0 && dy == 0 && dz != 0) {
-    dt = cfl * dz / constant::C_0;
-  }
-
-  return dt;
 }
 
 void CalculationParam::generateMaterialSpaceParam(const GridSpace* grid_space) {
@@ -308,38 +263,47 @@ void CalculationParam::calculateCoefficient(const GridSpace* grid_space) {
                    chzey);
 }
 
-void CalculationParam::allocate(const GridSpace* grid_space) {
-  auto nx{grid_space->hNodeX().size()};
-  auto ny{grid_space->hNodeY().size()};
-  auto nz{grid_space->hNodeZ().size()};
-
-  materialParam()->epsX().resize({nx, ny + 1, nz + 1});
-  materialParam()->epsY().resize({nx + 1, ny, nz + 1});
-  materialParam()->epsZ().resize({nx + 1, ny + 1, nz});
-  materialParam()->epsX().fill(constant::EPSILON_0);
-  materialParam()->epsY().fill(constant::EPSILON_0);
-  materialParam()->epsZ().fill(constant::EPSILON_0);
-
-  materialParam()->muX().resize({nx + 1, ny, nz});
-  materialParam()->muY().resize({nx, ny + 1, nz});
-  materialParam()->muZ().resize({nx, ny, nz + 1});
-  materialParam()->muX().fill(constant::MU_0);
-  materialParam()->muY().fill(constant::MU_0);
-  materialParam()->muZ().fill(constant::MU_0);
-
-  materialParam()->sigmaEX().resize({nx, ny + 1, nz + 1});
-  materialParam()->sigmaEY().resize({nx + 1, ny, nz + 1});
-  materialParam()->sigmaEZ().resize({nx + 1, ny + 1, nz});
-  materialParam()->sigmaEX().fill(1e-20);
-  materialParam()->sigmaEY().fill(1e-20);
-  materialParam()->sigmaEZ().fill(1e-20);
-
-  materialParam()->sigmaMX().resize({nx + 1, ny, nz});
-  materialParam()->sigmaMY().resize({nx, ny + 1, nz});
-  materialParam()->sigmaMZ().resize({nx, ny, nz + 1});
-  materialParam()->sigmaMX().fill(1e-20);
-  materialParam()->sigmaMY().fill(1e-20);
-  materialParam()->sigmaMZ().fill(1e-20);
+void CalculationParam::setTimeParam(std::unique_ptr<TimeParam> time_param) {
+  _time_param = std::move(time_param);
 }
+
+void CalculationParam::setMaterialParam(
+    std::unique_ptr<MaterialParam> material_param) {
+  _material_param = std::move(material_param);
+}
+
+// void CalculationParam::allocate(const GridSpace* grid_space) {
+//   auto nx{grid_space->hNodeX().size()};
+//   auto ny{grid_space->hNodeY().size()};
+//   auto nz{grid_space->hNodeZ().size()};
+
+//   materialParam()->epsX().resize({nx, ny + 1, nz + 1});
+//   materialParam()->epsY().resize({nx + 1, ny, nz + 1});
+//   materialParam()->epsZ().resize({nx + 1, ny + 1, nz});
+//   materialParam()->epsX().fill(constant::EPSILON_0);
+//   materialParam()->epsY().fill(constant::EPSILON_0);
+//   materialParam()->epsZ().fill(constant::EPSILON_0);
+
+//   materialParam()->muX().resize({nx + 1, ny, nz});
+//   materialParam()->muY().resize({nx, ny + 1, nz});
+//   materialParam()->muZ().resize({nx, ny, nz + 1});
+//   materialParam()->muX().fill(constant::MU_0);
+//   materialParam()->muY().fill(constant::MU_0);
+//   materialParam()->muZ().fill(constant::MU_0);
+
+//   materialParam()->sigmaEX().resize({nx, ny + 1, nz + 1});
+//   materialParam()->sigmaEY().resize({nx + 1, ny, nz + 1});
+//   materialParam()->sigmaEZ().resize({nx + 1, ny + 1, nz});
+//   materialParam()->sigmaEX().fill(1e-20);
+//   materialParam()->sigmaEY().fill(1e-20);
+//   materialParam()->sigmaEZ().fill(1e-20);
+
+//   materialParam()->sigmaMX().resize({nx + 1, ny, nz});
+//   materialParam()->sigmaMY().resize({nx, ny + 1, nz});
+//   materialParam()->sigmaMZ().resize({nx, ny, nz + 1});
+//   materialParam()->sigmaMX().fill(1e-20);
+//   materialParam()->sigmaMY().fill(1e-20);
+//   materialParam()->sigmaMZ().fill(1e-20);
+// }
 
 }  // namespace xfdtd

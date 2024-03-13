@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -73,7 +73,7 @@ void cylinderScatter2D(int num_thread, xfdtd::Divider::Type type) {
 
 int main(int argc, char* argv[]) {
   int num_thread = 1;
-  xfdtd::Divider::Type type = xfdtd::Divider::Type::X;
+  xfdtd::Divider::Type type = xfdtd::Divider::Type::XY;
   if (argc > 1) {
     num_thread = std::stoi(argv[1]);
     if (argc > 2) {
@@ -83,6 +83,9 @@ int main(int argc, char* argv[]) {
       }
       if (type_str == "X") {
         type = xfdtd::Divider::Type::X;
+      }
+      if (type_str == "XY") {
+        type = xfdtd::Divider::Type::XY;
       }
     }
   }

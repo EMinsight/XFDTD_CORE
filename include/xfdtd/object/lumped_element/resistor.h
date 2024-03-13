@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_RESISTOR_H_
-#define _XFDTD_LIB_RESISTOR_H_
+#ifndef _XFDTD_CORE_RESISTOR_H_
+#define _XFDTD_CORE_RESISTOR_H_
 
 #include "xfdtd/object/lumped_element/lumped_element.h"
 namespace xfdtd {
@@ -44,4 +44,4 @@ class Resistor : public LumpedElement {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_RESISTOR_H_
+#endif  // _XFDTD_CORE_RESISTOR_H_

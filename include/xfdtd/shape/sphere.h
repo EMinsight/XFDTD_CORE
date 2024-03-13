@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_SPHERE_H_
-#define _XFDTD_LIB_SPHERE_H_
+#ifndef _XFDTD_CORE_SPHERE_H_
+#define _XFDTD_CORE_SPHERE_H_
 
 #include <xfdtd/shape/shape.h>
 
@@ -27,7 +27,7 @@ class Sphere : public Shape {
 
   bool isInside(const Vector &vector) const override;
 
-  Cube wrappedCube() const override;
+  std::unique_ptr<Cube> wrappedCube() const override;
 
   Vector center() const;
 
@@ -46,4 +46,4 @@ class Sphere : public Shape {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_SPHERE_H_
+#endif  // _XFDTD_CORE_SPHERE_H_

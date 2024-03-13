@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_MATERIAL_H_
-#define _XFDTD_LIB_MATERIAL_H_
+#ifndef _XFDTD_CORE_MATERIAL_H_
+#define _XFDTD_CORE_MATERIAL_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
@@ -106,4 +106,4 @@ class Material {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_MATERIAL_H_
+#endif  // _XFDTD_CORE_MATERIAL_H_

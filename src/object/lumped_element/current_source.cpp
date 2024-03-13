@@ -1,6 +1,7 @@
 #include <xfdtd/object/lumped_element/current_source.h>
 
 #include <xtensor.hpp>
+
 #include "object/lumped_element_corrector.h"
 
 namespace xfdtd {
@@ -106,7 +107,6 @@ void CurrentSource::init(std::shared_ptr<const GridSpace> grid_space,
 
   auto dt{calculationParamPtr()->timeParam()->dt()};
   _beta = (dt * _dc) / (_resistance_factor * _da * _db);
-  _waveform->init(calculationParamPtr()->timeParam()->hTime());
 }
 
 void CurrentSource::correctUpdateCoefficient() {
@@ -160,6 +160,10 @@ void CurrentSource::correctUpdateCoefficient() {
          calc_param->materialParam()->sigmaEZ());
     return;
   }
+}
+
+void CurrentSource::initTimeDependentVariable() {
+  _waveform->init(calculationParamPtr()->timeParam()->hTime());
 }
 
 void CurrentSource::correctE() {

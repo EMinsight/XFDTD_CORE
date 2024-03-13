@@ -1,15 +1,15 @@
-#ifndef _XFDTD_LIB_WAVEFORM_SOURCE_H_
-#define _XFDTD_LIB_WAVEFORM_SOURCE_H_
+#ifndef _XFDTD_CORE_WAVEFORM_SOURCE_H_
+#define _XFDTD_CORE_WAVEFORM_SOURCE_H_
 
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/divider/divider.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/waveform/waveform.h>
 
 #include <memory>
 
 #include "corrector/corrector.h"
-#include "divider/divider.h"
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/waveform/waveform.h"
 
 namespace xfdtd {
 
@@ -35,13 +35,11 @@ class WaveformSource {
 
   virtual void correctUpdateCoefficient() = 0;
 
+  virtual void initTimeDependentVariable() = 0;
+
   virtual void updateWaveformSourceE() = 0;
 
   virtual void updateWaveformSourceH() = 0;
-
-  virtual void correctE() = 0;
-
-  virtual void correctH() = 0;
 
   const std::unique_ptr<Waveform> &waveform();
 
@@ -75,4 +73,4 @@ class WaveformSource {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_WAVEFORM_SOURCE_H_
+#endif  // _XFDTD_CORE_WAVEFORM_SOURCE_H_

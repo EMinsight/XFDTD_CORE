@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_DISPERSIVE_SOLVER_COMMON_H_
-#define _XFDTD_LIB_DISPERSIVE_SOLVER_COMMON_H_
+#ifndef _XFDTD_CORE_DISPERSIVE_SOLVER_COMMON_H_
+#define _XFDTD_CORE_DISPERSIVE_SOLVER_COMMON_H_
 
 #include <xtensor/xarray.hpp>
 
@@ -38,4 +38,4 @@ namespace z_transfer {}
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_DISPERSIVE_SOLVER_COMMON_H_
+#endif  // _XFDTD_CORE_DISPERSIVE_SOLVER_COMMON_H_

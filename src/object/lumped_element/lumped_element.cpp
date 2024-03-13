@@ -1,6 +1,6 @@
 #include <xfdtd/object/lumped_element/lumped_element.h>
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/grid_space/grid_space.h"
 
@@ -25,8 +25,6 @@ void LumpedElement::init(std::shared_ptr<const GridSpace> grid_space,
   _je = grid_box->end().j();
   _ke = grid_box->end().k();
 }
-
-// void LumpedElement::correctMaterialSpace(std::size_t index) {}
 
 Axis::XYZ LumpedElement::xyz() const { return _xyz; }
 

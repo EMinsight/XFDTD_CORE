@@ -1,7 +1,8 @@
 
+#include <xfdtd/divider/divider.h>
+
 #include <memory>
 
-#include "divider/divider.h"
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
@@ -107,6 +108,9 @@ int main(int argc, char *argv[]) {
     }
     if (std::string(argv[2]) == "Z") {
       divider_type = xfdtd::Divider::Type::Z;
+    }
+    if (std::string(argv[2]) == "XY") {
+      divider_type = xfdtd::Divider::Type::XY;
     }
   }
   microstripLine(num_thread, divider_type);

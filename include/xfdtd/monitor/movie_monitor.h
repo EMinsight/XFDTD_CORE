@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_MOVIE_MONITOR_H_
-#define _XFDTD_LIB_MOVIE_MONITOR_H_
+#ifndef _XFDTD_CORE_MOVIE_MONITOR_H_
+#define _XFDTD_CORE_MOVIE_MONITOR_H_
 
 #include <xfdtd/monitor/monitor.h>
 
@@ -56,4 +56,4 @@ class MovieMonitor : public xfdtd::Monitor {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_MOVIE_MONITOR_H_
+#endif  // _XFDTD_CORE_MOVIE_MONITOR_H_

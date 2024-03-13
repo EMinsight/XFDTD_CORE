@@ -1,14 +1,39 @@
-#include <memory>
+#include "waveform_source/tfsf_corrector.h"
 
-#include "divider/divider.h"
-#include "waveform_source/waveform_source_corrector.h"
+#include <memory>
+#include <sstream>
 
 namespace xfdtd {
 
+std::string TFSFCorrector::toString() const {
+  std::stringstream ss;
+  ss << "Total Field Scattered Field Corrector: ";
+  ss << "Global Task: \n";
+  ss << "XN: "
+     << "EY: " << globalEyTaskXN().toString()
+     << " EZ: " << globalEzTaskXN().toString() << "\n";
+  ss << "XP: "
+     << "EY: " << globalEyTaskXP().toString()
+     << " EZ: " << globalEzTaskXP().toString() << "\n";
+  ss << "YN: "
+     << "EZ: " << globalEzTaskYN().toString()
+     << " EX: " << globalExTaskYN().toString() << "\n";
+  ss << "YP: "
+     << "EZ: " << globalEzTaskYP().toString()
+     << " EX: " << globalExTaskYP().toString() << "\n";
+  ss << "ZN: "
+     << "EX: " << globalExTaskZN().toString()
+     << " EY: " << globalEyTaskZN().toString() << "\n";
+  ss << "ZP: "
+     << "EX: " << globalExTaskZP().toString()
+     << " EY: " << globalEyTaskZP().toString();
+  return ss.str();
+}
+
 double TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
-  i = i - start().i() + 1;
-  j = j - start().j();
-  k = k - start().k();
+  i = i - globalStart().i() + 1;
+  j = j - globalStart().j();
+  k = k - globalStart().k();
   auto projection{_projection_x_half(i) + _projection_y_int(j) +
                   _projection_z_int(k)};
   auto index{static_cast<std::size_t>(projection)};
@@ -17,9 +42,9 @@ double TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
 }
 
 double TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
-  i = i - start().i();
-  j = j - start().j() + 1;
-  k = k - start().k();
+  i = i - globalStart().i();
+  j = j - globalStart().j() + 1;
+  k = k - globalStart().k();
   auto projection{_projection_x_int(i) + _projection_y_half(j) +
                   _projection_z_int(k)};
   auto index{static_cast<std::size_t>(projection)};
@@ -28,9 +53,9 @@ double TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
 }
 
 double TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
-  i = i - start().i();
-  j = j - start().j();
-  k = k - start().k() + 1;
+  i = i - globalStart().i();
+  j = j - globalStart().j();
+  k = k - globalStart().k() + 1;
   auto projection{_projection_x_int(i) + _projection_y_int(j) +
                   _projection_z_half(k)};
   auto index{static_cast<std::size_t>(projection)};
@@ -39,9 +64,9 @@ double TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
 }
 
 double TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
-  i = i - start().i();
-  j = j - start().j() + 1;
-  k = k - start().k() + 1;
+  i = i - globalStart().i();
+  j = j - globalStart().j() + 1;
+  k = k - globalStart().k() + 1;
   auto projection{_projection_x_int(i) + _projection_y_half(j) +
                   _projection_z_half(k) - 0.5};
   auto index{static_cast<std::size_t>(projection)};
@@ -50,9 +75,9 @@ double TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
 }
 
 double TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
-  i = i - start().i() + 1;
-  j = j - start().j();
-  k = k - start().k() + 1;
+  i = i - globalStart().i() + 1;
+  j = j - globalStart().j();
+  k = k - globalStart().k() + 1;
   auto projection{_projection_x_half(i) + _projection_y_int(j) +
                   _projection_z_half(k) - 0.5};
   auto index{static_cast<std::size_t>(projection)};
@@ -61,14 +86,661 @@ double TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
 }
 
 double TFSFCorrector::hzInc(std::size_t i, std::size_t j, std::size_t k) const {
-  i = i - start().i() + 1;
-  j = j - start().j() + 1;
-  k = k - start().k();
+  i = i - globalStart().i() + 1;
+  j = j - globalStart().j() + 1;
+  k = k - globalStart().k();
   auto projection{_projection_x_half(i) + _projection_y_half(j) +
                   _projection_z_int(k) - 0.5};
   auto index{static_cast<std::size_t>(projection)};
   auto weight{projection - index};
   return (1 - weight) * _hz_inc(index) + weight * _hz_inc(index + 1);
+}
+
+void TFSFCorrector::correctEyXN() {
+  const auto& task = globalEyTaskXN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_x{cax()};
+
+  const auto is_node = is - offset.i();
+  for (auto j{js}; j < js; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ey_xn{emf->ey()(is_node, j_node, k_node)};
+      const auto hz_i{hzInc(is - 1, j, k)};
+      ey_xn += ca_x * hz_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEzXN() {
+  const auto& task = globalEzTaskXN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_x{cax()};
+
+  const auto is_node = is - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ez_xn{emf->ez()(is_node, j_node, k_node)};
+      const auto hy_i{hyInc(is - 1, j, k)};
+      ez_xn -= ca_x * hy_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEyXP() {
+  const auto& task = globalEyTaskXP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto ie = task.xRange().start();  // careful!!
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_x{cax()};
+
+  const auto ie_node = ie - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ey_xp{emf->ey()(ie_node, j_node, k_node)};
+      const auto hz_i{hzInc(ie, j, k)};
+      ey_xp -= ca_x * hz_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEzXP() {
+  const auto& task = globalEzTaskXP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto ie = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_x{cax()};
+
+  const auto ie_node = ie - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ez_xp{emf->ez()(ie_node, j_node, k_node)};
+      const auto hy_i{hyInc(ie, j, k)};
+      ez_xp += ca_x * hy_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEzYN() {
+  const auto& task = globalEzTaskYN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_y = cay();
+
+  const auto js_node = js - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ez_yn{emf->ez()(i_node, js_node, k_node)};
+      const auto hx_i{hxInc(i, js - 1, k)};
+      ez_yn += ca_y * hx_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctExYN() {
+  const auto& task = globalExTaskYN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_y = cay();
+
+  const auto js_node = js - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ex_yn{emf->ex()(i_node, js_node, k_node)};
+      const auto hz_i{hzInc(i, js - 1, k)};
+      ex_yn -= ca_y * hz_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEzYP() {
+  const auto& task = globalEzTaskYP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto je = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_y = cay();
+
+  const auto je_node = je - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ez_yp{emf->ez()(i_node, je_node, k_node)};
+      const auto hx_i{hxInc(i, je, k)};
+      ez_yp -= ca_y * hx_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctExYP() {
+  const auto& task = globalExTaskYP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto je = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto ca_y = cay();
+
+  const auto je_node = je - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& ex_yp{emf->ez()(i_node, je_node, k_node)};
+      const auto hx_i{hxInc(i, je, k)};
+      ex_yp += ca_y * hx_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctExZN() {
+  const auto& task = globalExTaskZN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto ca_z = caz();
+
+  const auto ks_node = ks - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& ex_zn{emf->ex()(i_node, j_node, ks_node)};
+      const auto hy_i{hyInc(i, j, ks - 1)};
+      ex_zn += ca_z * hy_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEyZN() {
+  const auto& task = globalEyTaskZN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto ca_z = caz();
+
+  const auto ks_node = ks - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& ey_zn{emf->ey()(i_node, j_node, ks_node)};
+      const auto hx_i{hxInc(i, j, ks - 1)};
+      ey_zn -= ca_z * hx_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctExZP() {
+  const auto& task = globalExTaskZP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ke = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto ca_z = caz();
+
+  const auto ke_node = ke - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& ex_zp{emf->ex()(i_node, j_node, ke_node)};
+      const auto hy_i{hyInc(i, j, ke)};
+      ex_zp -= ca_z * hy_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctEyZP() {
+  const auto& task = globalEyTaskZP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ke = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto ca_z = caz();
+
+  const auto ke_node = ke - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& ey_zp{emf->ey()(i_node, j_node, ke_node)};
+      const auto hx_i{hxInc(i, j, ke)};
+      ey_zp += ca_z * hx_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHzXN() {
+  const auto& task = globalEyTaskXN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_x{cbx()};
+
+  const auto is_node = is - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hz_xn{emf->hz()(is_node - 1, j_node, k_node)};
+      const auto ey_i{eyInc(is, j, k)};
+      hz_xn += cb_x * ey_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHyXN() {
+  const auto& task = globalEzTaskXN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_x{cbx()};
+  const auto is_node = is - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hy_xn{emf->hy()(is_node - 1, j_node, k_node)};
+      const auto ez_i{ezInc(is, j, k)};
+      hy_xn -= cb_x * ez_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHzXP() {
+  const auto& task = globalEyTaskXP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto ie = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_x{cbx()};
+
+  const auto ie_node = ie - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hz_xp{emf->hz()(ie_node, j_node, k_node)};
+      const auto ey_i{eyInc(ie, j, k)};
+      hz_xp -= cb_x * ey_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHyXP() {
+  const auto& task = globalEzTaskXP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto ie = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_x{cbx()};
+
+  const auto ie_node = ie - offset.i();
+  for (auto j{js}; j < je; ++j) {
+    const auto j_node = j - offset.j();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hy_xp{emf->hy()(ie_node, j_node, k_node)};
+      const auto ez_i{ezInc(ie, j, k)};
+      hy_xp += cb_x * ez_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHxYN() {
+  const auto& task = globalEzTaskYN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_y{cby()};
+
+  const auto js_node = js - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hx_yn{emf->hx()(i_node, js_node - 1, k_node)};
+      const auto ez_i{ezInc(i, js, k)};
+      hx_yn += cb_y * ez_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHzYN() {
+  const auto& task = globalExTaskYN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_y{cby()};
+
+  const auto js_node = js - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hz_yn{emf->hz()(i_node, js_node - 1, k_node)};
+      const auto ex_i{exInc(i, js, k)};
+      hz_yn -= cb_y * ex_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHxYP() {
+  const auto& task = globalEzTaskYP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto je = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_y{cby()};
+
+  const auto je_node = je - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hx_yp{emf->hx()(i_node, je_node, k_node)};
+      const auto ez_i{ezInc(i, je, k)};
+      hx_yp -= cb_y * ez_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHzYP() {
+  const auto& task = globalExTaskYP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto je = task.yRange().start();
+  const auto ks = task.zRange().start();
+  const auto ke = task.zRange().end();
+
+  auto&& emf = emfPtr();
+  const auto cb_y{cby()};
+
+  const auto je_node = je - offset.j();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto k{ks}; k < ke; ++k) {
+      const auto k_node = k - offset.k();
+      auto& hz_yp{emf->hz()(i_node, je_node, k_node)};
+      const auto ex_i{exInc(i, je, k)};
+      hz_yp += cb_y * ex_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHxZN() {
+  const auto& task = globalEyTaskZN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto cb_z{cbz()};
+
+  const auto ks_node = ks - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& hx_zn{emf->hx()(i_node, j_node, ks_node - 1)};
+      const auto ey_i{eyInc(i, j, ks)};
+      hx_zn -= cb_z * ey_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHyZN() {
+  const auto& task = globalExTaskZN();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ks = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto cb_z{cbz()};
+
+  const auto ks_node = ks - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& hy_zn{emf->hy()(i_node, j_node, ks_node - 1)};
+      const auto ex_i{exInc(i, j, ks)};
+      hy_zn += cb_z * ex_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHxZP() {
+  const auto& task = globalEyTaskZP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ke = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto cb_z{cbz()};
+
+  const auto ke_node = ke - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& hx_zp{emf->hx()(i_node, j_node, ke_node)};
+      const auto ey_i{eyInc(i, j, ke)};
+      hx_zp += cb_z * ey_i;
+    }
+  }
+}
+
+void TFSFCorrector::correctHyZP() {
+  const auto& task = globalExTaskZP();
+  const auto& offset = gridSpace()->globalBox().origin();
+
+  const auto is = task.xRange().start();
+  const auto ie = task.xRange().end();
+  const auto js = task.yRange().start();
+  const auto je = task.yRange().end();
+  const auto ke = task.zRange().start();
+
+  auto&& emf = emfPtr();
+  const auto cb_z{cbz()};
+
+  const auto ke_node = ke - offset.k();
+  for (auto i{is}; i < ie; ++i) {
+    const auto i_node = i - offset.i();
+    for (auto j{js}; j < je; ++j) {
+      const auto j_node = j - offset.j();
+      auto& hy_zp{emf->hy()(i_node, j_node, ke_node)};
+      const auto ex_i{exInc(i, j, ke)};
+      hy_zp -= cb_z * ex_i;
+    }
+  }
+}
+
+Divider::IndexTask TFSFCorrector::globalEyTaskXN() const {
+  return _global_ey_task_xn;
+}
+
+Divider::IndexTask TFSFCorrector::globalEzTaskXN() const {
+  return _global_ez_task_xn;
+}
+
+Divider::IndexTask TFSFCorrector::globalEyTaskXP() const {
+  return _global_ey_task_xp;
+}
+
+Divider::IndexTask TFSFCorrector::globalEzTaskXP() const {
+  return _global_ez_task_xp;
+}
+
+Divider::IndexTask TFSFCorrector::globalEzTaskYN() const {
+  return _global_ez_task_yn;
+}
+
+Divider::IndexTask TFSFCorrector::globalExTaskYN() const {
+  return _global_ex_task_yn;
+}
+
+Divider::IndexTask TFSFCorrector::globalEzTaskYP() const {
+  return _global_ez_task_yp;
+}
+
+Divider::IndexTask TFSFCorrector::globalExTaskYP() const {
+  return _global_ex_task_yp;
+}
+
+Divider::IndexTask TFSFCorrector::globalExTaskZN() const {
+  return _global_ex_task_zn;
+}
+
+Divider::IndexTask TFSFCorrector::globalEyTaskZN() const {
+  return _global_ey_task_zn;
+}
+
+Divider::IndexTask TFSFCorrector::globalExTaskZP() const {
+  return _global_ex_task_zp;
+}
+
+Divider::IndexTask TFSFCorrector::globalEyTaskZP() const {
+  return _global_ey_task_zp;
 }
 
 void TFSF1DCorrector::correctE() {
@@ -98,359 +770,47 @@ void TFSF1DCorrector::correctH() {
 }
 
 void TFSF2DCorrector::correctE() {
-  const auto is{task()._x_range[0]};
-  const auto js{task()._y_range[0]};
-  const auto ie{task()._x_range[1]};
-  const auto je{task()._y_range[1]};
-
-  auto emf{emfPtr()};
-  const auto ca_x{cax()};
-  const auto ca_y{cay()};
-
-  // xn
-  const auto js_xn = jStartXN();
-  const auto je_xn = jEndXN();
-  for (auto j{js_xn}; j < je_xn + 1; ++j) {
-    auto& ez_xn{emfPtr()->ez()(is, j, 0)};
-    const auto hy_i{hyInc(is - 1, j, 0)};
-    ez_xn -= ca_x * hy_i;
-  }
-
-  // xp
-  const auto js_xp = jStartXP();
-  const auto je_xp = jEndXP();
-  for (auto j{js_xp}; j < je_xp + 1; ++j) {
-    auto& ez_xp{emfPtr()->ez()(ie, j, 0)};
-    const auto hy_i{hyInc(ie, j, 0)};
-    ez_xp += ca_x * hy_i;
-  }
-
-  // yn
-  const auto is_yn = iStartYN();
-  const auto ie_yn = iEndYN();
-  for (auto i{is_yn}; i < ie_yn + 1; ++i) {
-    auto& ez_yn{emfPtr()->ez()(i, js, 0)};
-    const auto hx_i{hxInc(i, js - 1, 0)};
-    ez_yn += ca_y * hx_i;
-  }
-
-  // yp
-  const auto is_yp = iStartYP();
-  const auto ie_yp = iEndYP();
-  for (auto i{is_yp}; i < ie_yp + 1; ++i) {
-    auto& ez_yp{emfPtr()->ez()(i, je, 0)};
-    const auto hx_i{hxInc(i, je, 0)};
-    ez_yp -= ca_y * hx_i;
-  }
+  correctEzXN();
+  correctEzXP();
+  correctEzYN();
+  correctEzYP();
 }
 
 void TFSF2DCorrector::correctH() {
-  const auto is{task()._x_range[0]};
-  const auto js{task()._y_range[0]};
-  const auto ie{task()._x_range[1]};
-  const auto je{task()._y_range[1]};
-
-  auto emf{emfPtr()};
-  const auto cb_x{cbx()};
-  const auto cb_y{cby()};
-
-  // xn
-  const auto js_xn = jStartXN();
-  const auto je_xn = jEndXN();
-  for (auto j{js_xn}; j < je_xn + 1; ++j) {
-    auto& hy_xn{emfPtr()->hy()(is - 1, j, 0)};
-    const auto ez_i{ezInc(is, j, 0)};
-    hy_xn -= cb_x * ez_i;
-  }
-
-  // xp
-  const auto js_xp = jStartXP();
-  const auto je_xp = jEndXP();
-  for (auto j{js_xp}; j < je_xp + 1; ++j) {
-    auto& hy_xp{emfPtr()->hy()(ie, j, 0)};
-    const auto ez_i{ezInc(ie, j, 0)};
-    hy_xp += cb_x * ez_i;
-  }
-
-  // yn
-  const auto is_yn = iStartYN();
-  const auto ie_yn = iEndYN();
-  for (auto i{is_yn}; i < ie_yn + 1; ++i) {
-    auto& hx_yn{emfPtr()->hx()(i, js - 1, 0)};
-    const auto ez_i{ezInc(i, js, 0)};
-    hx_yn += cb_y * ez_i;
-  }
-
-  // yp
-  const auto is_yp = iStartYP();
-  const auto ie_yp = iEndYP();
-  for (auto i{is_yp}; i < ie_yp + 1; ++i) {
-    auto& hx_yp{emfPtr()->hx()(i, je, 0)};
-    const auto ez_i{ezInc(i, je, 0)};
-    hx_yp -= cb_y * ez_i;
-  }
+  correctHyXN();
+  correctHyXP();
+  correctHxYN();
+  correctHxYP();
 }
 
 void TFSF3DCorrector::correctE() {
-  const auto is{task()._x_range[0]};
-  const auto js{task()._y_range[0]};
-  const auto ks{task()._z_range[0]};
-  const auto ie{task()._x_range[1]};
-  const auto je{task()._y_range[1]};
-  const auto ke{task()._z_range[1]};
-
-  auto emf{emfPtr()};
-  const auto ca_x{cax()};
-  const auto ca_y{cay()};
-  const auto ca_z{caz()};
-
-  // xn
-  const auto js_xn = jStartXN();
-  const auto je_xn = jEndXN();
-  const auto ks_xn = kStartXN();
-  const auto ke_xn = kEndXN();
-  for (auto j{js_xn}; j < je_xn; ++j) {
-    for (auto k{ks_xn}; k < ke_xn + 1; ++k) {
-      auto& ey_xn{emfPtr()->ey()(is, j, k)};
-      const auto hz_i{hzInc(is - 1, j, k)};
-      ey_xn += ca_x * hz_i;
-    }
-  }
-  for (auto j{js_xn}; j < je_xn + 1; ++j) {
-    for (auto k{ks_xn}; k < ke_xn; ++k) {
-      auto& ez_xn{emfPtr()->ez()(is, j, k)};
-      const auto hy_i{hyInc(is - 1, j, k)};
-      ez_xn -= ca_x * hy_i;
-    }
-  }
-  // xp
-  const auto js_xp = jStartXP();
-  const auto je_xp = jEndXP();
-  const auto ks_xp = kStartXP();
-  const auto ke_xp = kEndXP();
-  for (auto j{js_xp}; j < je_xp; ++j) {
-    for (auto k{ks_xp}; k < ke_xp + 1; ++k) {
-      auto& ey_xp{emfPtr()->ey()(ie, j, k)};
-      const auto hz_i{hzInc(ie, j, k)};
-      ey_xp -= ca_x * hz_i;
-    }
-  }
-  for (auto j{js_xp}; j < je_xp + 1; ++j) {
-    for (auto k{ks_xp}; k < ke_xp; ++k) {
-      auto& ez_xp{emfPtr()->ez()(ie, j, k)};
-      const auto hy_i{hyInc(ie, j, k)};
-      ez_xp += ca_x * hy_i;
-    }
-  }
-
-  // yn
-  const auto is_yn = iStartYN();
-  const auto ie_yn = iEndYN();
-  const auto ks_yn = kStartYN();
-  const auto ke_yn = kEndYN();
-  for (auto i{is_yn}; i < ie_yn + 1; ++i) {
-    for (auto k{ks_yn}; k < ke_yn; ++k) {
-      auto& ez_yn{emfPtr()->ez()(i, js, k)};
-      const auto hx_i{hxInc(i, js - 1, k)};
-      ez_yn += ca_y * hx_i;
-    }
-  }
-  for (auto i{is_yn}; i < ie_yn; ++i) {
-    for (auto k{ks_yn}; k < ke_yn + 1; ++k) {
-      auto& ex_yn{emfPtr()->ex()(i, js, k)};
-      const auto hz_i{hzInc(i, js - 1, k)};
-      ex_yn -= ca_y * hz_i;
-    }
-  }
-  // yp
-  const auto is_yp = iStartYP();
-  const auto ie_yp = iEndYP();
-  const auto ks_yp = kStartYP();
-  const auto ke_yp = kEndYP();
-  for (auto i{is_yp}; i < ie_yp + 1; ++i) {
-    for (auto k{ks_yp}; k < ke_yp; ++k) {
-      auto& ez_yp{emfPtr()->ez()(i, je, k)};
-      const auto hx_i{hxInc(i, je, k)};
-      ez_yp -= ca_y * hx_i;
-    }
-  }
-  for (auto i{is_yp}; i < ie_yp; ++i) {
-    for (auto k{ks_yp}; k < ke_yp + 1; ++k) {
-      auto& ex_yp{emfPtr()->ex()(i, je, k)};
-      const auto hz_i{hzInc(i, je, k)};
-      ex_yp += ca_y * hz_i;
-    }
-  }
-
-  // zn
-  const auto is_zn = iStartZN();
-  const auto ie_zn = iEndZN();
-  const auto js_zn = jStartZN();
-  const auto je_zn = jEndZN();
-  for (auto i{is_zn}; i < ie_zn; ++i) {
-    for (auto j{js_zn}; j < je_zn + 1; ++j) {
-      auto& ex_zn{emfPtr()->ex()(i, j, ks)};
-      const auto hy_i{hyInc(i, j, ks - 1)};
-      ex_zn += ca_z * hy_i;
-    }
-  }
-  for (auto i{is_zn}; i < ie_zn + 1; ++i) {
-    for (auto j{js_zn}; j < je_zn; ++j) {
-      auto& ey_zn{emfPtr()->ey()(i, j, ks)};
-      const auto hx_i{hxInc(i, j, ks - 1)};
-      ey_zn -= ca_z * hx_i;
-    }
-  }
-  // zp
-  const auto is_zp = iStartZP();
-  const auto ie_zp = iEndZP();
-  const auto js_zp = jStartZP();
-  const auto je_zp = jEndZP();
-  for (auto i{is_zp}; i < ie_zp; ++i) {
-    for (auto j{js_zp}; j < je_zp + 1; ++j) {
-      auto& ex_zp{emfPtr()->ex()(i, j, ke)};
-      const auto hy_i{hyInc(i, j, ke)};
-      ex_zp -= ca_z * hy_i;
-    }
-  }
-  for (auto i{is}; i < ie + 1; ++i) {
-    for (auto j{js}; j < je; ++j) {
-      auto& ey_zp{emfPtr()->ey()(i, j, ke)};
-      const auto hx_i{hxInc(i, j, ke)};
-      ey_zp += ca_z * hx_i;
-    }
-  }
+  correctEyXN();
+  correctEzXN();
+  correctEyXP();
+  correctEzXP();
+  correctEzYN();
+  correctExYN();
+  correctEzYP();
+  correctExYP();
+  correctExZN();
+  correctEyZN();
+  correctExZP();
+  correctEyZP();
 }
 
 void TFSF3DCorrector::correctH() {
-  const auto is{task()._x_range[0]};
-  const auto js{task()._y_range[0]};
-  const auto ks{task()._z_range[0]};
-  const auto ie{task()._x_range[1]};
-  const auto je{task()._y_range[1]};
-  const auto ke{task()._z_range[1]};
-
-  auto emf{emfPtr()};
-  const auto cb_x{cbx()};
-  const auto cb_y{cby()};
-  const auto cb_z{cbz()};
-
-  // xn
-  const auto js_xn = jStartXN();
-  const auto je_xn = jEndXN();
-  const auto ks_xn = kStartXN();
-  const auto ke_xn = kEndXN();
-  for (auto j{js_xn}; j < je_xn; ++j) {
-    for (auto k{ks_xn}; k < ke_xn + 1; ++k) {
-      auto& hz_xn{emfPtr()->hz()(is - 1, j, k)};
-      const auto ey_i{eyInc(is, j, k)};
-      hz_xn += cb_x * ey_i;
-    }
-  }
-  for (auto j{js_xn}; j < je_xn + 1; ++j) {
-    for (auto k{ks_xn}; k < ke_xn; ++k) {
-      auto& hy_xn{emfPtr()->hy()(is - 1, j, k)};
-      const auto ez_i{ezInc(is, j, k)};
-      hy_xn -= cb_x * ez_i;
-    }
-  }
-  // xp
-  const auto js_xp = jStartXP();
-  const auto je_xp = jEndXP();
-  const auto ks_xp = kStartXP();
-  const auto ke_xp = kEndXP();
-  for (auto j{js_xp}; j < je_xp; ++j) {
-    for (auto k{ks_xp}; k < ke_xp + 1; ++k) {
-      auto& hz_xp{emfPtr()->hz()(ie, j, k)};
-      const auto ey_i{eyInc(ie, j, k)};
-      hz_xp -= cb_x * ey_i;
-    }
-  }
-  for (auto j{js_xp}; j < je_xp + 1; ++j) {
-    for (auto k{ks_xp}; k < ke_xp; ++k) {
-      auto& hy_xp{emfPtr()->hy()(ie, j, k)};
-      const auto ez_i{ezInc(ie, j, k)};
-      hy_xp += cb_x * ez_i;
-    }
-  }
-
-  // yn
-  const auto is_yn = iStartYN();
-  const auto ie_yn = iEndYN();
-  const auto ks_yn = kStartYN();
-  const auto ke_yn = kEndYN();
-  for (auto i{is_yn}; i < ie_yn + 1; ++i) {
-    for (auto k{ks_yn}; k < ke_yn; ++k) {
-      auto& hx_yn{emfPtr()->hx()(i, js - 1, k)};
-      const auto ez_i{ezInc(i, js, k)};
-      hx_yn += cb_y * ez_i;
-    }
-  }
-  for (auto i{is_yn}; i < ie_yn; ++i) {
-    for (auto k{ks_yn}; k < ke_yn + 1; ++k) {
-      auto& hz_yn{emfPtr()->hz()(i, js - 1, k)};
-      const auto ex_i{exInc(i, js, k)};
-      hz_yn -= cb_y * ex_i;
-    }
-  }
-  // yp
-  const auto is_yp = iStartYP();
-  const auto ie_yp = iEndYP();
-  const auto ks_yp = kStartYP();
-  const auto ke_yp = kEndYP();
-  for (auto i{is_yp}; i < ie_yp + 1; ++i) {
-    for (auto k{ks_yp}; k < ke_yp; ++k) {
-      auto& hx_yp{emfPtr()->hx()(i, je, k)};
-      const auto ez_i{ezInc(i, je, k)};
-      hx_yp -= cb_y * ez_i;
-    }
-  }
-  for (auto i{is_yp}; i < ie_yp; ++i) {
-    for (auto k{ks_yp}; k < ke_yp + 1; ++k) {
-      auto& hz_yp{emfPtr()->hz()(i, je, k)};
-      const auto ex_i{exInc(i, je, k)};
-      hz_yp += cb_y * ex_i;
-    }
-  }
-
-  // zn
-  const auto is_zn = iStartZN();
-  const auto ie_zn = iEndZN();
-  const auto js_zn = jStartZN();
-  const auto je_zn = jEndZN();
-  for (auto i{is_zn}; i < ie_zn; ++i) {
-    for (auto j{js_zn}; j < je_zn + 1; ++j) {
-      auto& hy_zn{emfPtr()->hy()(i, j, ks - 1)};
-      const auto ex_i{exInc(i, j, ks)};
-      hy_zn += cb_z * ex_i;
-    }
-  }
-  for (auto i{is_zn}; i < ie_zn + 1; ++i) {
-    for (auto j{js_zn}; j < je_zn; ++j) {
-      auto& hx_zn{emfPtr()->hx()(i, j, ks - 1)};
-      const auto ey_i{eyInc(i, j, ks)};
-      hx_zn -= cb_z * ey_i;
-    }
-  }
-  // zp
-  const auto is_zp = iStartZP();
-  const auto ie_zp = iEndZP();
-  const auto js_zp = jStartZP();
-  const auto je_zp = jEndZP();
-  for (auto i{is_zp}; i < ie_zp; ++i) {
-    for (auto j{js_zp}; j < je_zp + 1; ++j) {
-      auto& hy_zp{emfPtr()->hy()(i, j, ke)};
-      const auto ex_i{exInc(i, j, ke)};
-      hy_zp -= cb_z * ex_i;
-    }
-  }
-  for (auto i{is}; i < ie + 1; ++i) {
-    for (auto j{js}; j < je; ++j) {
-      auto& hx_zp{emfPtr()->hx()(i, j, ke)};
-      const auto ey_i{eyInc(i, j, ke)};
-      hx_zp += cb_z * ey_i;
-    }
-  }
+  correctHyXN();
+  correctHzXN();
+  correctHyXP();
+  correctHzXP();
+  correctHxYN();
+  correctHzYN();
+  correctHxYP();
+  correctHzYP();
+  correctHxZN();
+  correctHyZN();
+  correctHxZP();
+  correctHyZP();
 }
 
 }  // namespace xfdtd

@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_RANDOM_H_
-#define _XFDTD_LIB_RANDOM_H_
+#ifndef _XFDTD_CORE_RANDOM_H_
+#define _XFDTD_CORE_RANDOM_H_
 
 #include <random>
 #include <string>
@@ -25,4 +25,4 @@ inline std::string randomString(size_t length) {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_RANDOM_H_
+#endif  // _XFDTD_CORE_RANDOM_H_

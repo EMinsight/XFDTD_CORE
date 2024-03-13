@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_VOLTAGE_MONITOR_H_
-#define _XFDTD_LIB_VOLTAGE_MONITOR_H_
+#ifndef _XFDTD_CORE_VOLTAGE_MONITOR_H_
+#define _XFDTD_CORE_VOLTAGE_MONITOR_H_
 
 #include <xfdtd/monitor/monitor.h>
 
@@ -26,6 +26,8 @@ class VoltageMonitor : public Monitor {
 
   void update() override;
 
+  void initTimeDependentVariable() override;
+
  private:
   Axis::Direction _direction;
   std::size_t _is, _ie, _js, _je, _ks, _ke;
@@ -35,4 +37,4 @@ class VoltageMonitor : public Monitor {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_VOLTAGE_MONITOR_H_
+#endif  // _XFDTD_CORE_VOLTAGE_MONITOR_H_

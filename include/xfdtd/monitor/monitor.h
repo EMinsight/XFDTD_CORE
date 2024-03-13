@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_MONITOR_H_
-#define _XFDTD_LIB_MONITOR_H_
+#ifndef _XFDTD_CORE_MONITOR_H_
+#define _XFDTD_CORE_MONITOR_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
@@ -60,6 +60,8 @@ class Monitor {
 
   virtual void output();
 
+   virtual void initTimeDependentVariable() {}
+
  protected:
   void defaultInit(std::shared_ptr<const GridSpace> grid_space,
                    std::shared_ptr<const CalculationParam> calculation_param,
@@ -88,4 +90,4 @@ class Monitor {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_MONITOR_H_
+#endif  // _XFDTD_CORE_MONITOR_H_

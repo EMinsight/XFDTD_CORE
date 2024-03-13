@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_CAPACITOR_H_
-#define _XFDTD_LIB_CAPACITOR_H_
+#ifndef _XFDTD_CORE_CAPACITOR_H_
+#define _XFDTD_CORE_CAPACITOR_H_
 
 #include "xfdtd/object/lumped_element/lumped_element.h"
 namespace xfdtd {
@@ -42,4 +42,4 @@ class Capacitor : public LumpedElement {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_CAPACITOR_H_
+#endif  // _XFDTD_CORE_CAPACITOR_H_

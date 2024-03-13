@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_PEC_PLANE_H_
-#define _XFDTD_LIB_PEC_PLANE_H_
+#ifndef _XFDTD_CORE_PEC_PLANE_H_
+#define _XFDTD_CORE_PEC_PLANE_H_
 
 #include <memory>
 
@@ -29,4 +29,4 @@ class PecPlane : public Object {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_PEC_PLANE_H_
+#endif  // _XFDTD_CORE_PEC_PLANE_H_

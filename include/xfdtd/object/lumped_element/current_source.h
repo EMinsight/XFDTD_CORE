@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_CURRENT_SOURCE_H_
-#define _XFDTD_LIB_CURRENT_SOURCE_H_
+#ifndef _XFDTD_CORE_CURRENT_SOURCE_H_
+#define _XFDTD_CORE_CURRENT_SOURCE_H_
 
 #include "xfdtd/object/lumped_element/lumped_element.h"
 #include "xfdtd/waveform/waveform.h"
@@ -31,6 +31,8 @@ class CurrentSource : public LumpedElement {
 
   void correctUpdateCoefficient() override;
 
+  void initTimeDependentVariable() override;
+
   void correctE() override;
 
   void correctH() override;
@@ -59,4 +61,4 @@ class CurrentSource : public LumpedElement {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_CURRENT_SOURCE_H_
+#endif  // _XFDTD_CORE_CURRENT_SOURCE_H_

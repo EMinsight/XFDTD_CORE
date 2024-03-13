@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_EXCEPTION_H_
-#define _XFDTD_LIB_EXCEPTION_H_
+#ifndef _XFDTD_CORE_EXCEPTION_H_
+#define _XFDTD_CORE_EXCEPTION_H_
 
 #include <exception>
 #include <string>
@@ -19,4 +19,4 @@ class XFDTDException : public std::exception {
 };
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_EXCEPTION_H_
+#endif  // _XFDTD_CORE_EXCEPTION_H_

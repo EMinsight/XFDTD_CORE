@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(XFDTDLib VERSION 0.0.0 LANGUAGES CXX)
+project(XFDTD_CORE VERSION 0.0.0 LANGUAGES CXX)
 
-set(XFDTDLib_MAIN_PROJECT OFF)
+set(XFDTD_CORE_MAIN_PROJECT OFF)
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
   set(XFDTDLib_MAIN_PROJECT ON)
 endif()
@@ -11,7 +11,7 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     message(FATAL_ERROR "In-source builds are not allowed")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -31,18 +31,18 @@ find_package(xtensor-blas REQUIRED)
 set(FFTW_USE_DOUBLE ON)
 find_package(xtensor-fftw REQUIRED)
 
-set(XFDTD_LIB_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-set(XFDTD_LIB_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
+set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
 set(XFDTD_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
-include_directories(${XFDTD_LIB_PUBLIC_INCLUDE_DIR}
-                    ${XFDTD_LIB_PRIVATE_INCLUDE_DIR}
+include_directories(${XFDTD_CORE_PUBLIC_INCLUDE_DIR}
+                    ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
                     ${FFTW_INCLUDE_DIR}
                     ${xtensor_INCLUDE_DIRS}
                     ${xtensor_blas_INCLUDE_DIRS}
                     ${xtensor_fftw_INCLUDE_DIRS})
 
-set(XFDTD_LIB_THIRD_PARTY_LIB ${FFTW_LIBRARIES}
+set(XFDTD_CORE_THIRD_PARTY_LIB ${FFTW_LIBRARIES}
                               ${BLAS_LIBRARIES}
                               ${LAPACK_LIBRARIES}
                               xtensor
