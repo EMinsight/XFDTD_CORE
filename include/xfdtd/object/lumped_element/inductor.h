@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_INDUCTOR_H_
-#define _XFDTD_LIB_INDUCTOR_H_
+#ifndef _XFDTD_CORE_INDUCTOR_H_
+#define _XFDTD_CORE_INDUCTOR_H_
 
 #include "xfdtd/object/lumped_element/lumped_element.h"
 
@@ -48,4 +48,4 @@ class Inductor : public LumpedElement {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_INDUCTOR_H_
+#endif  // _XFDTD_CORE_INDUCTOR_H_

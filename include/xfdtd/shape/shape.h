@@ -1,9 +1,10 @@
-#ifndef _XFDTD_LIB_SHAPE_H_
-#define _XFDTD_LIB_SHAPE_H_
+#ifndef _XFDTD_CORE_SHAPE_H_
+#define _XFDTD_CORE_SHAPE_H_
 
 #include <xfdtd/coordinate_system/coordinate_system.h>
 
 #include <memory>
+#include <vector>
 
 namespace xfdtd {
 
@@ -55,9 +56,12 @@ class Shape {
 
   virtual bool isInside(const Vector& vector) const = 0;
 
-  virtual Cube wrappedCube() const = 0;
+  virtual std::unique_ptr<Cube> wrappedCube() const = 0;
+
+  static std::unique_ptr<Cube> makeWrappedCube(
+      const std::vector<const Shape*>& shapes);
 };
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_SHAPE_H_
+#endif  // _XFDTD_CORE_SHAPE_H_

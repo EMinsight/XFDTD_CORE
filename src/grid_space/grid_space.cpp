@@ -58,6 +58,39 @@ GridSpace::GridSpace(GridSpaceRegion region, double dx, double dy, double dz,
       _e_node_y{std::move(e_node_y)},
       _e_node_z{std::move(e_node_z)} {}
 
+GridSpace::GridSpace(Dimension dimension, Type type, GridSpaceRegion region,
+                     GridBox global_box, double based_dx, double based_dy,
+                     double based_dz, double min_dx, double min_dy,
+                     double min_dz, xt::xarray<double> e_node_x,
+                     xt::xarray<double> e_node_y, xt::xarray<double> e_node_z,
+                     xt::xarray<double> h_node_x, xt::xarray<double> h_node_y,
+                     xt::xarray<double> h_node_z, xt::xarray<double> e_size_x,
+                     xt::xarray<double> e_size_y, xt::xarray<double> e_size_z,
+                     xt::xarray<double> h_size_x, xt::xarray<double> h_size_y,
+                     xt::xarray<double> h_size_z)
+    : _dimension{dimension},
+      _type{type},
+      _region{std::move(region)},
+      _global_box{global_box},
+      _based_dx{based_dx},
+      _based_dy{based_dy},
+      _based_dz{based_dz},
+      _min_dx{min_dx},
+      _min_dy{min_dy},
+      _min_dz{min_dz},
+      _e_node_x{std::move(e_node_x)},
+      _e_node_y{std::move(e_node_y)},
+      _e_node_z{std::move(e_node_z)},
+      _h_node_x{std::move(h_node_x)},
+      _h_node_y{std::move(h_node_y)},
+      _h_node_z{std::move(h_node_z)},
+      _e_size_x{std::move(e_size_x)},
+      _e_size_y{std::move(e_size_y)},
+      _e_size_z{std::move(e_size_z)},
+      _h_size_x{std::move(h_size_x)},
+      _h_size_y{std::move(h_size_y)},
+      _h_size_z{std::move(h_size_z)} {}
+
 GridSpace::Dimension GridSpace::dimension() const { return _dimension; }
 
 GridSpace::Type GridSpace::type() const { return _type; }
@@ -79,6 +112,10 @@ double GridSpace::minDx() const { return _min_dx; }
 double GridSpace::minDy() const { return _min_dy; }
 
 double GridSpace::minDz() const { return _min_dz; }
+
+std::shared_ptr<GridSpace> GridSpace::globalGridSpace() const {
+  return _global_grid_space.lock();
+}
 
 const xt::xarray<double>& GridSpace::eNodeX() const { return _e_node_x; }
 
@@ -165,8 +202,8 @@ Vector GridSpace::getGridEndVector(const Grid& grid) const {
 
 GridBox GridSpace::getGridBox(const Shape* shape) const {
   auto cube{shape->wrappedCube()};
-  auto origin{getGrid(cube.origin())};
-  auto end{getGrid(cube.end())};
+  auto origin{getGrid(cube->origin())};
+  auto end{getGrid(cube->end())};
   return GridBox{origin, end - origin};
 }
 
@@ -218,6 +255,19 @@ void GridSpace::extendGridSpace(Axis::Direction direction, std::size_t num,
     default:
       throw XFDTDGridSpaceException{"Invalid direction"};
   };
+}
+
+GridBox GridSpace::getGridBoxWithoutCheck(const Shape* shape) const {
+  auto cube{shape->wrappedCube()};
+  auto origin{getGridWithoutCheck(cube->origin())};
+  auto end{getGridWithoutCheck(cube->end())};
+  return GridBox{origin, end - origin};
+}
+
+Grid GridSpace::getGridWithoutCheck(const Vector& vector) const {
+  return {handleTransformXWithoutCheck(vector.x()),
+          handleTransformYWithoutCheck(vector.y()),
+          handleTransformZWithoutCheck(vector.z())};
 }
 
 xt::xarray<double>& GridSpace::eNodeX() { return _e_node_x; }
@@ -282,15 +332,30 @@ void GridSpace::setMinDy(double min_dy) { _min_dy = min_dy; }
 
 void GridSpace::setMinDz(double min_dz) { _min_dz = min_dz; }
 
-void GridSpace::generateGrid(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _grid = xt::xarray<std::shared_ptr<Grid>>::from_shape({nx, ny, nz});
+void GridSpace::generateMaterialGrid(std::size_t nx, std::size_t ny,
+                                     std::size_t nz) {
+  _grid_with_material =
+      xt::xarray<std::shared_ptr<Grid>>::from_shape({nx, ny, nz});
   for (auto i{0}; i < nx; ++i) {
     for (auto j{0}; j < ny; ++j) {
       for (auto k{0}; k < nz; ++k) {
-        _grid(i, j, k) = std::make_shared<Grid>(i, j, k);
+        _grid_with_material(i, j, k) = std::make_shared<Grid>(i, j, k);
       }
     }
   }
+}
+
+void GridSpace::setGlobalGridSpace(std::weak_ptr<GridSpace> global_grid_space) {
+  auto temp{global_grid_space.lock()};
+  if (temp == nullptr) {
+    throw XFDTDGridSpaceException{"Invalid global_grid_space"};
+  }
+
+  if (temp->dimension() != dimension()) {
+    throw XFDTDGridSpaceException{"Invalid dimension"};
+  }
+
+  _global_grid_space = std::move(global_grid_space);
 }
 
 std::size_t GridSpace::handleTransformX(double x) const {
@@ -306,6 +371,20 @@ std::size_t GridSpace::handleTransformX(double x) const {
 
   return xt::argmin(xt::abs(_e_node_x - x)).front();
 }
+
+GridBox GridSpace::validGridBoxEx() const {
+  return {Grid{0, 1, 1}, Grid{sizeX(), sizeY() - 1, sizeZ() - 1}};
+}
+
+GridBox GridSpace::validGridBoxEy() const {
+  return {Grid{1, 0, 1}, Grid{sizeX() - 1, sizeY(), sizeZ() - 1}};
+}
+
+GridBox GridSpace::validGridBoxEz() const {
+  return {Grid{1, 1, 0}, Grid{sizeX() - 1, sizeY() - 1, sizeZ()}};
+}
+
+GridBox GridSpace::globalBox() const { return _global_box; }
 
 std::size_t GridSpace::handleTransformY(double y) const {
   if (y < _e_node_y.front()) {
@@ -331,6 +410,18 @@ std::size_t GridSpace::handleTransformZ(double z) const {
                                   std::to_string(_e_node_z.back())};
   }
 
+  return xt::argmin(xt::abs(_e_node_z - z)).front();
+}
+
+std::size_t GridSpace::handleTransformXWithoutCheck(double x) const {
+  return xt::argmin(xt::abs(_e_node_x - x)).front();
+}
+
+std::size_t GridSpace::handleTransformYWithoutCheck(double y) const {
+  return xt::argmin(xt::abs(_e_node_y - y)).front();
+}
+
+std::size_t GridSpace::handleTransformZWithoutCheck(double z) const {
   return xt::argmin(xt::abs(_e_node_z - z)).front();
 }
 

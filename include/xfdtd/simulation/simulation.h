@@ -1,7 +1,17 @@
-#ifndef _XFDTD_LIB_SIMULATION_H_
-#define _XFDTD_LIB_SIMULATION_H_
+#ifndef _XFDTD_CORE_SIMULATION_H_
+#define _XFDTD_CORE_SIMULATION_H_
 
+#include <xfdtd/boundary/boundary.h>
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/divider/divider.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/monitor/monitor.h>
+#include <xfdtd/network/network.h>
+#include <xfdtd/nffft/nffft.h>
+#include <xfdtd/object/object.h>
+#include <xfdtd/waveform_source/waveform_source.h>
 
 #include <barrier>
 #include <chrono>
@@ -10,17 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "divider/divider.h"
 #include "domain/domain.h"
-#include "xfdtd/boundary/boundary.h"
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/exception/exception.h"
-#include "xfdtd/monitor/monitor.h"
-#include "xfdtd/network/network.h"
-#include "xfdtd/nffft/nffft.h"
-#include "xfdtd/object/object.h"
-#include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
 
@@ -40,6 +40,14 @@ class Simulation {
              Divider::Type divider_type = Divider::Type::UNDEFINED);
 
   ~Simulation();
+
+  bool isRoot() const { return true; }
+
+  int myRank() const { return 0; }
+
+  int numNode() const { return 1; }
+
+  int numThread() const { return _num_thread; }
 
   void addObject(std::shared_ptr<xfdtd::Object> object);
 
@@ -61,7 +69,7 @@ class Simulation {
 
   const std::shared_ptr<EMF>& emf() const;
 
-  void init(std::size_t time_step);
+  void init();
 
  private:
   double _dx, _dy, _dz;
@@ -80,15 +88,30 @@ class Simulation {
   std::chrono::high_resolution_clock::time_point _start_time;
   std::chrono::high_resolution_clock::time_point _end_time;
 
+  std::shared_ptr<GridSpace> _global_grid_space;
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
 
   std::vector<std::unique_ptr<Domain>> _domains;
 
+  std::unique_ptr<CalculationParam> makeCalculationParam();
+
+  std::unique_ptr<TimeParam> makeTimeParam();
+
+  std::unique_ptr<MaterialParam> makeMaterialParam();
+
   void generateDomain();
 
   void generateGridSpace();
+
+  void globalGridSpaceDecomposition();
+
+  void generateEMF();
+
+  void generateMaterialSpace();
+
+  void generateFDTDUpdateCoefficient();
 
   void correctMaterialSpace();
 
@@ -111,4 +134,4 @@ class Simulation {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_SIMULATION_H_
+#endif  // _XFDTD_CORE_SIMULATION_H_

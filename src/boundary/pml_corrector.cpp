@@ -1,8 +1,19 @@
-#include "boundary/pml_corrector.h"
-
-#include "boundary/pml_scheme.h"
+#include <boundary/pml_corrector.h>
+#include <boundary/pml_scheme.h>
+#include <sstream>
+#include <string>
 
 namespace xfdtd {
+
+std::string PMLCorrectorX::toString() const {
+  std::stringstream ss;
+  ss << "PMLCorrectorX: pml_e_c_start=" << _pml_e_c_start
+     << ", pml_h_c_start=" << _pml_h_c_start << ", a_s=" << _a_s
+     << ", a_n=" << _a_n << ", b_s=" << _b_s << ", b_n=" << _b_n
+     << ", c_e_s=" << _c_e_s << ", c_e_n=" << _c_e_n << ", c_h_s=" << _c_h_s
+     << ", c_h_n=" << _c_h_n;
+  return ss.str();
+}
 
 void PMLCorrectorX::correctE() {
   for (std::size_t i{_c_e_s}; i < _c_e_s + _c_e_n; ++i) {
@@ -44,6 +55,16 @@ void PMLCorrectorX::correctH() {
       }
     }
   }
+}
+
+std::string PMLCorrectorY::toString() const {
+  std::stringstream ss;
+  ss << "PMLCorrectorY: pml_e_c_start=" << _pml_e_c_start
+     << ", pml_h_c_start=" << _pml_h_c_start << ", a_s=" << _a_s
+     << ", a_n=" << _a_n << ", b_s=" << _b_s << ", b_n=" << _b_n
+     << ", c_e_s=" << _c_e_s << ", c_e_n=" << _c_e_n << ", c_h_s=" << _c_h_s
+     << ", c_h_n=" << _c_h_n;
+  return ss.str();
 }
 
 void PMLCorrectorY::correctE() {
@@ -92,6 +113,16 @@ void PMLCorrectorY::correctH() {
       }
     }
   }
+}
+
+std::string PMLCorrectorZ::toString() const {
+  std::stringstream ss;
+  ss << "PMLCorrectorZ: pml_e_c_start=" << _pml_e_c_start
+     << ", pml_h_c_start=" << _pml_h_c_start << ", a_s=" << _a_s
+     << ", a_n=" << _a_n << ", b_s=" << _b_s << ", b_n=" << _b_n
+     << ", c_e_s=" << _c_e_s << ", c_e_n=" << _c_e_n << ", c_h_s=" << _c_h_s
+     << ", c_h_n=" << _c_h_n;
+  return ss.str();
 }
 
 void PMLCorrectorZ::correctE() {

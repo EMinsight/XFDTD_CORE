@@ -1,12 +1,12 @@
-#ifndef _XFDTD_LIB_PORT_H_
-#define _XFDTD_LIB_PORT_H_
+#ifndef _XFDTD_CORE_PORT_H_
+#define _XFDTD_CORE_PORT_H_
+
+#include <xfdtd/monitor/current_monitor.h>
+#include <xfdtd/monitor/voltage_monitor.h>
 
 #include <complex>
 #include <cstddef>
 #include <memory>
-
-#include "xfdtd/monitor/current_monitor.h"
-#include "xfdtd/monitor/voltage_monitor.h"
 
 namespace xfdtd {
 
@@ -60,4 +60,4 @@ class Port {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_PORT_H_
+#endif  // _XFDTD_CORE_PORT_H_

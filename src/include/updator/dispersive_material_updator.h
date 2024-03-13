@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_DISPERSIVE_MATERIAL_UPDATOR_H_
-#define _XFDTD_LIB_DISPERSIVE_MATERIAL_UPDATOR_H_
+#ifndef _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_
+#define _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_
 
 #include <cstddef>
 #include <memory>
@@ -152,4 +152,4 @@ class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_DISPERSIVE_MATERIAL_UPDATOR_H_
+#endif  // _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_

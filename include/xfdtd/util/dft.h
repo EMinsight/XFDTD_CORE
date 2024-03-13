@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_DFT_H_
-#define _XFDTD_LIB_DFT_H_
+#ifndef _XFDTD_CORE_DFT_H_
+#define _XFDTD_CORE_DFT_H_
 
 #include <xfdtd/util/constant.h>
 
@@ -25,4 +25,4 @@ inline xt::xarray<std::complex<double>> dft(
 }
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_DFT_H_
+#endif  // _XFDTD_CORE_DFT_H_

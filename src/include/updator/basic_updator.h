@@ -1,7 +1,8 @@
-#ifndef _XFDTD_LIB_BASIC_UPDATOR_H_
-#define _XFDTD_LIB_BASIC_UPDATOR_H_
+#ifndef _XFDTD_CORE_BASIC_UPDATOR_H_
+#define _XFDTD_CORE_BASIC_UPDATOR_H_
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
+
 #include "updator/updator.h"
 
 namespace xfdtd {
@@ -48,10 +49,6 @@ class BasicUpdatorTE : public BasicUpdator {
   void updateEEdge() override;
 
   void updateHEdge() override{};
-
-  auto&& hxBuffer() { return hxBufferYN(); }
-
-  auto&& hyBuffer() { return hyBufferXN(); }
 };
 
 class BasicUpdator3D : public BasicUpdator {
@@ -93,4 +90,4 @@ class BasicUpdator3D : public BasicUpdator {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_BASIC_UPDATOR_H_
+#endif  // _XFDTD_CORE_BASIC_UPDATOR_H_

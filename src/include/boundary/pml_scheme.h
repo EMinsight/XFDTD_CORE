@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_PML_SCHEME_H_
-#define _XFDTD_LIB_PML_SCHEME_H_
+#ifndef _XFDTD_CORE_PML_SCHEME_H_
+#define _XFDTD_CORE_PML_SCHEME_H_
 
 namespace xfdtd {
 
@@ -12,4 +12,4 @@ inline auto correctPML(T& field, T& psi, const T& coeff_a, const T& coeff_b,
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_PML_SCHEME_H_
+#endif  // _XFDTD_CORE_PML_SCHEME_H_

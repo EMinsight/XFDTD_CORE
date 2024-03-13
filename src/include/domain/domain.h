@@ -1,18 +1,20 @@
-#ifndef _XFDTD_LIB_DOMAIN_H_
-#define _XFDTD_LIB_DOMAIN_H_
+#ifndef _XFDTD_CORE_DOMAIN_H_
+#define _XFDTD_CORE_DOMAIN_H_
+
+#include <xfdtd/divider/divider.h>
+#include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/monitor/monitor.h>
+#include <xfdtd/nffft/nffft.h>
+#include <xfdtd/waveform_source/waveform_source.h>
 
 #include <barrier>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
 
 #include "corrector/corrector.h"
-#include "divider/divider.h"
 #include "updator/updator.h"
-#include "xfdtd/grid_space/grid_space.h"
-#include "xfdtd/monitor/monitor.h"
-#include "xfdtd/nffft/nffft.h"
-#include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
 
@@ -39,13 +41,50 @@ class Domain {
         _nfffts{std::move(nfffts)},
         _barrier{barrier},
         _master{master} {
-    std::cout << "Domain: " << _id << " " << _task.toString() << '\n';
-    std::cout << _updator->toString() << '\n' << '\n';
+    std::stringstream ss;
+    ss << "Domain: " << _id << " Master: " << std::boolalpha << _master << "\n";
+    ss << _task.toString() << "\n";
+    ss << _updator->toString();
+
+    for (auto&& c : _correctors) {
+      ss << "\n\n" << c->toString();
+    }
+    ss << "\n";
+
+    std::cout << ss.str() << "\n";
+  }
+
+  Domain(std::size_t id, Divider::IndexTask task,
+         std::shared_ptr<GridSpace> grid_space,
+         std::shared_ptr<CalculationParam> calculation_param,
+         std::shared_ptr<EMF> emf, std::unique_ptr<Updator> updator,
+         std::barrier<>& barrier, bool master = false)
+      : _id{id},
+        _task{task},
+        _grid_space{std::move(grid_space)},
+        _calculation_param{std::move(calculation_param)},
+        _emf{std::move(emf)},
+        _updator{std::move(updator)},
+        _barrier{barrier},
+        _master{master} {
+    std::stringstream ss;
+    ss << "Domain: " << _id << " Master: " << std::boolalpha << _master << "\n";
+    ss << _task.toString() << "\n";
+    ss << _updator->toString();
+
+    for (auto&& c : _correctors) {
+      ss << "\n\n" << c->toString();
+    }
+    ss << "\n";
+
+    std::cout << ss.str() << "\n";
   }
 
   ~Domain() = default;
 
   auto id() const { return _id; }
+
+  auto task() const { return _task; }
 
   bool isCalculationDone() const;
 
@@ -87,26 +126,14 @@ class Domain {
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
   std::unique_ptr<Updator> _updator;
-  std::vector<std::shared_ptr<WaveformSource>> _waveform_sources;
-  std::vector<std::unique_ptr<Corrector>> _correctors;
-  std::vector<std::shared_ptr<Monitor>> _monitors;
-  std::vector<std::shared_ptr<NFFFT>> _nfffts;
+  std::vector<std::shared_ptr<WaveformSource>> _waveform_sources{};
+  std::vector<std::unique_ptr<Corrector>> _correctors{};
+  std::vector<std::shared_ptr<Monitor>> _monitors{};
+  std::vector<std::shared_ptr<NFFFT>> _nfffts{};
   std::barrier<>& _barrier;
   bool _master = false;
-
-  xt::xarray<double> makeHyBufferForEx();
-
-  xt::xarray<double> makeHzBufferForEx();
-
-  xt::xarray<double> makeHzBufferForEy();
-
-  xt::xarray<double> makeHxBufferForEy();
-
-  xt::xarray<double> makeHxBufferForEz();
-
-  xt::xarray<double> makeHyBufferForEz();
 };
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_DOMAIN_H_
+#endif  // _XFDTD_CORE_DOMAIN_H_

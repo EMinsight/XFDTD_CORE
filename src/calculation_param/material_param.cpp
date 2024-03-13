@@ -326,4 +326,34 @@ xt::xarray<double>& MaterialParam::property(MaterialParam::Attribute attribute,
   }
 }
 
+void MaterialParam::allocate(std::size_t nx, std::size_t ny, std::size_t nz) {
+  _eps_x = xt::zeros<double>({nx, ny + 1, nz + 1});
+  _eps_y = xt::zeros<double>({nx + 1, ny, nz + 1});
+  _eps_z = xt::zeros<double>({nx + 1, ny + 1, nz});
+  _eps_x.fill(constant::EPSILON_0);
+  _eps_y.fill(constant::EPSILON_0);
+  _eps_z.fill(constant::EPSILON_0);
+
+  _mu_x = xt::zeros<double>({nx + 1, ny, nz});
+  _mu_y = xt::zeros<double>({nx, ny + 1, nz});
+  _mu_z = xt::zeros<double>({nx, ny, nz + 1});
+  _mu_x.fill(constant::MU_0);
+  _mu_y.fill(constant::MU_0);
+  _mu_z.fill(constant::MU_0);
+
+  _sigma_e_x = xt::zeros<double>({nx, ny + 1, nz + 1});
+  _sigma_e_y = xt::zeros<double>({nx + 1, ny, nz + 1});
+  _sigma_e_z = xt::zeros<double>({nx + 1, ny + 1, nz});
+  _sigma_e_x.fill(constant::SIGMA_E_ZERO_APPROX);
+  _sigma_e_y.fill(constant::SIGMA_E_ZERO_APPROX);
+  _sigma_e_z.fill(constant::SIGMA_E_ZERO_APPROX);
+
+  _sigma_m_x = xt::zeros<double>({nx + 1, ny, nz});
+  _sigma_m_y = xt::zeros<double>({nx, ny + 1, nz});
+  _sigma_m_z = xt::zeros<double>({nx, ny, nz + 1});
+  _sigma_m_x.fill(constant::SIGMA_M_ZERO_APPROX);
+  _sigma_m_y.fill(constant::SIGMA_M_ZERO_APPROX);
+  _sigma_m_z.fill(constant::SIGMA_M_ZERO_APPROX);
+}
+
 }  // namespace xfdtd

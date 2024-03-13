@@ -1,3 +1,4 @@
+#include <xfdtd/divider/divider.h>
 #include <xfdtd/object/lumped_element/voltage_source.h>
 
 #include <cstddef>
@@ -5,7 +6,6 @@
 #include <utility>
 #include <xtensor.hpp>
 
-#include "divider/divider.h"
 #include "object/lumped_element_corrector.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/grid_space/grid_space.h"
@@ -105,8 +105,6 @@ void VoltageSource::init(std::shared_ptr<const GridSpace> grid_space,
     _db = dy;
     _dc = dz;
   }
-
-  _waveform->init(calculationParamPtr()->timeParam()->hTime());
 }
 
 void VoltageSource::correctUpdateCoefficient() {
@@ -163,6 +161,10 @@ void VoltageSource::correctUpdateCoefficient() {
     func(ceze, cezhx, cezhy, eps_z, sigma_e_z);
     return;
   }
+}
+
+void VoltageSource::initTimeDependentVariable() {
+  _waveform->init(calculationParamPtr()->timeParam()->hTime());
 }
 
 void VoltageSource::correctE() {

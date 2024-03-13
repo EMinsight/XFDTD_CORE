@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_FLOAT_COMPARE_H_
-#define _XFDTD_LIB_FLOAT_COMPARE_H_
+#ifndef _XFDTD_CORE_FLOAT_COMPARE_H_
+#define _XFDTD_CORE_FLOAT_COMPARE_H_
 
 #include <xfdtd/exception/exception.h>
 
@@ -42,4 +42,4 @@ inline bool floatCompare(double lhs, double rhs, FloatCompareOperator op,
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_FLOAT_COMPARE_H_
+#endif  // _XFDTD_CORE_FLOAT_COMPARE_H_

@@ -2,6 +2,7 @@
 #include <xfdtd/shape/cylinder.h>
 #include <xfdtd/shape/shape.h>
 
+#include <memory>
 #include <utility>
 
 #include "util/float_compare.h"
@@ -44,7 +45,7 @@ Axis Cylinder::axis() const { return _axis; }
 
 bool Cylinder::isInside(double x, double y, double z) const {
   auto wrapped_cube{wrappedCube()};
-  if (!wrapped_cube.isInside(x, y, z)) {
+  if (!wrapped_cube->isInside(x, y, z)) {
     return false;
   }
 
@@ -69,26 +70,29 @@ bool Cylinder::isInside(const Vector& vector) const {
   return isInside(vector.x(), vector.y(), vector.z());
 }
 
-Cube Cylinder::wrappedCube() const {
+std::unique_ptr<Cube> Cylinder::wrappedCube() const {
   auto size{radius() * 2};
 
   if (_axis == Axis::XYZ::X) {
     auto x{center().x() - _height / 2};
     auto y{center().y() - radius()};
     auto z{center().z() - radius()};
-    return Cube{Vector{x, y, z}, Vector{height(), size, size}};
+    return std::make_unique<Cube>(Vector{x, y, z},
+                                  Vector{height(), size, size});
   }
   if (_axis == Axis::XYZ::Y) {
     auto x{center().x() - radius()};
     auto y{center().y() - _height / 2};
     auto z{center().z() - radius()};
-    return Cube{Vector{x, y, z}, Vector{size, height(), size}};
+    return std::make_unique<Cube>(Vector{x, y, z},
+                                  Vector{size, height(), size});
   }
   if (_axis == Axis::XYZ::Z) {
     auto x{center().x() - radius()};
     auto y{center().y() - radius()};
     auto z{center().z() - _height / 2};
-    return Cube{Vector{x, y, z}, Vector{size, size, height()}};
+    return std::make_unique<Cube>(Vector{x, y, z},
+                                  Vector{size, size, height()});
   }
 
   throw XFDTDShapeFailToSupportException{"Cylinder axis is not supported"};

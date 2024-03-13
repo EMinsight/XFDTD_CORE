@@ -3,7 +3,7 @@
 #include <xtensor.hpp>
 #include <xtensor/xnpy.hpp>
 
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/monitor/voltage_monitor.h"
@@ -122,7 +122,7 @@ void rlcCircuit(int num_thread) {
       xfdtd::Axis::Direction::ZP, "./data/rlc_circuit")};
 
   auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, num_thread,
-                           xfdtd::Divider::Type::X}};
+                           xfdtd::Divider::Type::XY}};
   s.addObject(domain);
   s.addObject(plane);
   s.addObject(plane1);

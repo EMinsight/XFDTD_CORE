@@ -40,7 +40,7 @@ LinearDispersiveMaterialADEUpdator::LinearDispersiveMaterialADEUpdator(
     std::shared_ptr<const CalculationParam> calculation_param,
     std::shared_ptr<EMF> emf, Divider::IndexTask task)
     : BasicUpdator(std::move(grid_space), std::move(calculation_param),
-                   std::move(emf), std::move(task)) {
+                   std::move(emf), task) {
   if (_grid_space->type() != GridSpace::Type::UNIFORM) {
     throw std::runtime_error("Grid space type must be uniform");
   }
@@ -52,7 +52,7 @@ LorentzADEUpdator::LorentzADEUpdator(
     std::shared_ptr<EMF> emf, Divider::IndexTask task)
     : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
                                          std::move(calculation_param),
-                                         std::move(emf), std::move(task)} {
+                                         std::move(emf), task} {
   init();
 }
 
@@ -80,9 +80,13 @@ void LorentzADEUpdator::updateE() {
   auto& ex{_emf->ex()};
   auto& ey{_emf->ey()};
   auto& ez{_emf->ez()};
-  auto& ex_prev = _emf->exPrev();
-  auto& ey_prev = _emf->eyPrev();
-  auto& ez_prev = _emf->ezPrev();
+  // auto& ex_prev = _emf->exPrev();
+  // auto& ey_prev = _emf->eyPrev();
+  // auto& ez_prev = _emf->ezPrev();
+  throw std::runtime_error("Not implemented yet");
+  auto& ex_prev = _emf->ex();
+  auto& ey_prev = _emf->ey();
+  auto& ez_prev = _emf->ez();
 
   const auto& dt = _calculation_param->timeParam()->dt();
 
@@ -120,7 +124,7 @@ void LorentzADEUpdator::updateE() {
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js + 1}; j < je; ++j) {
       for (std::size_t k{ks + 1}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
         if (m_index == -1 || _lorentz_map.find(m_index) == _lorentz_map.end()) {
           ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
                         cexhy(i, j, k) * (hy(i, j, k) - hy(i, j, k - 1)) +
@@ -156,7 +160,7 @@ void LorentzADEUpdator::updateE() {
   for (std::size_t i{is + 1}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
       for (std::size_t k{ks + 1}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _lorentz_map.find(m_index) == _lorentz_map.end()) {
           ey(i, j, k) = ceye(i, j, k) * ey(i, j, k) +
@@ -194,7 +198,7 @@ void LorentzADEUpdator::updateE() {
   for (std::size_t i{is + 1}; i < ie; ++i) {
     for (std::size_t j{js + 1}; j < je; ++j) {
       for (std::size_t k{ks}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _lorentz_map.find(m_index) == _lorentz_map.end()) {
           ez(i, j, k) = ceze(i, j, k) * ez(i, j, k) +
@@ -268,7 +272,7 @@ DrudeADEUpdator::DrudeADEUpdator(
     std::shared_ptr<EMF> emf, Divider::IndexTask task)
     : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
                                          std::move(calculation_param),
-                                         std::move(emf), std::move(task)} {
+                                         std::move(emf), task} {
   init();
 }
 
@@ -352,7 +356,7 @@ void DrudeADEUpdator::updateE() {
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js + 1}; j < je; ++j) {
       for (std::size_t k{ks + 1}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
         if (m_index == -1 || _drude_map.find(m_index) == _drude_map.end()) {
           ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
                         cexhy(i, j, k) * (hy(i, j, k) - hy(i, j, k - 1)) +
@@ -385,7 +389,7 @@ void DrudeADEUpdator::updateE() {
   for (std::size_t i{is + 1}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
       for (std::size_t k{ks + 1}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _drude_map.find(m_index) == _drude_map.end()) {
           ey(i, j, k) = ceye(i, j, k) * ey(i, j, k) +
@@ -420,7 +424,7 @@ void DrudeADEUpdator::updateE() {
   for (std::size_t i{is + 1}; i < ie; ++i) {
     for (std::size_t j{js + 1}; j < je; ++j) {
       for (std::size_t k{ks}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _drude_map.find(m_index) == _drude_map.end()) {
           ez(i, j, k) = ceze(i, j, k) * ez(i, j, k) +
@@ -459,7 +463,7 @@ DebyeADEUpdator::DebyeADEUpdator(
     std::shared_ptr<EMF> emf, Divider::IndexTask task)
     : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
                                          std::move(calculation_param),
-                                         std::move(emf), std::move(task)} {
+                                         std::move(emf), task} {
   init();
 }
 
@@ -539,7 +543,7 @@ void DebyeADEUpdator::updateE() {
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js + 1}; j < je; ++j) {
       for (std::size_t k{ks + 1}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
         if (m_index == -1 || _debye_map.find(m_index) == _debye_map.end()) {
           ex(i, j, k) = cexe(i, j, k) * ex(i, j, k) +
                         cexhy(i, j, k) * (hy(i, j, k) - hy(i, j, k - 1)) +
@@ -572,7 +576,7 @@ void DebyeADEUpdator::updateE() {
   for (std::size_t i{is + 1}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
       for (std::size_t k{ks + 1}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _debye_map.find(m_index) == _debye_map.end()) {
           ey(i, j, k) = ceye(i, j, k) * ey(i, j, k) +
@@ -607,7 +611,7 @@ void DebyeADEUpdator::updateE() {
   for (std::size_t i{is + 1}; i < ie; ++i) {
     for (std::size_t j{js + 1}; j < je; ++j) {
       for (std::size_t k{ks}; k < ke; ++k) {
-        auto m_index = _grid_space->grid()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
 
         if (m_index == -1 || _debye_map.find(m_index) == _debye_map.end()) {
           ez(i, j, k) = ceze(i, j, k) * ez(i, j, k) +

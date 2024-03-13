@@ -47,15 +47,15 @@ void dielectricSphereScatter(int num_thread, xfdtd::Divider::Type type) {
 
   auto movie_xz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
-          std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.3, -0.3, -0.3},
-                                        xfdtd::Vector{0.6, 0.6, 0.6}),
+          std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.3, 0, -0.3},
+                                        xfdtd::Vector{0.6, dl, 0.6}),
           xfdtd::Axis::XYZ::Y, xfdtd::EMF::Field::EZ, "", ""),
       20, "movie_xz", "./data/dielectric_sphere_scatter/movie_xz")};
 
   auto movie_yz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
-          std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.3, -0.3, -0.3},
-                                        xfdtd::Vector{0.6, 0.6, 0.6}),
+          std::make_unique<xfdtd::Cube>(xfdtd::Vector{0, -0.3, -0.3},
+                                        xfdtd::Vector{dl, 0.6, 0.6}),
           xfdtd::Axis::XYZ::X, xfdtd::EMF::Field::EZ, "", ""),
       20, "movie_yz", "./data/dielectric_sphere_scatter/movie_yz")};
 
@@ -98,12 +98,14 @@ int main(int argc, char* argv[]) {
   if (argc > 1) {
     num_thread = std::stoi(argv[1]);
     if (argc > 2) {
-      if (std::string(argv[2]) == "Y") {
+      if (std::string(argv[2]) == "X") {
+        type = xfdtd::Divider::Type::X;
+      } else if (std::string(argv[2]) == "Y") {
         type = xfdtd::Divider::Type::Y;
       } else if (std::string(argv[2]) == "Z") {
         type = xfdtd::Divider::Type::Z;
       } else {
-        type = xfdtd::Divider::Type::X;
+        type = xfdtd::Divider::Type::XY;
       }
     }
   }

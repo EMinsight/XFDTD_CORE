@@ -1,5 +1,8 @@
-#ifndef _XFDTD_LIB_NETWORK_H_
-#define _XFDTD_LIB_NETWORK_H_
+#ifndef _XFDTD_CORE_NETWORK_H_
+#define _XFDTD_CORE_NETWORK_H_
+
+#include <xfdtd/exception/exception.h>
+#include <xfdtd/network/port.h>
 
 #include <complex>
 #include <cstddef>
@@ -7,9 +10,6 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
-
-#include "xfdtd/exception/exception.h"
-#include "xfdtd/network/port.h"
 namespace xfdtd {
 
 class XFDTDNetworkException : public XFDTDException {
@@ -61,4 +61,4 @@ class Network {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_NETWORK_H_
+#endif  // _XFDTD_CORE_NETWORK_H_

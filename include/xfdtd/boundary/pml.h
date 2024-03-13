@@ -1,13 +1,10 @@
-#ifndef _XFDTD_LIB_PML_H_
-#define _XFDTD_LIB_PML_H_
+#ifndef _XFDTD_CORE_PML_H_
+#define _XFDTD_CORE_PML_H_
 
 #include <xfdtd/boundary/boundary.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
 
-#include <memory>
-#include <xtensor/xview.hpp>
-
-#include "corrector/corrector.h"
-#include "xfdtd/coordinate_system/coordinate_system.h"
+#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 
@@ -160,4 +157,4 @@ class PML : public Boundary {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_PML_H_
+#endif  // _XFDTD_CORE_PML_H_

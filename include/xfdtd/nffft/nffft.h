@@ -1,13 +1,13 @@
-#ifndef _XFDTD_LIB_NFFFT_H_
-#define _XFDTD_LIB_NFFFT_H_
+#ifndef _XFDTD_CORE_NFFFT_H_
+#define _XFDTD_CORE_NFFFT_H_
+
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/grid_space/grid_space.h>
 
 #include <complex>
 #include <cstddef>
-
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/coordinate_system/coordinate_system.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
@@ -33,6 +33,8 @@ class NFFFT {
   void update();
 
   void output();
+
+  void initTimeDependentVariable();
 
   void outputRadiationPower();
 
@@ -89,4 +91,4 @@ class NFFFT {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_NFFFT_H_
+#endif  // _XFDTD_CORE_NFFFT_H_

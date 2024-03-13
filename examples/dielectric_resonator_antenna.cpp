@@ -1,7 +1,8 @@
+#include <xfdtd/divider/divider.h>
+
 #include <memory>
 #include <utility>
 
-#include "divider/divider.h"
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -134,12 +135,14 @@ int main(int argc, char* argv[]) {
   if (argc > 1) {
     num_thread = std::stoi(argv[1]);
     if (argc > 2) {
-      if (std::string(argv[2]) == "Y") {
+      if (std::string(argv[2]) == "X") {
+        type = xfdtd::Divider::Type::X;
+      } else if (std::string(argv[2]) == "Y") {
         type = xfdtd::Divider::Type::Y;
       } else if (std::string(argv[2]) == "Z") {
         type = xfdtd::Divider::Type::Z;
-      } else {
-        type = xfdtd::Divider::Type::X;
+      } else if (std::string(argv[2]) == "XY") {
+        type = xfdtd::Divider::Type::XY;
       }
     }
   }

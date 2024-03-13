@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_TRANSFORM_H_
-#define _XFDTD_LIB_TRANSFORM_H_
+#ifndef _XFDTD_CORE_TRANSFORM_H_
+#define _XFDTD_CORE_TRANSFORM_H_
 
 #include <tuple>
 
@@ -32,4 +32,4 @@ inline auto xYZToABC(const std::tuple<T, T, T> &data, Axis::XYZ xyz) {
 
 }  // namespace xfdtd::transform
 
-#endif  // _XFDTD_LIB_TRANSFORM_H_
+#endif  // _XFDTD_CORE_TRANSFORM_H_

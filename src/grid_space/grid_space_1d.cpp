@@ -1,6 +1,7 @@
 
+#include "grid_space/grid_space_1d.h"
+
 #include <xfdtd/grid_space/grid_space.h>
-#include <xfdtd/grid_space/grid_space_1d.h>
 
 #include <limits>
 #include <xtensor.hpp>
@@ -21,14 +22,15 @@ GridSpace1D::GridSpace1D(GridSpaceRegion region, double based_dz,
                 std::move(e_node_z)} {}
 
 void GridSpace1D::correctGridSpace() {
-  correctGridSpaceForOne(basedDz(), eNodeZ(), hNodeZ(), eSizeZ(), hSizeZ());
-  setMinDx(1);
-  setMinDy(1);
-  auto dz_unique{xt::unique(eSizeZ())};
-  auto min_dz{std::numeric_limits<double>::max()};
-  std::for_each(dz_unique.begin(), dz_unique.end(),
-                [&min_dz](double dz) { min_dz = std::min(min_dz, dz); });
-  setMinDz(min_dz);
+  // correctGridSpaceForOne(basedDz(), eNodeZ(), hNodeZ(), eSizeZ(), hSizeZ());
+  // setMinDx(1);
+  // setMinDy(1);
+  // auto dz_unique{xt::unique(eSizeZ())};
+  // auto min_dz{std::numeric_limits<double>::max()};
+  // std::for_each(dz_unique.begin(), dz_unique.end(),
+  //               [&min_dz](double dz) { min_dz = std::min(min_dz, dz); });
+  // setMinDz(min_dz);
+  throw std::runtime_error("Not implemented");
 }
 
 std::size_t GridSpace1D::handleTransformX(double x) const {

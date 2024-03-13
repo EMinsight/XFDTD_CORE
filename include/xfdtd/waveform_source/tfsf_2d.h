@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_TFSF_2D_H_
-#define _XFDTD_LIB_TFSF_2D_H_
+#ifndef _XFDTD_CORE_TFSF_2D_H_
+#define _XFDTD_CORE_TFSF_2D_H_
 
 #include "xfdtd/waveform_source/tfsf.h"
 
@@ -16,10 +16,6 @@ class TFSF2D : public TFSF {
             std::shared_ptr<CalculationParam> calculation_param,
             std::shared_ptr<EMF> emf) override;
 
-  void correctE() override;
-
-  void correctH() override;
-
   std::unique_ptr<Corrector> generateCorrector(
       const Divider::IndexTask &task) override;
 
@@ -28,4 +24,4 @@ class TFSF2D : public TFSF {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_TFSF_2D_H_
+#endif  // _XFDTD_CORE_TFSF_2D_H_

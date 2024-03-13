@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_PML_CORRECTOR_H_
-#define _XFDTD_LIB_PML_CORRECTOR_H_
+#ifndef _XFDTD_CORE_PML_CORRECTOR_H_
+#define _XFDTD_CORE_PML_CORRECTOR_H_
 
 #include <cstddef>
 #include <xtensor/xarray.hpp>
@@ -91,6 +91,8 @@ class PMLCorrectorX : public PMLCorrector {
 
   void correctH() override;
 
+  std::string toString() const override;
+
  private:
 };
 
@@ -121,6 +123,8 @@ class PMLCorrectorY : public PMLCorrector {
   void correctE() override;
 
   void correctH() override;
+
+  std::string toString() const override;
 
  private:
 };
@@ -153,9 +157,11 @@ class PMLCorrectorZ : public PMLCorrector {
 
   void correctH() override;
 
+  std::string toString() const override;
+
  private:
 };
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_PML_CORRECTOR_H_
+#endif  // _XFDTD_CORE_PML_CORRECTOR_H_

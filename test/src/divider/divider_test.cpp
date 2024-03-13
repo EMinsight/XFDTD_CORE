@@ -1,4 +1,4 @@
-#include "divider/divider.h"
+#include <xfdtd/divider/divider.h>
 
 #include <iostream>
 

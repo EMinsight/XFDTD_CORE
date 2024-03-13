@@ -1,7 +1,7 @@
-#ifndef _XFDTD_LIB_CURRENT_MONITOR_H_
-#define _XFDTD_LIB_CURRENT_MONITOR_H_
+#ifndef _XFDTD_CORE_CURRENT_MONITOR_H_
+#define _XFDTD_CORE_CURRENT_MONITOR_H_
 
-#include "xfdtd/monitor/monitor.h"
+#include <xfdtd/monitor/monitor.h>
 
 namespace xfdtd {
 
@@ -26,6 +26,8 @@ class CurrentMonitor : public Monitor {
 
   void update() override;
 
+  void initTimeDependentVariable() override;
+
  private:
   Axis::Direction _direction;
   std::size_t _is, _ie, _js, _je, _ks, _ke;
@@ -35,4 +37,4 @@ class CurrentMonitor : public Monitor {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_CURRENT_MONITOR_H_
+#endif  // _XFDTD_CORE_CURRENT_MONITOR_H_

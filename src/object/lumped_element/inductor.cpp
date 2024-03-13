@@ -39,9 +39,6 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
 
   auto dt{calculationParamPtr()->timeParam()->dt()};
   auto g{gridSpacePtr()};
-  auto nx{g->sizeX()};
-  auto ny{g->sizeY()};
-  auto nz{g->sizeZ()};
 
   _inductance_factor = in_f(_inductance, nodeCountSubAxisA(),
                             nodeCountSubAxisB(), nodeCountMainAxis());
@@ -53,8 +50,6 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
     _da = dy;
     _db = dz;
     _dc = dx;
-
-    emfPtr()->allocateJx(nx, ny + 1, nz + 1);
   }
 
   if (xyz() == Axis::XYZ::Y) {
@@ -64,8 +59,6 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
     _da = dz;
     _db = dx;
     _dc = dy;
-
-    emfPtr()->allocateJy(nx + 1, ny, nz + 1);
   }
 
   if (xyz() == Axis::XYZ::Z) {
@@ -75,8 +68,6 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
     _da = dx;
     _db = dy;
     _dc = dz;
-
-    emfPtr()->allocateJz(nx + 1, ny + 1, nz);
   }
 
   _cjcec = dt * _dc / (_inductance_factor * _da * _db);
@@ -114,34 +105,7 @@ void Inductor::correctUpdateCoefficient() {
   }
 }
 
-void Inductor::correctE() {
-  if (xyz() == Axis::XYZ::X) {
-    auto& jx{emfPtr()->jx()};
-    auto& ex{emfPtr()->ex()};
-    auto jx_view{xt::view(jx, rangeX(), rangeY(), rangeZ())};
-    auto ex_view{xt::view(ex, rangeX(), rangeY(), rangeZ())};
-    ex_view += _cecjc * jx_view;
-    jx_view = (_cjcec * ex_view + jx_view);
-  }
-
-  if (xyz() == Axis::XYZ::Y) {
-    auto& jy{emfPtr()->jy()};
-    auto& ey{emfPtr()->ey()};
-    auto jy_view{xt::view(jy, rangeX(), rangeY(), rangeZ())};
-    auto ey_view{xt::view(ey, rangeX(), rangeY(), rangeZ())};
-    ey_view += _cecjc * jy_view;
-    jy_view = (_cjcec * ey_view + jy_view);
-  }
-
-  if (xyz() == Axis::XYZ::Z) {
-    auto& jz{emfPtr()->jz()};
-    auto& ez{emfPtr()->ez()};
-    auto jz_view{xt::view(jz, rangeX(), rangeY(), rangeZ())};
-    auto ez_view{xt::view(ez, rangeX(), rangeY(), rangeZ())};
-    ez_view += _cecjc * jz_view;
-    jz_view = (_cjcec * ez_view + jz_view);
-  }
-}
+void Inductor::correctE() {}
 
 void Inductor::correctH() {}
 

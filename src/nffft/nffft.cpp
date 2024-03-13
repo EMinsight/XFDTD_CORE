@@ -103,8 +103,6 @@ void NFFFT::init(std::shared_ptr<const GridSpace> grid_space,
       {_frequencies.size(), size_i, 1UL, size_k});
   _mz_yp = xt::zeros<std::complex<double>>(
       {_frequencies.size(), size_i, 1UL, size_k});
-
-  initDFT();
 }
 
 void NFFFT::initDFT() {
@@ -263,6 +261,8 @@ void NFFFT::update() {
 }
 
 void NFFFT::output() {}
+
+void NFFFT::initTimeDependentVariable() { initDFT(); }
 
 void NFFFT::processFarField(const xt::xarray<double>& theta,
                             const xt::xarray<double>& phi,

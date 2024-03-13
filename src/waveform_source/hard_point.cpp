@@ -22,26 +22,26 @@ void HardPoint::updateWaveformSourceE() {}
 
 void HardPoint::updateWaveformSourceH() {}
 
-void HardPoint::correctE() {
-  // center
-  auto center{gridSpacePtr()->box().center()};
-  auto& ez{emfPtr()->ez()};
-  auto& ex{emfPtr()->ex()};
-  auto& ey{emfPtr()->ey()};
+// void HardPoint::correctE() {
+//   // center
+//   auto center{gridSpacePtr()->box().center()};
+//   auto& ez{emfPtr()->ez()};
+//   auto& ex{emfPtr()->ex()};
+//   auto& ey{emfPtr()->ey()};
 
-  ez(center.i(), center.j(), center.k()) +=
-      waveform()
-          ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
-  //   ex(center.i(), center.j(), center.k()) +=
-  //       waveform()
-  //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+//   ez(center.i(), center.j(), center.k()) +=
+//       waveform()
+//           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+//   //   ex(center.i(), center.j(), center.k()) +=
+//   //       waveform()
+//   //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
 
-  //   ey(center.i(), center.j(), center.k()) +=
-  //       waveform()
-  //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
-}
+//   //   ey(center.i(), center.j(), center.k()) +=
+//   //       waveform()
+//   //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+// }
 
-void HardPoint::correctH() {}
+// void HardPoint::correctH() {}
 
 std::unique_ptr<Corrector> HardPoint::generateCorrector(
     const Divider::IndexTask& task) {

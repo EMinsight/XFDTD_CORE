@@ -31,17 +31,6 @@ EMF::Field EMF::fieldFromAttributeAndComponent(EMF::Attribute a,
         default:
           throw XFDTDEMFException("Invalid component type");
       }
-    case EMF::Attribute::J:
-      switch (c) {
-        case EMF::Component::X:
-          return EMF::Field::JX;
-        case EMF::Component::Y:
-          return EMF::Field::JY;
-        case EMF::Component::Z:
-          return EMF::Field::JZ;
-        default:
-          throw XFDTDEMFException("Invalid component type");
-      }
     default:
       throw XFDTDEMFException("Invalid attribute type");
   }
@@ -51,15 +40,12 @@ EMF::Component EMF::componentFromField(EMF::Field f) {
   switch (f) {
     case EMF::Field::EX:
     case EMF::Field::HX:
-    case EMF::Field::JX:
       return EMF::Component::X;
     case EMF::Field::EY:
     case EMF::Field::HY:
-    case EMF::Field::JY:
       return EMF::Component::Y;
     case EMF::Field::EZ:
     case EMF::Field::HZ:
-    case EMF::Field::JZ:
       return EMF::Component::Z;
     default:
       throw XFDTDEMFException("Invalid field type");
@@ -76,10 +62,6 @@ EMF::Attribute EMF::attributeFromField(EMF::Field f) {
     case EMF::Field::HY:
     case EMF::Field::HZ:
       return EMF::Attribute::H;
-    case EMF::Field::JX:
-    case EMF::Field::JY:
-    case EMF::Field::JZ:
-      return EMF::Attribute::J;
     default:
       throw XFDTDEMFException("Invalid field type");
   }
@@ -97,24 +79,6 @@ const xt::xarray<double>& EMF::hy() const { return _hy; }
 
 const xt::xarray<double>& EMF::hz() const { return _hz; }
 
-const xt::xarray<double>& EMF::jx() const { return _jx; }
-
-const xt::xarray<double>& EMF::jy() const { return _jy; }
-
-const xt::xarray<double>& EMF::jz() const { return _jz; }
-
-const xt::xarray<double>& EMF::jxPrev() const { return _jx_prev; }
-
-const xt::xarray<double>& EMF::jyPrev() const { return _jy_prev; }
-
-const xt::xarray<double>& EMF::jzPrev() const { return _jz_prev; }
-
-const xt::xarray<double>& EMF::exPrev() const { return _ex_prev; }
-
-const xt::xarray<double>& EMF::eyPrev() const { return _ey_prev; }
-
-const xt::xarray<double>& EMF::ezPrev() const { return _ez_prev; }
-
 const xt::xarray<double>& EMF::field(Field f) const {
   switch (f) {
     case Field::EX:
@@ -129,12 +93,6 @@ const xt::xarray<double>& EMF::field(Field f) const {
       return _hy;
     case Field::HZ:
       return _hz;
-    case Field::JX:
-      return _jx;
-    case Field::JY:
-      return _jy;
-    case Field::JZ:
-      return _jz;
     default:
       throw XFDTDEMFException("Invalid field type");
   }
@@ -156,24 +114,6 @@ xt::xarray<double>& EMF::hy() { return _hy; }
 
 xt::xarray<double>& EMF::hz() { return _hz; }
 
-xt::xarray<double>& EMF::jx() { return _jx; }
-
-xt::xarray<double>& EMF::jy() { return _jy; }
-
-xt::xarray<double>& EMF::jz() { return _jz; }
-
-xt::xarray<double>& EMF::jxPrev() { return _jx_prev; }
-
-xt::xarray<double>& EMF::jyPrev() { return _jy_prev; }
-
-xt::xarray<double>& EMF::jzPrev() { return _jz_prev; }
-
-xt::xarray<double>& EMF::exPrev() { return _ex_prev; }
-
-xt::xarray<double>& EMF::eyPrev() { return _ey_prev; }
-
-xt::xarray<double>& EMF::ezPrev() { return _ez_prev; }
-
 xt::xarray<double>& EMF::field(Field f) {
   switch (f) {
     case Field::EX:
@@ -188,12 +128,6 @@ xt::xarray<double>& EMF::field(Field f) {
       return _hy;
     case Field::HZ:
       return _hz;
-    case Field::JX:
-      return _jx;
-    case Field::JY:
-      return _jy;
-    case Field::JZ:
-      return _jz;
     default:
       throw XFDTDEMFException("Invalid field type");
   }
@@ -350,42 +284,6 @@ void EMF::allocateHy(std::size_t nx, std::size_t ny, std::size_t nz) {
 
 void EMF::allocateHz(std::size_t nx, std::size_t ny, std::size_t nz) {
   _hz = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateJx(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _jx = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateJy(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _jy = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateJz(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _jz = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateJxPrev(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _jx_prev = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateJyPrev(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _jy_prev = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateJzPrev(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _jz_prev = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateExPrev(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _ex_prev = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateEyPrev(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _ey_prev = xt::zeros<double>({nx, ny, nz});
-}
-
-void EMF::allocateEzPrev(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _ez_prev = xt::zeros<double>({nx, ny, nz});
 }
 
 }  // namespace xfdtd

@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_WAVEFORM_H_
-#define _XFDTD_LIB_WAVEFORM_H_
+#ifndef _XFDTD_CORE_WAVEFORM_H_
+#define _XFDTD_CORE_WAVEFORM_H_
 
 #include <functional>
 #include <xtensor/xarray.hpp>
@@ -20,6 +20,7 @@ class Waveform {
 
   ~Waveform() = default;
 
+  // TODO(franzero): use std::unique_ptr<Waveform> instead of Waveform
   static Waveform sine(double frequency, double amplitude = 1.0);
 
   static Waveform cosine(double frequency, double amplitude = 1.0);
@@ -67,4 +68,4 @@ class Waveform {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_WAVEFORM_H_
+#endif  // _XFDTD_CORE_WAVEFORM_H_

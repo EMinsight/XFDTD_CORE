@@ -1,8 +1,12 @@
-#include <xfdtd/grid_space/grid_space_3d.h>
+#include "grid_space/grid_space_3d.h"
 
 #include <limits>
+#include <memory>
 #include <utility>
 #include <xtensor.hpp>
+
+#include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
@@ -19,6 +23,102 @@ GridSpace3D::GridSpace3D(GridSpaceRegion region, double based_dx,
                 std::move(e_node_x),
                 std::move(e_node_y),
                 std::move(e_node_z)} {}
+
+GridSpace3D::GridSpace3D(
+    Type type, GridSpaceRegion region, GridBox global_box, double based_dx,
+    double based_dy, double based_dz, double min_dx, double min_dy,
+    double min_dz, xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
+    xt::xarray<double> e_node_z, xt::xarray<double> h_node_x,
+    xt::xarray<double> h_node_y, xt::xarray<double> h_node_z,
+    xt::xarray<double> e_size_x, xt::xarray<double> e_size_y,
+    xt::xarray<double> e_size_z, xt::xarray<double> h_size_x,
+    xt::xarray<double> h_size_y, xt::xarray<double> h_size_z)
+    : GridSpace{Dimension::THREE,
+                type,
+                std::move(region),
+                global_box,
+                based_dx,
+                based_dy,
+                based_dz,
+                min_dx,
+                min_dy,
+                min_dz,
+                std::move(e_node_x),
+                std::move(e_node_y),
+                std::move(e_node_z),
+                std::move(h_node_x),
+                std::move(h_node_y),
+                std::move(h_node_z),
+                std::move(e_size_x),
+                std::move(e_size_y),
+                std::move(e_size_z),
+                std::move(h_size_x),
+                std::move(h_size_y),
+                std::move(h_size_z)} {
+  _max_x = eNodeX().back();
+  _max_y = eNodeY().back();
+  _max_z = eNodeZ().back();
+  _min_x = eNodeX().front();
+  _min_y = eNodeY().front();
+  _min_z = eNodeZ().front();
+}
+
+std::unique_ptr<GridSpace> GridSpace3D::subGridSpace(
+    std::size_t start_i, std::size_t start_j, std::size_t start_k,
+    std::size_t end_i, std::size_t end_j, std::size_t end_k) const {
+  auto max_i = sizeX();
+  auto max_j = sizeY();
+  auto max_k = sizeZ();
+
+  if (max_i < start_i || max_j < start_j || max_k < start_k) {
+    throw XFDTDGridSpaceException("subGridSpace: start index is out of range");
+  }
+
+  end_i = std::min(end_i, max_i);
+  end_j = std::min(end_j, max_j);
+  end_k = std::min(end_k, max_k);
+
+  auto based_dx{basedDx()};
+  auto based_dy{basedDy()};
+  auto based_dz{basedDz()};
+  auto min_dx{minDx()};
+  auto min_dy{minDy()};
+  auto min_dz{minDz()};
+  xt::xarray<double> e_node_x{
+      xt::view(eNodeX(), xt::range(start_i, end_i + 1))};
+  xt::xarray<double> e_node_y{
+      xt::view(eNodeY(), xt::range(start_j, end_j + 1))};
+  xt::xarray<double> e_node_z{
+      xt::view(eNodeZ(), xt::range(start_k, end_k + 1))};
+  xt::xarray<double> h_node_x{xt::view(hNodeX(), xt::range(start_i, end_i))};
+  xt::xarray<double> h_node_y{xt::view(hNodeY(), xt::range(start_j, end_j))};
+  xt::xarray<double> h_node_z{xt::view(hNodeZ(), xt::range(start_k, end_k))};
+  xt::xarray<double> e_size_x{xt::view(eSizeX(), xt::range(start_i, end_i))};
+  xt::xarray<double> e_size_y{xt::view(eSizeY(), xt::range(start_j, end_j))};
+  xt::xarray<double> e_size_z{xt::view(eSizeZ(), xt::range(start_k, end_k))};
+  xt::xarray<double> h_size_x{
+      xt::view(hSizeX(), xt::range(start_i, end_i + 1))};
+  xt::xarray<double> h_size_y{
+      xt::view(hSizeY(), xt::range(start_j, end_j + 1))};
+  xt::xarray<double> h_size_z{
+      xt::view(hSizeZ(), xt::range(start_k, end_k + 1))};
+
+  auto region = GridSpaceRegion{
+      Vector{e_node_x.front(), e_node_y.front(), e_node_z.front()},
+      Vector{e_node_x.back(), e_node_y.back(), e_node_z.back()}};
+
+  auto global_box =
+      GridBox{Grid{start_i, start_j, start_k},
+              Grid{end_i - start_i, end_j - start_j, end_k - start_k}};
+
+  return std::make_unique<GridSpace3D>(
+      type(), std::move(region), global_box, based_dx, based_dy, based_dz,
+      min_dx, min_dy, min_dz, std::move(e_node_x), std::move(e_node_y),
+      std::move(e_node_z), std::move(h_node_x), std::move(h_node_y),
+      std::move(h_node_z), std::move(e_size_x), std::move(e_size_y),
+      std::move(e_size_z), std::move(h_size_x), std::move(h_size_y),
+      std::move(h_size_z));
+}
 
 void GridSpace3D::correctGridSpace() {
   correctGridSpaceForOne(basedDx(), eNodeX(), hNodeX(), eSizeX(), hSizeX());
@@ -40,10 +140,6 @@ void GridSpace3D::correctGridSpace() {
                 [&min_dz](double dz) { min_dz = std::min(min_dz, dz); });
   setMinDz(min_dz);
 
-  generateGrid(hNodeX().size(), hNodeY().size(), hNodeZ().size());
-  _nx = hNodeX().size();
-  _ny = hNodeY().size();
-  _nz = hNodeZ().size();
   _max_x = eNodeX().back();
   _max_y = eNodeY().back();
   _max_z = eNodeZ().back();

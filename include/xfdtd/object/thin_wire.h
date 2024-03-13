@@ -1,5 +1,5 @@
-#ifndef _XFDTD_LIB_THIN_WIRE_H_
-#define _XFDTD_LIB_THIN_WIRE_H_
+#ifndef _XFDTD_CORE_THIN_WIRE_H_
+#define _XFDTD_CORE_THIN_WIRE_H_
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/object/object.h"
@@ -36,4 +36,4 @@ class ThinWire : public Object {
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_THIN_WIRE_H_
+#endif  // _XFDTD_CORE_THIN_WIRE_H_

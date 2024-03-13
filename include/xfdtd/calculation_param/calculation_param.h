@@ -1,31 +1,34 @@
-#ifndef _XFDTD_LIB_CALCULATION_PARAM_H_
-#define _XFDTD_LIB_CALCULATION_PARAM_H_
+#ifndef _XFDTD_CORE_CALCULATION_PARAM_H_
+#define _XFDTD_CORE_CALCULATION_PARAM_H_
 
+#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/exception/exception.h>
-#include <xfdtd/grid_space/grid_space.h>
 
 #include <memory>
 #include <vector>
-
-#include "xfdtd/coordinate_system/coordinate_system.h"
+#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 
+class GridSpace;
+
 class TimeParam {
  public:
+  static constexpr double DEFAULT_CFL{0.98};
+
+  static double calculateDt(double cfl, double dx, double dy, double dz);
+
+  static double calculateDt(double cfl, double dx, double dy);
+
+  static double calculateDt(double cfl, double dz);
+
   TimeParam(double dt, std::size_t size, std::size_t start_time_step = 0);
 
-  // TimeParam(const TimeParam&) = default;
-
-  // TimeParam(TimeParam&&) noexcept = default;
-
-  // TimeParam& operator=(const TimeParam&) = default;
-
-  // TimeParam& operator=(TimeParam&&) noexcept = default;
-
-  virtual ~TimeParam() = default;
+  explicit TimeParam(double cfl = DEFAULT_CFL);
 
   double dt() const;
+
+  double cfl() const;
 
   std::size_t startTimeStep() const;
 
@@ -41,15 +44,21 @@ class TimeParam {
 
   virtual void reset();
 
+  void setDt(double dt);
+
+  void setTimeParamRunRange(std::size_t end_time_step,
+                            std::size_t start_time_step = 0);
+
   xt::xarray<double> eTime() const;
 
   xt::xarray<double> hTime() const;
 
  private:
-  double _dt;
-  std::size_t _start_time_step;
-  std::size_t _size;
-  std::size_t _current_time_step;
+  double _cfl;
+  double _dt{};
+  std::size_t _start_time_step{};
+  std::size_t _size{};
+  std::size_t _current_time_step{};
 };
 
 // forward declare
@@ -152,6 +161,8 @@ class MaterialParam {
   auto&& materialArray();
 
   void addMaterial(std::shared_ptr<Material> material);
+
+  void allocate(std::size_t nx, std::size_t ny, std::size_t nz);
 
  private:
   xt::xarray<double> _eps_x;
@@ -291,14 +302,10 @@ class XFDTDCalculationParamException : public XFDTDException {
 
 class CalculationParam {
  public:
-  inline static constexpr double DEFAULT_CFL{0.98};
 
-  CalculationParam(const GridSpace* grid_space, std::size_t start_time_step,
-                   std::size_t time_size, double cfl = DEFAULT_CFL);
+  CalculationParam();
 
   ~CalculationParam() = default;
-
-  double cfl() const;
 
   const std::unique_ptr<TimeParam>& timeParam() const;
 
@@ -316,17 +323,16 @@ class CalculationParam {
 
   void calculateCoefficient(const GridSpace* grid_space);
 
-  static double calculateDt(double cfl, double dx, double dy, double dz);
+  void setMaterialParam(std::unique_ptr<MaterialParam> material_param);
+
+  void setTimeParam(std::unique_ptr<TimeParam> time_param);
 
  private:
-  double _cfl;
   std::unique_ptr<TimeParam> _time_param;
   std::unique_ptr<MaterialParam> _material_param;
   std::unique_ptr<FDTDUpdateCoefficient> _fdtd_coefficient;
-
-  void allocate(const GridSpace* grid_space);
 };
 
 }  // namespace xfdtd
 
-#endif  // _XFDTD_LIB_CALCULATION_PARAM_H_
+#endif  // _XFDTD_CORE_CALCULATION_PARAM_H_
