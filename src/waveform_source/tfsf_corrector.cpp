@@ -7,24 +7,23 @@ namespace xfdtd {
 
 std::string TFSFCorrector::toString() const {
   std::stringstream ss;
-  ss << "Total Field Scattered Field Corrector: ";
-  ss << "Global Task: \n";
-  ss << "XN: "
+  ss << "Total Field Scattered Field Corrector:\n";
+  ss << " XN: "
      << "EY: " << globalEyTaskXN().toString()
      << " EZ: " << globalEzTaskXN().toString() << "\n";
-  ss << "XP: "
+  ss << " XP: "
      << "EY: " << globalEyTaskXP().toString()
      << " EZ: " << globalEzTaskXP().toString() << "\n";
-  ss << "YN: "
+  ss << " YN: "
      << "EZ: " << globalEzTaskYN().toString()
      << " EX: " << globalExTaskYN().toString() << "\n";
-  ss << "YP: "
+  ss << " YP: "
      << "EZ: " << globalEzTaskYP().toString()
      << " EX: " << globalExTaskYP().toString() << "\n";
-  ss << "ZN: "
+  ss << " ZN: "
      << "EX: " << globalExTaskZN().toString()
      << " EY: " << globalEyTaskZN().toString() << "\n";
-  ss << "ZP: "
+  ss << " ZP: "
      << "EX: " << globalExTaskZP().toString()
      << " EY: " << globalEyTaskZP().toString();
   return ss.str();

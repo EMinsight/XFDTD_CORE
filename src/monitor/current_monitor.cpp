@@ -19,13 +19,13 @@ void CurrentMonitor::init(
     std::shared_ptr<const EMF> emf) {
   defaultInit(grid_space, calculation_param, emf);
 
-  auto grid_box{gridBoxPtr()};
-  _is = grid_box->origin().i();
-  _ie = grid_box->end().i();
-  _js = grid_box->origin().j();
-  _je = grid_box->end().j();
-  _ks = grid_box->origin().k();
-  _ke = grid_box->end().k();
+  auto grid_box{nodeGridBox()};
+  _is = grid_box.origin().i();
+  _ie = grid_box.end().i();
+  _js = grid_box.origin().j();
+  _je = grid_box.end().j();
+  _ks = grid_box.origin().k();
+  _ke = grid_box.end().k();
 
   if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::X) {
     _da = xt::view(gridSpacePtr()->eSizeY(), xt::range(_js, _je + 1));

@@ -1,11 +1,13 @@
 #include <xfdtd/grid_space/grid_space.h>
 
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <xtensor.hpp>
 
 #include "util/float_compare.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
 
 namespace xfdtd {
@@ -32,6 +34,11 @@ std::size_t Grid::materialIndex() const { return _material_index; }
 
 void Grid::setMaterialIndex(std::size_t index) { _material_index = index; }
 
+std::string Grid::toString() const {
+  return "Grid{i: " + std::to_string(_i) + ", j: " + std::to_string(_j) +
+         ", k: " + std::to_string(_k) + "}";
+}
+
 GridBox::GridBox(Grid origin, Grid size) : _origin{origin}, _size{size} {}
 
 Grid GridBox::origin() const { return _origin; }
@@ -45,11 +52,18 @@ Grid GridBox::center() const {
 
 Grid GridBox::end() const { return origin() + size(); }
 
-GridSpace::GridSpace(GridSpaceRegion region, double dx, double dy, double dz,
-                     Dimension dimension, xt::xarray<double> e_node_x,
-                     xt::xarray<double> e_node_y, xt::xarray<double> e_node_z)
-    : _region{std::move(region)},
-      _based_dx{dx},
+std::string GridBox::toString() const {
+  std::stringstream ss;
+  ss << "GridBox:\n";
+  ss << " Origin: " << _origin.toString() << "\n";
+  ss << " Size: " << _size.toString();
+  return ss.str();
+}
+
+GridSpace::GridSpace(double dx, double dy, double dz, Dimension dimension,
+                     xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
+                     xt::xarray<double> e_node_z)
+    : _based_dx{dx},
       _based_dy{dy},
       _based_dz{dz},
       _dimension{dimension},
@@ -58,19 +72,17 @@ GridSpace::GridSpace(GridSpaceRegion region, double dx, double dy, double dz,
       _e_node_y{std::move(e_node_y)},
       _e_node_z{std::move(e_node_z)} {}
 
-GridSpace::GridSpace(Dimension dimension, Type type, GridSpaceRegion region,
-                     GridBox global_box, double based_dx, double based_dy,
-                     double based_dz, double min_dx, double min_dy,
-                     double min_dz, xt::xarray<double> e_node_x,
-                     xt::xarray<double> e_node_y, xt::xarray<double> e_node_z,
-                     xt::xarray<double> h_node_x, xt::xarray<double> h_node_y,
-                     xt::xarray<double> h_node_z, xt::xarray<double> e_size_x,
-                     xt::xarray<double> e_size_y, xt::xarray<double> e_size_z,
-                     xt::xarray<double> h_size_x, xt::xarray<double> h_size_y,
-                     xt::xarray<double> h_size_z)
+GridSpace::GridSpace(Dimension dimension, Type type, GridBox global_box,
+                     double based_dx, double based_dy, double based_dz,
+                     double min_dx, double min_dy, double min_dz,
+                     xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
+                     xt::xarray<double> e_node_z, xt::xarray<double> h_node_x,
+                     xt::xarray<double> h_node_y, xt::xarray<double> h_node_z,
+                     xt::xarray<double> e_size_x, xt::xarray<double> e_size_y,
+                     xt::xarray<double> e_size_z, xt::xarray<double> h_size_x,
+                     xt::xarray<double> h_size_y, xt::xarray<double> h_size_z)
     : _dimension{dimension},
       _type{type},
-      _region{std::move(region)},
       _global_box{global_box},
       _based_dx{based_dx},
       _based_dy{based_dy},
@@ -95,7 +107,12 @@ GridSpace::Dimension GridSpace::dimension() const { return _dimension; }
 
 GridSpace::Type GridSpace::type() const { return _type; }
 
-GridSpace::GridSpaceRegion GridSpace::region() const { return _region; }
+GridSpace::GridSpaceRegion GridSpace::region() const {
+  return Cube{Vector{eNodeX().front(), eNodeY().front(), eNodeZ().front()},
+              Vector{eNodeX().back() - eNodeX().front(),
+                     eNodeY().back() - eNodeY().front(),
+                     eNodeZ().back() - eNodeZ().front()}};
+}
 
 GridBox GridSpace::box() const {
   return GridBox{Grid{0, 0, 0}, Grid{sizeX(), sizeY(), sizeZ()}};
@@ -385,6 +402,53 @@ GridBox GridSpace::validGridBoxEz() const {
 }
 
 GridBox GridSpace::globalBox() const { return _global_box; }
+
+static std::string dimensionToString(GridSpace::Dimension condition) {
+  switch (condition) {
+    case GridSpace::Dimension::ONE:
+      return "ONE";
+    case GridSpace::Dimension::TWO:
+      return "TWO";
+    case GridSpace::Dimension::THREE:
+      return "THREE";
+    default:
+      return "UNDEFINED";
+  }
+}
+
+static std::string typeToString(GridSpace::Type condition) {
+  switch (condition) {
+    case GridSpace::Type::UNIFORM:
+      return "UNIFORM";
+    case GridSpace::Type::NONUNIFORM:
+      return "NON_UNIFORM";
+    default:
+      return "UNDEFINED";
+  }
+}
+
+std::string GridSpace::toString() const {
+  std::stringstream ss;
+
+  ss << "GridSpace: \n";
+  ss << " Dimension: " << dimensionToString(dimension()) << "\n";
+  ss << " Type: " << typeToString(type()) << "\n";
+  ss << " Region: " << region().toString() << "\n";
+  ss << " Box: " << box().toString() << "\n";
+  ss << " GlobalBox: " << globalBox().toString();
+
+  return ss.str();
+}
+
+Grid GridSpace::transformNodeToGlobal(const Grid& grid) const {
+  auto offset{globalBox().origin()};
+  return offset + grid;
+}
+
+GridBox GridSpace::transformNodeToGlobal(const GridBox& grid_box) const {
+  auto offset{globalBox().origin()};
+  return {offset + grid_box.origin(), grid_box.size()};
+}
 
 std::size_t GridSpace::handleTransformY(double y) const {
   if (y < _e_node_y.front()) {

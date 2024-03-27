@@ -30,6 +30,29 @@ inline auto xYZToABC(const std::tuple<T, T, T> &data, Axis::XYZ xyz) {
   }
 }
 
+template <typename T>
+inline auto aBCToXYZ(const std::tuple<T, T, T> &data, Axis::XYZ xyz) {
+  switch (xyz) {
+    case Axis::XYZ::X: {
+      // x: c y: a z: b
+      return std::make_tuple(std::get<2>(data), std::get<0>(data),
+                             std::get<1>(data));
+    }
+    case Axis::XYZ::Y: {
+      // x: b y: c z: a
+      return std::make_tuple(std::get<1>(data), std::get<2>(data),
+                             std::get<0>(data));
+    }
+    case Axis::XYZ::Z: {
+      // x: a y: b z: c
+      return std::make_tuple(std::get<0>(data), std::get<1>(data),
+                             std::get<2>(data));
+    }
+    default:
+      throw std::invalid_argument("Invalid Axis::XYZ");
+  }
+}
+
 }  // namespace xfdtd::transform
 
 #endif  // _XFDTD_CORE_TRANSFORM_H_

@@ -1,9 +1,9 @@
 #include "updator/updator.h"
 
+#include <xfdtd/divider/divider.h>
+
 #include <sstream>
 #include <utility>
-
-#include <xfdtd/divider/divider.h>
 
 namespace xfdtd {
 
@@ -18,8 +18,8 @@ Updator::Updator(std::shared_ptr<const GridSpace> grid_space,
 std::string Updator::toString() const {
   std::stringstream ss;
   ss << "Updator: ";
-  ss << _task.toString() << "\n";
-  ss << "H field: " << _task.toString();
+  ss << " " << _task.toString() << "\n";
+  ss << " H field: " << _task.toString();
   return ss.str();
 }
 

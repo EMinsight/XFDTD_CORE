@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(XFDTD_CORE VERSION 0.0.0 LANGUAGES CXX)
+project(
+  XFDTD_CORE
+  VERSION 0.0.0
+  LANGUAGES CXX)
 
 set(XFDTD_CORE_MAIN_PROJECT OFF)
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
@@ -8,13 +11,17 @@ if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
 endif()
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
-    message(FATAL_ERROR "In-source builds are not allowed")
+  message(FATAL_ERROR "In-source builds are not allowed")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# option to enable MPI support 
+# commnad: cmake -D XFDTD_CORE_WITH_MPI=ON ${PROJECT_BIUILD_DIR}
+option(XFDTD_CORE_WITH_MPI "Enable MPI support" OFF)
 
 include("cmake/FindFFTW.cmake")
 if(WIN32)
@@ -33,30 +40,26 @@ find_package(xtensor-fftw REQUIRED)
 
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
-set(XFDTD_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(XFDTD_CORE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
-include_directories(${XFDTD_CORE_PUBLIC_INCLUDE_DIR}
-                    ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
-                    ${FFTW_INCLUDE_DIR}
-                    ${xtensor_INCLUDE_DIRS}
-                    ${xtensor_blas_INCLUDE_DIRS}
-                    ${xtensor_fftw_INCLUDE_DIRS})
+include_directories(
+  ${XFDTD_CORE_PUBLIC_INCLUDE_DIR} ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
+  ${FFTW_INCLUDE_DIR} ${xtensor_INCLUDE_DIRS} ${xtensor_blas_INCLUDE_DIRS}
+  ${xtensor_fftw_INCLUDE_DIRS})
 
-set(XFDTD_CORE_THIRD_PARTY_LIB ${FFTW_LIBRARIES}
-                              ${BLAS_LIBRARIES}
-                              ${LAPACK_LIBRARIES}
-                              xtensor
-                              xtensor-blas)
+set(XFDTD_CORE_THIRD_PARTY_LIB ${FFTW_LIBRARIES} ${BLAS_LIBRARIES}
+                               ${LAPACK_LIBRARIES} xtensor)
+
+if(XFDTD_CORE_WITH_MPI)
+  message(STATUS "XFDTD MPI support enabled")
+  find_package(MPI REQUIRED)
+  add_definitions(-DXFDTD_CORE_WITH_MPI)
+  include_directories(${MPI_CXX_INCLUDE_PATH})
+  set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB}
+                                 ${MPI_CXX_LIBRARIES})
+endif()
 
 enable_testing()
-
-# # for all target add -fsanitize=thread
-# if (XFDTDLib_MAIN_PROJECT)
-#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
-#   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
-#   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=thread")
-#   set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
-# endif()
 
 add_subdirectory(src)
 add_subdirectory(test)
@@ -71,8 +74,7 @@ install(
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  cmake/xfdtd-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config.cmake
+  cmake/xfdtd-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config.cmake
   INSTALL_DESTINATION ${XFDTD_INSTALL_PREFIX}/lib/cmake/xfdtd)
 
 write_basic_package_version_file(
@@ -80,8 +82,6 @@ write_basic_package_version_file(
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion)
 
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config-version.cmake
-  DESTINATION ${XFDTD_INSTALL_PREFIX}/lib/cmake/xfdtd
-)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config-version.cmake
+        DESTINATION ${XFDTD_INSTALL_PREFIX}/lib/cmake/xfdtd)

@@ -21,6 +21,27 @@ class Divider {
  public:
   enum class Type { UNDEFINED, X, Y, Z, XY, XZ, YZ, XYZ };
 
+  static auto toString(Type type) -> std::string {
+    switch (type) {
+      case Type::X:
+        return "X";
+      case Type::Y:
+        return "Y";
+      case Type::Z:
+        return "Z";
+      case Type::XY:
+        return "XY";
+      case Type::XZ:
+        return "XZ";
+      case Type::YZ:
+        return "YZ";
+      case Type::XYZ:
+        return "XYZ";
+      default:
+        return "Undefined";
+    }
+  }
+
   template <typename T>
   class Range {
    public:
@@ -151,64 +172,52 @@ class Divider {
   }
 
   template <typename T>
-  static auto divide(const Task<T>& problem, int num_procs, Type type) {
-    if (num_procs <= 1) {
+  static auto divide(const Task<T>& problem, Type type, int nx, int ny, int nz,
+                     int row_major = 1) {
+    if (nx <= 0 || ny <= 0 || nz <= 0) {
       return std::vector<Task<T>>{problem};
+    }
+
+    if (row_major != 1) {
+      throw XFDTDDividerException("Invalid z_major: " +
+                                  std::to_string(row_major));
     }
 
     auto res = std::vector<Task<T>>{};
     switch (type) {
       case Type::X: {
-        auto x_ranges = divide(problem.xRange(), num_procs);
-        for (int i = 0; i < num_procs; ++i) {
+        auto x_ranges = divide(problem.xRange(), nx);
+        for (int i = 0; i < nx; ++i) {
           res.emplace_back(
               makeTask(x_ranges[i], problem.yRange(), problem.zRange()));
         }
         return res;
       }
       case Type::Y: {
-        auto y_ranges = divide(problem.yRange(), num_procs);
-        for (int i = 0; i < num_procs; ++i) {
+        auto y_ranges = divide(problem.yRange(), ny);
+        for (int i = 0; i < ny; ++i) {
           res.emplace_back(
               makeTask(problem.xRange(), y_ranges[i], problem.zRange()));
         }
         return res;
       }
       case Type::Z: {
-        auto z_ranges = divide(problem.zRange(), num_procs);
-        for (int i = 0; i < num_procs; ++i) {
+        auto z_ranges = divide(problem.zRange(), nz);
+        for (int i = 0; i < nz; ++i) {
           res.emplace_back(
               makeTask(problem.xRange(), problem.yRange(), z_ranges[i]));
         }
         return res;
       }
       case Type::XY: {
-        if (num_procs == 2) {
-          auto x_ranges = divide(problem.xRange(), 2);
-          return std::vector<Task<T>>{
-              makeTask(x_ranges[0], problem.yRange(), problem.zRange()),
-              makeTask(x_ranges[1], problem.yRange(), problem.zRange())};
-        }
+        auto x_ranges = divide(problem.xRange(), nx);
+        auto y_ranges = divide(problem.yRange(), ny);
 
-        if (num_procs == 3) {
-          auto x_ranges = divide(problem.xRange(), 2);
-          auto l_y_ranges = divide(problem.yRange(), 2);
-          return std::vector<Task<T>>{
-              makeTask(x_ranges[0], l_y_ranges[0], problem.zRange()),
-              makeTask(x_ranges[1], problem.yRange(), problem.zRange()),
-              makeTask(x_ranges[0], l_y_ranges[1], problem.zRange())};
-        }
-
-        auto temp = divide<int>(makeRange<int>(0, num_procs), 4);
-        auto x_ranges = divide(problem.xRange(), 2);
-        auto y_ranges = divide(problem.yRange(), 2);
-        for (int i = 0; i < 4; ++i) {
-          auto x = i % 2;
-          auto y = i / 2;
-          auto unit =
-              divide(makeIndexTask(x_ranges[x], y_ranges[y], problem.zRange()),
-                     temp[i].size(), type);
-          res.insert(res.end(), unit.begin(), unit.end());
+        for (int i = 0; i < nx; ++i) {
+          for (int j = 0; j < ny; ++j) {
+            res.emplace_back(
+                makeTask(x_ranges[i], y_ranges[j], problem.zRange()));
+          }
         }
 
         return res;

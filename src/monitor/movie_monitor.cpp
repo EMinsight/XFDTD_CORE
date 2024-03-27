@@ -1,5 +1,4 @@
-
-#include "xfdtd/monitor/movie_monitor.h"
+#include <xfdtd/monitor/movie_monitor.h>
 
 #include <iomanip>
 #include <memory>
@@ -36,6 +35,10 @@ void MovieMonitor::update() {
 
 void MovieMonitor::output() {}
 
+auto MovieMonitor::initParallelizedConfig() -> void {
+  frame()->initParallelizedConfig();
+}
+
 std::size_t MovieMonitor::frameInterval() const { return _frame_interval; }
 
 std::size_t MovieMonitor::frameCount() const { return _frame_count; }
@@ -56,6 +59,16 @@ std::string MovieMonitor::formatFrameCount(std::size_t frame_count) const {
   std::string frame_count_str{std::to_string(frame_count)};
   std::stringstream ss;
   ss << std::setw(5) << std::setfill('0') << frame_count_str;
+  return ss.str();
+}
+
+std::string MovieMonitor::toString() const {
+  std::stringstream ss;
+  ss << "Movie Monitor: " << name() << "\n";
+  ss << " Frame Interval: " << frameInterval() << "\n";
+  ss << " Frame Count: " << frameCount() << "\n";
+  ss << " Frame monitor: \n";
+  ss << "  " << frame()->toString();
   return ss.str();
 }
 

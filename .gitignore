@@ -6,3 +6,5 @@ plot/
 .*/
 .DS_store
 *.py
+*.txt
+*.sh

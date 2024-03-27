@@ -83,8 +83,7 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace1D(
        std::numeric_limits<double>::infinity(), nz * dz}}};
   auto e_node_z{xt::linspace<double>(region.originZ(), region.endZ(), nz + 1)};
 
-  return std::make_unique<GridSpace1D>(std::move(region), dz,
-                                       std::move(e_node_z));
+  return std::make_unique<GridSpace1D>(dz, std::move(e_node_z));
 }
 
 std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace2D(
@@ -111,8 +110,8 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace2D(
   auto e_node_x{xt::linspace<double>(region.originX(), region.endX(), nx + 1)};
   auto e_node_y{xt::linspace<double>(region.originY(), region.endY(), ny + 1)};
 
-  return std::make_unique<GridSpace2D>(
-      std::move(region), dx, dy, std::move(e_node_x), std::move(e_node_y));
+  return std::make_unique<GridSpace2D>(dx, dy, std::move(e_node_x),
+                                       std::move(e_node_y));
 }
 
 std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace3D(
@@ -149,8 +148,8 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace3D(
   auto e_node_y{xt::linspace<double>(region.originY(), region.endY(), ny + 1)};
   auto e_node_z{xt::linspace<double>(region.originZ(), region.endZ(), nz + 1)};
 
-  return std::make_unique<GridSpace3D>(std::move(region), dx, dy, dz,
-                                       std::move(e_node_x), std::move(e_node_y),
+  return std::make_unique<GridSpace3D>(dx, dy, dz, std::move(e_node_x),
+                                       std::move(e_node_y),
                                        std::move(e_node_z));
 }
 

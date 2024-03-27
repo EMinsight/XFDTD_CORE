@@ -1,9 +1,23 @@
+#include <xfdtd/boundary/pml.h>
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/divider/divider.h>
+#include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/grid_space/grid_space_generator.h>
+#include <xfdtd/material/dispersive_material.h>
+#include <xfdtd/monitor/monitor.h>
+#include <xfdtd/nffft/nffft.h>
+#include <xfdtd/object/lumped_element/pec_plane.h>
+#include <xfdtd/parallel/mpi_support.h>
+#include <xfdtd/parallel/parallelized_config.h>
 #include <xfdtd/simulation/simulation.h>
+#include <xfdtd/waveform_source/waveform_source.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <tuple>
 #include <utility>
@@ -15,29 +29,33 @@
 #include "updator/basic_updator.h"
 #include "updator/dispersive_material_updator.h"
 #include "updator/updator.h"
-#include "xfdtd/boundary/pml.h"
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/coordinate_system/coordinate_system.h"
-#include "xfdtd/grid_space/grid_space.h"
-#include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/monitor/monitor.h"
-#include "xfdtd/nffft/nffft.h"
-#include "xfdtd/object/lumped_element/pec_plane.h"
-#include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
 
 Simulation::Simulation(double dx, double dy, double dz, double cfl,
                        int num_thread, Divider::Type divider_type)
+    : _dx{dx}, _dy{dy}, _dz{dz}, _cfl{cfl}, _barrier(num_thread) {
+  throw XFDTDSimulationException("Deprecated constructor");
+}
+
+Simulation::Simulation(double dx, double dy, double dz, double cfl,
+                       ThreadConfig thread_config)
     : _dx{dx},
       _dy{dy},
       _dz{dz},
       _cfl{cfl},
-      _num_thread{num_thread},
-      _barrier(num_thread),
-      _divider_type{divider_type} {}
+      _thread_config{std::move(thread_config)},
+      _barrier(_thread_config.size()) {}
 
 Simulation::~Simulation() = default;
+
+bool Simulation::isRoot() const { return MpiSupport::instance().isRoot(); }
+
+int Simulation::myRank() const { return MpiSupport::instance().rank(); }
+
+int Simulation::numNode() const { return MpiSupport::instance().size(); }
+
+int Simulation::numThread() const { return _thread_config.size(); }
 
 void Simulation::addObject(std::shared_ptr<xfdtd::Object> object) {
   _objects.emplace_back(std::move(object));
@@ -96,18 +114,52 @@ void Simulation::run(std::size_t time_step) {
     m->initTimeDependentVariable();
   }
 
-  struct ThreadGuard {
-    ~ThreadGuard() {
-      for (auto& t : _threads) {
-        if (t.joinable()) {
-          t.join();
-        }
-      }
-    }
+  if (isRoot()) {
+    // global grid space and thread config
+    {
+      std::stringstream ss;
+      ss << "\n";
+      ss << "Global grid space: \n";
+      ss << _global_grid_space->toString();
+      ss << "\n";
 
-    std::vector<std::thread> _threads;
-    std::chrono::high_resolution_clock::time_point _start_time;
-  };
+      ss << "\n";
+      ss << _thread_config.toString() << "\n";
+      std::cout << ss.str() << std::flush;
+    }
+  }
+
+  MpiSupport::instance().barrier();
+
+  {
+    std::stringstream ss;
+    ss << "\n";
+    ss << "Rank: " << myRank() << "\n";
+    ss << _grid_space->toString();
+    std::cout << ss.str();
+    MpiSupport::instance().barrier();
+  }
+
+  {
+    std::stringstream ss;
+    ss << "\n";
+    ss << "Rank: " << myRank() << "\n";
+    ss << MpiSupport::instance().config().toString() << "\n";
+    std::cout << ss.str();
+    MpiSupport::instance().barrier();
+  }
+
+  {
+    // std::stringstream ss;
+    // ss << "\n";
+    // for (const auto& d : _domains) {
+    //   ss << "Rank: " << myRank() << "\n";
+    //   ss << d->toString() << "\n";
+    //   std::cout << ss.str() << std::flush;
+    //   MpiSupport::instance().barrier();
+    //   ss.str("");
+    // }
+  }
 
   {
     std::vector<std::thread> threads;
@@ -115,12 +167,25 @@ void Simulation::run(std::size_t time_step) {
       threads.emplace_back([&domain = _domains[i]]() { domain->run(); });
     }
 
-    ThreadGuard tg{
+    struct ThreadGuard {
+      ~ThreadGuard() {
+        for (auto& t : _threads) {
+          if (t.joinable()) {
+            t.join();
+          }
+        }
+      }
+
+      std::vector<std::thread> _threads;
+      std::chrono::high_resolution_clock::time_point _start_time;
+    } tg{
         ._threads = std::move(threads),
     };
 
     _domains[0]->run();
   }
+
+  MpiSupport::instance().barrier();
 
   _end_time = std::chrono::high_resolution_clock::now();
   if (isRoot()) {
@@ -135,6 +200,11 @@ void Simulation::run(std::size_t time_step) {
                                                                   _start_time)
                      .count()
               << " s"
+              << " or "
+              << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
+                                                                  _start_time)
+                     .count()
+              << " m."
               << "\n";
   }
 }
@@ -170,7 +240,7 @@ void Simulation::init() {
   generateFDTDUpdateCoefficient();
 
   // init monitor
-  for (const auto& m : _monitors) {
+  for (auto&& m : _monitors) {
     m->init(_grid_space, _calculation_param, _emf);
   }
   for (const auto& n : _networks) {
@@ -181,19 +251,25 @@ void Simulation::init() {
   }
 
   generateDomain();
+
+  for (auto&& m : _monitors) {
+    m->initParallelizedConfig();
+  }
+
+  MpiSupport::instance().generateSlice(
+      _grid_space->sizeX(), _grid_space->sizeY(), _grid_space->sizeZ());
 }
 
 void Simulation::generateDomain() {
-  if (_num_thread <= 1) {
-    _num_thread = 1;
+  if (std::thread::hardware_concurrency() < numThread()) {
+    std::stringstream ss;
+    ss << "The number of threads is too large : " << numThread() << ". Set to "
+       << std::thread::hardware_concurrency() << "\n";
+    throw XFDTDSimulationException(ss.str());
   }
 
-  if (std::thread::hardware_concurrency() < _num_thread) {
-    std::cout << "The number of threads is too large, set to the maximum "
-                 "number of threads: "
-              << std::thread::hardware_concurrency() << "\n";
-    _num_thread = std::thread::hardware_concurrency();
-  }
+  auto num_thread = numThread();
+  auto type = _thread_config.dividerType();
 
   Divider::IndexTask problem = Divider::makeTask(
       Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
@@ -205,15 +281,8 @@ void Simulation::generateDomain() {
       Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
       Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()))};
 
-  try {
-    tasks = Divider::divide(problem, _num_thread, _divider_type);
-  } catch (const XFDTDDividerException& e) {
-    _num_thread = 1;
-  }
-
-  if (_num_thread == 1) {
-    std::cout << "Single thread mode\n";
-  }
+  tasks = Divider::divide(problem, type, _thread_config.numX(),
+                          _thread_config.numY(), _thread_config.numZ());
 
   // Corrector
   /*  IMPORTANT: the corrector can't be parallelized in thread model, the
@@ -263,7 +332,7 @@ void Simulation::generateDomain() {
   for (const auto& t : tasks) {
     auto updator = makeUpdator(t);
 
-    if (master) {
+    if (id == _thread_config.root()) {
       _domains.emplace_back(std::make_unique<Domain>(
           id, t, _grid_space, _calculation_param, _emf, std::move(updator),
           _waveform_sources, std::move(correctors), _monitors, _nfffts,
@@ -272,9 +341,14 @@ void Simulation::generateDomain() {
     } else {
       _domains.emplace_back(
           std::make_unique<Domain>(id, t, _grid_space, _calculation_param, _emf,
-                                   std::move(updator), _barrier, master));
+                                   std::move(updator), _barrier, false));
     }
+
     ++id;
+  }
+
+  if (master) {
+    throw XFDTDSimulationException("Master domain is not created");
   }
 }
 
@@ -346,16 +420,19 @@ void Simulation::generateEMF() {
 
 void Simulation::globalGridSpaceDecomposition() {
   auto my_mpi_rank = myRank();
-  auto mpi_size = numNode();
-  bool single_node = mpi_size <= 1;
-  auto node_divider_type = Divider::Type::X;
+  // auto mpi_size = numNode();
+  auto node_divider_type = MpiSupport::instance().config().dividerType();
+  auto divide_nx = MpiSupport::instance().config().numX();
+  auto divide_ny = MpiSupport::instance().config().numY();
+  auto divide_nz = MpiSupport::instance().config().numZ();
 
   auto global_problem = Divider::makeIndexTask(
       Divider::makeRange<std::size_t>(0, _global_grid_space->sizeX()),
       Divider::makeRange<std::size_t>(0, _global_grid_space->sizeY()),
       Divider::makeRange<std::size_t>(0, _global_grid_space->sizeZ()));
 
-  auto global_task = Divider::divide(global_problem, mpi_size, _divider_type);
+  auto global_task = Divider::divide(global_problem, node_divider_type,
+                                     divide_nx, divide_ny, divide_nz);
   auto my_task = global_task[my_mpi_rank];
 
   auto overlap_offset =

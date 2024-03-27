@@ -21,13 +21,13 @@ void VoltageMonitor::init(
   defaultInit(std::move(grid_space), std::move(calculation_param),
               std::move(emf));
 
-  auto grid_box{gridBoxPtr()};
-  _is = grid_box->origin().i();
-  _ie = grid_box->end().i();
-  _js = grid_box->origin().j();
-  _je = grid_box->end().j();
-  _ks = grid_box->origin().k();
-  _ke = grid_box->end().k();
+  auto grid_box{nodeGridBox()};
+  _is = grid_box.origin().i();
+  _ie = grid_box.end().i();
+  _js = grid_box.origin().j();
+  _je = grid_box.end().j();
+  _ks = grid_box.origin().k();
+  _ke = grid_box.end().k();
 
   if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::X) {
     _dc = xt::view(gridSpacePtr()->hSizeX(), xt::range(_is, _ie));

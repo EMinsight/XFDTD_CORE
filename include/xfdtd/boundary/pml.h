@@ -6,6 +6,8 @@
 
 #include <xtensor/xarray.hpp>
 
+#include "xfdtd/divider/divider.h"
+
 namespace xfdtd {
 
 class XFDTDPMLException : public XFDTDBoundaryException {
@@ -42,10 +44,6 @@ class PML : public Boundary {
 
   void correctUpdateCoefficient() override;
 
-  void correctE() override;
-
-  void correctH() override;
-
   int thickness() const;
 
   Axis::Direction direction() const;
@@ -56,15 +54,21 @@ class PML : public Boundary {
 
   Axis::XYZ mainAxis() const;
 
-  std::size_t eNodeStartIndexMainAxis() const;
+  std::size_t globalENodeStartIndexMainAxis() const;
 
-  std::size_t hNodeStartIndexMainAxis() const;
+  std::size_t globalHNodeStartIndexMainAxis() const;
+
+  std::size_t nodeENodeStartIndexMainAxis() const;
+
+  std::size_t nodeHNodeStartIndexMainAxis() const;
 
   std::size_t n() const;
 
-  const xt::xarray<double>& eSize() const;
+  std::size_t nodeN() const;
 
-  const xt::xarray<double>& hSize() const;
+  const xt::xarray<double>& globalESize() const;
+
+  const xt::xarray<double>& globalHSize() const;
 
   std::unique_ptr<Corrector> generateDomainCorrector(
       const Divider::Task<std::size_t>& task) override;
@@ -79,11 +83,17 @@ class PML : public Boundary {
   double _alpha_min;
   double _alpha_max;
   double _kappa_max;
-  std::size_t _e_start_index, _h_start_index;
-  std::size_t _na, _nb;
+  std::size_t _global_e_start_index, _global_h_start_index;
+  std::size_t _global_na, _global_nb;
+  Divider::IndexTask _pml_global_task_abc;
+  Divider::IndexTask _pml_global_task;
+  Divider::IndexTask _pml_node_task_abc;
+  Divider::IndexTask _pml_node_task;
 
-  xt::xarray<double> _h_size;
-  xt::xarray<double> _e_size;
+  std::size_t _node_e_start_index, _node_h_start_index;
+
+  xt::xarray<double> _global_h_size;
+  xt::xarray<double> _global_e_size;
   xt::xarray<double> _kappa_e;
   xt::xarray<double> _kappa_h;
 
@@ -102,7 +112,7 @@ class PML : public Boundary {
   xt::xarray<double> _c_hb_psi_ea;
   xt::xarray<double> _hb_psi_ea;
 
-  bool taskContainPML(const Divider::Task<std::size_t>& task) const;
+  //   bool taskContainPML(const Divider::Task<std::size_t>& task) const;
 
   xt::xarray<double>& eaF();
 

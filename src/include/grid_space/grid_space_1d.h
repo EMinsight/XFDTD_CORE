@@ -9,8 +9,7 @@ namespace xfdtd {
 
 class GridSpace1D : public GridSpace {
  public:
-  GridSpace1D(GridSpaceRegion region, double based_dz,
-              xt::xarray<double> e_node_z);
+  GridSpace1D(double based_dz, xt::xarray<double> e_node_z);
 
   void correctGridSpace() override;
 

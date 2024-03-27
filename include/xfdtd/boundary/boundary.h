@@ -40,10 +40,6 @@ class Boundary {
 
   virtual void correctUpdateCoefficient() = 0;
 
-  virtual void correctE() = 0;
-
-  virtual void correctH() = 0;
-
   virtual std::unique_ptr<Corrector> generateDomainCorrector(
       const Divider::Task<std::size_t>& task) = 0;
 

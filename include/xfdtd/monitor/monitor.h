@@ -2,15 +2,19 @@
 #define _XFDTD_CORE_MONITOR_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/divider/divider.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/parallel/mpi_config.h>
+#include <xfdtd/parallel/mpi_support.h>
+#include <xfdtd/parallel/parallelized_config.h>
 #include <xfdtd/shape/shape.h>
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <xtensor/xarray.hpp>
-
-#include "xfdtd/exception/exception.h"
 
 namespace xfdtd {
 
@@ -60,7 +64,21 @@ class Monitor {
 
   virtual void output();
 
-   virtual void initTimeDependentVariable() {}
+  virtual void initTimeDependentVariable();
+
+  GridBox globalGridBox() const;
+
+  GridBox nodeGridBox() const;
+
+  const MpiConfig& monitorMpiConfig() const;
+
+  virtual std::string toString() const;
+
+  virtual auto initParallelizedConfig() -> void;
+
+  auto globalTask() const -> Divider::IndexTask;
+
+  auto nodeTask() const -> Divider::IndexTask;
 
  protected:
   void defaultInit(std::shared_ptr<const GridSpace> grid_space,
@@ -73,7 +91,25 @@ class Monitor {
 
   const EMF* emfPtr() const;
 
-  const GridBox* gridBoxPtr() const;
+  auto nodeGridBox() -> GridBox&;
+
+  auto nodeTask() -> Divider::IndexTask&;
+
+  MpiConfig& monitorMpiConfig();
+
+  virtual auto gatherData() -> void;
+
+  auto setGlobalTask(Divider::IndexTask task) -> void;
+
+  auto setNodeTask(Divider::IndexTask task) -> void;
+
+  auto mpiBlock() -> MpiSupport::Block&;
+
+  auto mpiBlock() const -> const MpiSupport::Block&;
+
+  auto mpiBlockArray() -> std::vector<MpiSupport::Block>&;
+
+  auto mpiBlockArray() const -> const std::vector<MpiSupport::Block>&;
 
  private:
   std::unique_ptr<Shape> _shape;
@@ -85,7 +121,15 @@ class Monitor {
   std::shared_ptr<const CalculationParam> _calculation_param;
   std::shared_ptr<const EMF> _emf;
 
-  std::unique_ptr<GridBox> _grid_box;
+  GridBox _global_grid_box;
+  GridBox _node_grid_box;
+  Divider::IndexTask _global_task;
+  Divider::IndexTask _node_task;
+
+  MpiConfig _monitor_mpi_config;
+  MpiSupport::Block _block;
+  std::vector<MpiSupport::Block::Profile> _profiles;
+  std::vector<MpiSupport::Block> _blocks_mpi;
 };
 
 }  // namespace xfdtd

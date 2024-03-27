@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <utility>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xindex_view.hpp>
@@ -52,6 +53,8 @@ class Grid {
 
   void setMaterialIndex(std::size_t index);
 
+  std::string toString() const;
+
  private:
   std::size_t _i{0}, _j{0}, _k{0}, _material_index{static_cast<size_t>(-1)};
 };
@@ -79,6 +82,8 @@ class GridBox {
   Grid center() const;
 
   Grid end() const;
+
+  std::string toString() const;
 
  private:
   Grid _origin, _size;
@@ -198,21 +203,27 @@ class GridSpace {
 
   GridBox globalBox() const;
 
+  std::string toString() const;
+
+  Grid transformNodeToGlobal(const Grid& grid) const;
+
+  GridBox transformNodeToGlobal(const GridBox& box) const;
+
  protected:
-  GridSpace(GridSpaceRegion region, double dx, double dy, double dz,
-            Dimension dimension, xt::xarray<double> e_node_x,
-            xt::xarray<double> e_node_y, xt::xarray<double> e_node_z);
+  GridSpace(double dx, double dy, double dz, Dimension dimension,
+            xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
+            xt::xarray<double> e_node_z);
 
   // for subGridSpace
-  GridSpace(Dimension dimension, Type type, GridSpaceRegion region,
-            GridBox global_box, double based_dx, double based_dy,
-            double based_dz, double min_dx, double min_dy, double min_dz,
-            xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
-            xt::xarray<double> e_node_z, xt::xarray<double> h_node_x,
-            xt::xarray<double> h_node_y, xt::xarray<double> h_node_z,
-            xt::xarray<double> e_size_x, xt::xarray<double> e_size_y,
-            xt::xarray<double> e_size_z, xt::xarray<double> h_size_x,
-            xt::xarray<double> h_size_y, xt::xarray<double> h_size_z);
+  GridSpace(Dimension dimension, Type type, GridBox global_box, double based_dx,
+            double based_dy, double based_dz, double min_dx, double min_dy,
+            double min_dz, xt::xarray<double> e_node_x,
+            xt::xarray<double> e_node_y, xt::xarray<double> e_node_z,
+            xt::xarray<double> h_node_x, xt::xarray<double> h_node_y,
+            xt::xarray<double> h_node_z, xt::xarray<double> e_size_x,
+            xt::xarray<double> e_size_y, xt::xarray<double> e_size_z,
+            xt::xarray<double> h_size_x, xt::xarray<double> h_size_y,
+            xt::xarray<double> h_size_z);
 
   xt::xarray<double>& eNodeX();
 
@@ -269,7 +280,6 @@ class GridSpace {
   double _max_x, _max_y, _max_z;
 
  private:
-  GridSpaceRegion _region;
   Dimension _dimension{Dimension::UNDEFINED};
   Type _type{Type::UNDEFINED};
   double _based_dx, _based_dy, _based_dz;

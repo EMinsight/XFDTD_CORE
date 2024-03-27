@@ -8,10 +8,8 @@
 
 namespace xfdtd {
 
-GridSpace1D::GridSpace1D(GridSpaceRegion region, double based_dz,
-                         xt::xarray<double> e_node_z)
-    : GridSpace{std::move(region),
-                1,
+GridSpace1D::GridSpace1D(double based_dz, xt::xarray<double> e_node_z)
+    : GridSpace{1,
                 1,
                 based_dz,
                 GridSpace::Dimension::ONE,

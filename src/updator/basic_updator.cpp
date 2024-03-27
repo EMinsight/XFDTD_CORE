@@ -1,11 +1,13 @@
 #include "updator/basic_updator.h"
 
+#include <xfdtd/divider/divider.h>
+
 #include <utility>
 #include <xtensor.hpp>
 
 #include "updator/update_scheme.h"
-#include <xfdtd/divider/divider.h>
 #include "updator/updator.h"
+#include "xfdtd/util/fdtd_basic.h"
 
 namespace xfdtd {
 
@@ -17,12 +19,16 @@ BasicUpdator::BasicUpdator(
               std::move(emf), task) {}
 
 void BasicUpdator::updateH() {
-  const auto is = task()._x_range[0];
-  const auto ie = task()._x_range[1];
-  const auto js = task()._y_range[0];
-  const auto je = task()._y_range[1];
-  const auto ks = task()._z_range[0];
-  const auto ke = task()._z_range[1];
+  const auto task = this->task();
+  const auto x_range = task.xRange();
+  const auto y_range = task.yRange();
+  const auto z_range = task.zRange();
+  const auto is = basic::GridStructure::hFDTDUpdateXStart(x_range.start());
+  const auto ie = basic::GridStructure::hFDTDUpdateXEnd(x_range.end());
+  const auto js = basic::GridStructure::hFDTDUpdateYStart(y_range.start());
+  const auto je = basic::GridStructure::hFDTDUpdateYEnd(y_range.end());
+  const auto ks = basic::GridStructure::hFDTDUpdateZStart(z_range.start());
+  const auto ke = basic::GridStructure::hFDTDUpdateZEnd(z_range.end());
 
   const auto& chxh{_calculation_param->fdtdCoefficient()->chxh()};
   const auto& chyh{_calculation_param->fdtdCoefficient()->chyh()};

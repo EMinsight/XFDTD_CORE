@@ -10,6 +10,7 @@
 #include <barrier>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -28,31 +29,7 @@ class Domain {
          std::vector<std::unique_ptr<Corrector>> correctors,
          std::vector<std::shared_ptr<Monitor>> monitors,
          std::vector<std::shared_ptr<NFFFT>> nfffts, std::barrier<>& barrier,
-         bool master = false)
-      : _id{id},
-        _task{task},
-        _grid_space{std::move(grid_space)},
-        _calculation_param{std::move(calculation_param)},
-        _emf{std::move(emf)},
-        _updator{std::move(updator)},
-        _waveform_sources{std::move(waveform_sources)},
-        _correctors{std::move(correctors)},
-        _monitors{std::move(monitors)},
-        _nfffts{std::move(nfffts)},
-        _barrier{barrier},
-        _master{master} {
-    std::stringstream ss;
-    ss << "Domain: " << _id << " Master: " << std::boolalpha << _master << "\n";
-    ss << _task.toString() << "\n";
-    ss << _updator->toString();
-
-    for (auto&& c : _correctors) {
-      ss << "\n\n" << c->toString();
-    }
-    ss << "\n";
-
-    std::cout << ss.str() << "\n";
-  }
+         bool master = false);
 
   Domain(std::size_t id, Divider::IndexTask task,
          std::shared_ptr<GridSpace> grid_space,
@@ -66,19 +43,7 @@ class Domain {
         _emf{std::move(emf)},
         _updator{std::move(updator)},
         _barrier{barrier},
-        _master{master} {
-    std::stringstream ss;
-    ss << "Domain: " << _id << " Master: " << std::boolalpha << _master << "\n";
-    ss << _task.toString() << "\n";
-    ss << _updator->toString();
-
-    for (auto&& c : _correctors) {
-      ss << "\n\n" << c->toString();
-    }
-    ss << "\n";
-
-    std::cout << ss.str() << "\n";
-  }
+        _master{master} {}
 
   ~Domain() = default;
 
@@ -98,13 +63,15 @@ class Domain {
 
   void correctH();
 
-  void synchronize();
-
-  void communicate();
-
   void record();
 
   void nextStep();
+
+  void threadSynchronize();
+
+  void processSynchronize();
+
+  void synchronize();
 
   bool isMaster() const { return _master; }
 
@@ -114,10 +81,37 @@ class Domain {
 
   bool containZNEdge() const { return _task.zRange().start() == 0; }
 
- protected:
-  void communicateForH();
+  bool nodeContainXNBoundary() const {
+    return _grid_space->globalBox().origin().i() == 0;
+  }
 
-  void communicateForE();
+  bool nodeContainYNBoundary() const {
+    return _grid_space->globalBox().origin().j() == 0;
+  }
+
+  bool nodeContainZNBoundary() const {
+    return _grid_space->globalBox().origin().k() == 0;
+  }
+
+  bool nodeContainXPBoundary() const {
+    return _grid_space->globalBox().end().i() ==
+           _grid_space->globalGridSpace()->sizeX();
+  }
+
+  bool nodeContainYPBoundary() const {
+    return _grid_space->globalBox().end().j() ==
+           _grid_space->globalGridSpace()->sizeY();
+  }
+
+  bool nodeContainZPBoundary() const {
+    return _grid_space->globalBox().end().k() ==
+           _grid_space->globalGridSpace()->sizeZ();
+  }
+
+  auto toString() const -> std::string;
+
+ protected:
+  void exchangeH();
 
  private:
   std::size_t _id;

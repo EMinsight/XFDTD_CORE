@@ -14,6 +14,7 @@ add_subdirectory(network)
 add_subdirectory(nffft)
 add_subdirectory(simulation)
 add_subdirectory(domain)
+add_subdirectory(parallel)
 
 add_library(xfdtd STATIC ${ALL_OBJECT_FILES})
 
@@ -34,10 +35,11 @@ set(XFDTD_LIBS
     xfdtd_network
     xfdtd_nffft
     xfdtd_simulation
-    xfdtd_domain)
+    xfdtd_domain
+    xfdtd_parallel)
 
 target_link_libraries(
-  xfdtd PUBLIC ${XFDTD_LIBS} ${XFDTD_LIB_THIRD_PARTY_LIB})
+  xfdtd PUBLIC ${XFDTD_LIBS} ${XFDTD_CORE_THIRD_PARTY_LIB})
 
 target_include_directories(
   xfdtd PUBLIC $<BUILD_INTERFACE:${XFDTD_LIB_PUBLIC_INCLUDE_DIR}>

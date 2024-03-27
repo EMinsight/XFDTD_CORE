@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <xtensor.hpp>
 
@@ -10,11 +11,10 @@
 
 namespace xfdtd {
 
-GridSpace2D::GridSpace2D(GridSpaceRegion region, double based_dx,
-                         double based_dy, xt::xarray<double> e_node_x,
+GridSpace2D::GridSpace2D(double based_dx, double based_dy,
+                         xt::xarray<double> e_node_x,
                          xt::xarray<double> e_node_y)
-    : GridSpace{std::move(region),
-                based_dx,
+    : GridSpace{based_dx,
                 based_dx,
                 1.0,
                 GridSpace::Dimension::TWO,
@@ -24,16 +24,15 @@ GridSpace2D::GridSpace2D(GridSpaceRegion region, double based_dx,
                  std::numeric_limits<double>::infinity()}} {}
 
 GridSpace2D::GridSpace2D(
-    Type type, GridSpaceRegion region, GridBox global_box, double based_dx,
-    double based_dy, double min_dx, double min_dy, xt::xarray<double> e_node_x,
+    Type type, GridBox global_box, double based_dx, double based_dy,
+    double min_dx, double min_dy, xt::xarray<double> e_node_x,
     xt::xarray<double> e_node_y, xt::xarray<double> h_node_x,
     xt::xarray<double> h_node_y, xt::xarray<double> e_size_x,
     xt::xarray<double> e_size_y, xt::xarray<double> h_size_x,
     xt::xarray<double> h_size_y)
     : GridSpace(
-          GridSpace::Dimension::TWO, type, std::move(region), global_box,
-          based_dx, based_dy, 1, min_dx, min_dy, 1, std::move(e_node_x),
-          std::move(e_node_y),
+          GridSpace::Dimension::TWO, type, global_box, based_dx, based_dy, 1,
+          min_dx, min_dy, 1, std::move(e_node_x), std::move(e_node_y),
           xt::xarray<double>({constant::NEG_INF, constant::INF}),
           std::move(h_node_x), std::move(h_node_y), xt::xarray<double>({0}),
           std::move(e_size_x), std::move(e_size_y), xt::xarray<double>({1}),
@@ -54,7 +53,11 @@ std::unique_ptr<GridSpace> GridSpace2D::subGridSpace(
   auto max_k = sizeZ();
 
   if (max_i < start_i || max_j < start_j || max_k < start_k) {
-    throw XFDTDGridSpaceException("subGridSpace: start index is out of range");
+    std::stringstream ss;
+    ss << "Invalid sub grid space: start_i=" << start_i << ", start_j=" << start_j
+       << ", start_k=" << start_k << ", max_i=" << max_i << ", max_j=" << max_j
+       << ", max_k=" << max_k;
+    throw XFDTDGridSpaceException(ss.str());
   }
 
   end_i = std::min(end_i, max_i);
@@ -79,15 +82,11 @@ std::unique_ptr<GridSpace> GridSpace2D::subGridSpace(
   xt::xarray<double> h_size_y{
       xt::view(hSizeY(), xt::range(start_j, end_j + 1))};
 
-  auto region = GridSpaceRegion{
-      Vector{e_node_x.front(), e_node_y.front(), constant::NEG_INF},
-      Vector{e_node_x.back(), e_node_y.back(), constant::INF}};
-
   auto global_box = GridBox{Grid{start_i, start_j, 0},
                             Grid{end_i - start_i, end_j - start_j, 1}};
 
   return std::make_unique<GridSpace2D>(
-      type(), std::move(region), global_box, based_dx, based_dy, min_dx, min_dy,
+      type(), global_box, based_dx, based_dy, min_dx, min_dy,
       std::move(e_node_x), std::move(e_node_y), std::move(h_node_x),
       std::move(h_node_y), std::move(e_size_x), std::move(e_size_y),
       std::move(h_size_x), std::move(h_size_y));

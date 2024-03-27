@@ -1,11 +1,11 @@
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/material/material.h>
+#include <xfdtd/util/fdtd_basic.h>
 
 #include <memory>
 #include <utility>
 #include <vector>
-
-#include "xfdtd/coordinate_system/coordinate_system.h"
-#include "xfdtd/material/material.h"
 
 namespace xfdtd {
 
@@ -327,30 +327,38 @@ xt::xarray<double>& MaterialParam::property(MaterialParam::Attribute attribute,
 }
 
 void MaterialParam::allocate(std::size_t nx, std::size_t ny, std::size_t nz) {
-  _eps_x = xt::zeros<double>({nx, ny + 1, nz + 1});
-  _eps_y = xt::zeros<double>({nx + 1, ny, nz + 1});
-  _eps_z = xt::zeros<double>({nx + 1, ny + 1, nz});
+  const auto e_x_n = basic::GridStructure::exSize(nx, ny, nz);
+  const auto e_y_n = basic::GridStructure::eySize(nx, ny, nz);
+  const auto e_z_n = basic::GridStructure::ezSize(nx, ny, nz);
+  const auto h_x_n = basic::GridStructure::hxSize(nx, ny, nz);
+  const auto h_y_n = basic::GridStructure::hySize(nx, ny, nz);
+  const auto h_z_n = basic::GridStructure::hzSize(nx, ny, nz);
+
+  _eps_x = xt::zeros<double>(e_x_n);
+  _eps_y = xt::zeros<double>(e_y_n);
+  _eps_z = xt::zeros<double>(e_z_n);
+
   _eps_x.fill(constant::EPSILON_0);
   _eps_y.fill(constant::EPSILON_0);
   _eps_z.fill(constant::EPSILON_0);
 
-  _mu_x = xt::zeros<double>({nx + 1, ny, nz});
-  _mu_y = xt::zeros<double>({nx, ny + 1, nz});
-  _mu_z = xt::zeros<double>({nx, ny, nz + 1});
+  _mu_x = xt::zeros<double>(h_x_n);
+  _mu_y = xt::zeros<double>(h_y_n);
+  _mu_z = xt::zeros<double>(h_z_n);
   _mu_x.fill(constant::MU_0);
   _mu_y.fill(constant::MU_0);
   _mu_z.fill(constant::MU_0);
 
-  _sigma_e_x = xt::zeros<double>({nx, ny + 1, nz + 1});
-  _sigma_e_y = xt::zeros<double>({nx + 1, ny, nz + 1});
-  _sigma_e_z = xt::zeros<double>({nx + 1, ny + 1, nz});
+  _sigma_e_x = xt::zeros<double>(e_x_n);
+  _sigma_e_y = xt::zeros<double>(e_y_n);
+  _sigma_e_z = xt::zeros<double>(e_z_n);
   _sigma_e_x.fill(constant::SIGMA_E_ZERO_APPROX);
   _sigma_e_y.fill(constant::SIGMA_E_ZERO_APPROX);
   _sigma_e_z.fill(constant::SIGMA_E_ZERO_APPROX);
 
-  _sigma_m_x = xt::zeros<double>({nx + 1, ny, nz});
-  _sigma_m_y = xt::zeros<double>({nx, ny + 1, nz});
-  _sigma_m_z = xt::zeros<double>({nx, ny, nz + 1});
+  _sigma_m_x = xt::zeros<double>(h_x_n);
+  _sigma_m_y = xt::zeros<double>(h_y_n);
+  _sigma_m_z = xt::zeros<double>(h_z_n);
   _sigma_m_x.fill(constant::SIGMA_M_ZERO_APPROX);
   _sigma_m_y.fill(constant::SIGMA_M_ZERO_APPROX);
   _sigma_m_z.fill(constant::SIGMA_M_ZERO_APPROX);

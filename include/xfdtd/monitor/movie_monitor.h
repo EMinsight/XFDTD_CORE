@@ -44,6 +44,10 @@ class MovieMonitor : public xfdtd::Monitor {
 
   void setFrameCount(std::size_t frame_count);
 
+  std::string toString() const override;
+
+  auto initParallelizedConfig() -> void override;
+
  private:
   std::unique_ptr<xfdtd::Monitor> _frame;
 

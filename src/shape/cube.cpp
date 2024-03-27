@@ -19,8 +19,8 @@ std::unique_ptr<Shape> Cube::clone() const {
 }
 
 std::string Cube::toString() const {
-  return std::string{"Cube("} + _origin.toString() + ", " + _size.toString() +
-         ")";
+  return std::string{"Cube(origin: "} + _origin.toString() +
+         ", size:" + _size.toString() + " end: " + _end.toString() + ")";
 }
 
 Vector Cube::origin() const { return _origin; }
