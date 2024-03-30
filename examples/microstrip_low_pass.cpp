@@ -136,7 +136,7 @@ void microstripLowPass() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YP));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
-  s.addMonitor(movie_monitor);
+//   s.addMonitor(movie_monitor);
 
   s.run(3500);
 

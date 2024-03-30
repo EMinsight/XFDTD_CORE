@@ -72,4 +72,6 @@ std::string MovieMonitor::toString() const {
   return ss.str();
 }
 
+auto MovieMonitor::valid() const -> bool { return frame()->valid(); }
+
 }  // namespace xfdtd

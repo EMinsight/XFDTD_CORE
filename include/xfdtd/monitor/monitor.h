@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 #include <xtensor/xarray.hpp>
 
 namespace xfdtd {
@@ -46,6 +45,8 @@ class Monitor {
 
   virtual void update() = 0;
 
+  virtual auto initParallelizedConfig() -> void = 0;
+
   const std::unique_ptr<Shape>& shape() const;
 
   const std::string& name() const;
@@ -74,11 +75,11 @@ class Monitor {
 
   virtual std::string toString() const;
 
-  virtual auto initParallelizedConfig() -> void;
-
   auto globalTask() const -> Divider::IndexTask;
 
   auto nodeTask() const -> Divider::IndexTask;
+
+  virtual auto valid() const -> bool;
 
  protected:
   void defaultInit(std::shared_ptr<const GridSpace> grid_space,
@@ -99,17 +100,15 @@ class Monitor {
 
   virtual auto gatherData() -> void;
 
+  auto setGlobalGridBox(GridBox grid_box) -> void;
+
+  auto setNodeGridBox(GridBox grid_box) -> void;
+
   auto setGlobalTask(Divider::IndexTask task) -> void;
 
   auto setNodeTask(Divider::IndexTask task) -> void;
 
-  auto mpiBlock() -> MpiSupport::Block&;
-
-  auto mpiBlock() const -> const MpiSupport::Block&;
-
-  auto mpiBlockArray() -> std::vector<MpiSupport::Block>&;
-
-  auto mpiBlockArray() const -> const std::vector<MpiSupport::Block>&;
+  auto makeMpiSubComm() -> void;
 
  private:
   std::unique_ptr<Shape> _shape;
@@ -127,9 +126,6 @@ class Monitor {
   Divider::IndexTask _node_task;
 
   MpiConfig _monitor_mpi_config;
-  MpiSupport::Block _block;
-  std::vector<MpiSupport::Block::Profile> _profiles;
-  std::vector<MpiSupport::Block> _blocks_mpi;
 };
 
 }  // namespace xfdtd

@@ -40,7 +40,7 @@ void Monitor::setOutputDir(std::string output_dir) {
 }
 
 void Monitor::output() {
-  if (!nodeTask().valid() || !monitorMpiConfig().isRoot()) {
+  if (!valid() || !monitorMpiConfig().isRoot()) {
     return;
   }
 
@@ -77,11 +77,11 @@ std::string Monitor::toString() const {
   return ss.str();
 }
 
-auto Monitor::initParallelizedConfig() -> void {
+auto Monitor::makeMpiSubComm() -> void {
   auto& mpi_support = MpiSupport::instance();
   auto arr = std::vector<int>(mpi_support.size(), 0);
 
-  int is_valid = static_cast<int>(nodeTask().valid());
+  int is_valid = static_cast<int>(valid());
 
   mpi_support.allGather(mpi_support.config(), &is_valid, sizeof(int),
                         arr.data(), sizeof(int));
@@ -96,84 +96,9 @@ auto Monitor::initParallelizedConfig() -> void {
 
   _monitor_mpi_config =
       MpiConfig::makeSub(mpi_support.config(), color, counter);
-
-  if (is_valid == 0) {
-    return;
-  }
-
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto node_box_origin_in_global =
-      _grid_space->globalBox().origin() + _node_grid_box.origin();
-  const auto g_origin = _global_grid_box.origin();
-
-  auto nx = _node_task.xRange().size();
-  auto ny = _node_task.yRange().size();
-  auto nz = _node_task.zRange().size();
-  auto stride_elem = _global_task.zRange().size();
-  auto stride_vec = _global_task.zRange().size() * _global_task.yRange().size();
-  auto disp = (node_box_origin_in_global.i() - g_origin.i()) * stride_vec +
-              (node_box_origin_in_global.j() - g_origin.j()) * stride_elem +
-              (node_box_origin_in_global.k() - g_origin.k());
-
-  auto p = MpiSupport::Block::Profile{
-      static_cast<int>(nx),          static_cast<int>(ny),
-      static_cast<int>(nz),          static_cast<int>(stride_vec),
-      static_cast<int>(stride_elem), static_cast<int>(disp)};
-
-  if (_monitor_mpi_config.isRoot()) {
-    _profiles.resize(counter);
-  }
-
-  auto profile_type = MpiSupport::TypeGuard{};
-  MPI_Type_contiguous(sizeof(MpiSupport::Block::Profile), MPI_CHAR,
-                      &profile_type._type);
-  MPI_Type_commit(&profile_type._type);
-
-  _block = MpiSupport::Block::make(p);
-
-  mpi_support.gather(monitorMpiConfig(), &p, 1, profile_type, _profiles.data(),
-                     1, profile_type, monitorMpiConfig().root());
-
-  if (_monitor_mpi_config.isRoot()) {
-    _blocks_mpi.reserve(_profiles.size());
-    for (const auto& profile : _profiles) {
-      _blocks_mpi.emplace_back(MpiSupport::Block::make(profile));
-    }
-  }
-#endif
 }
 
-auto Monitor::gatherData() -> void {
-  if (!nodeTask().valid() || monitorMpiConfig().size() == 1) {
-    return;
-  }
-
-  auto& mpi_support = MpiSupport::instance();
-  if (monitorMpiConfig().isRoot()) {
-    xt::xarray<double> recv_buffer = xt::zeros<double>(
-        {_global_task.xRange().size(), _global_task.yRange().size(),
-         _global_task.zRange().size()});
-    for (int i = 1; i < monitorMpiConfig().size(); ++i) {
-      mpi_support.iRecv(monitorMpiConfig(), recv_buffer.data(), 1,
-                        _blocks_mpi[i], i, 0);
-    }
-
-    auto index =
-        mpi_support.iSendRecv(monitorMpiConfig(), data().data(), data().size(),
-                              monitorMpiConfig().rank(), 0, recv_buffer.data(),
-                              1, _block, monitorMpiConfig().rank(), 0);
-    mpi_support.waitAll();
-    if (index == -1) {
-      return;
-    }
-
-    data() = std::move(recv_buffer);
-  } else {
-    mpi_support.send(monitorMpiConfig(), data().data(),
-                     sizeof(double) * data().size(), monitorMpiConfig().root(),
-                     0);
-  }
-}
+auto Monitor::gatherData() -> void {}
 
 void Monitor::defaultInit(
     std::shared_ptr<const GridSpace> grid_space,
@@ -224,20 +149,18 @@ const EMF* Monitor::emfPtr() const { return _emf.get(); }
 
 MpiConfig& Monitor::monitorMpiConfig() { return _monitor_mpi_config; }
 
+auto Monitor::setGlobalGridBox(GridBox grid_box) -> void {
+  _global_grid_box = grid_box;
+}
+
+auto Monitor::setNodeGridBox(GridBox grid_box) -> void {
+  _node_grid_box = grid_box;
+}
+
 auto Monitor::nodeGridBox() -> GridBox& { return _node_grid_box; }
 
 auto Monitor::nodeTask() -> Divider::IndexTask& { return _node_task; }
 
-auto Monitor::mpiBlock() -> MpiSupport::Block& { return _block; }
-
-auto Monitor::mpiBlock() const -> const MpiSupport::Block& { return _block; }
-
-auto Monitor::mpiBlockArray() -> std::vector<MpiSupport::Block>& {
-  return _blocks_mpi;
-}
-
-auto Monitor::mpiBlockArray() const -> const std::vector<MpiSupport::Block>& {
-  return _blocks_mpi;
-}
+auto Monitor::valid() const -> bool { return nodeTask().valid(); }
 
 }  // namespace xfdtd

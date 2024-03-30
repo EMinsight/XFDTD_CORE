@@ -20,7 +20,7 @@
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 
-void dielectricResonatorAntenna(int num_thread, xfdtd::Divider::Type type) {
+void dielectricResonatorAntenna() {
   constexpr double dx{0.715e-3};
   constexpr double dy{0.508e-3};
   constexpr double dz{0.5e-3};
@@ -92,7 +92,7 @@ void dielectricResonatorAntenna(int num_thread, xfdtd::Divider::Type type) {
       13, 13, 13, xt::xarray<double>{3.5e9, 4.3e9},
       "./data/dielectric_resonator_antenna")};
 
-  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, num_thread, type}};
+  auto s{xfdtd::Simulation{dx, dy, dz, 0.9}};
   s.addObject(domain);
   s.addObject(box);
   s.addObject(ground);
@@ -130,23 +130,6 @@ void dielectricResonatorAntenna(int num_thread, xfdtd::Divider::Type type) {
 }
 
 int main(int argc, char* argv[]) {
-  int num_thread = 1;
-  xfdtd::Divider::Type type = xfdtd::Divider::Type::X;
-  if (argc > 1) {
-    num_thread = std::stoi(argv[1]);
-    if (argc > 2) {
-      if (std::string(argv[2]) == "X") {
-        type = xfdtd::Divider::Type::X;
-      } else if (std::string(argv[2]) == "Y") {
-        type = xfdtd::Divider::Type::Y;
-      } else if (std::string(argv[2]) == "Z") {
-        type = xfdtd::Divider::Type::Z;
-      } else if (std::string(argv[2]) == "XY") {
-        type = xfdtd::Divider::Type::XY;
-      }
-    }
-  }
-
-  dielectricResonatorAntenna(num_thread, type);
+  dielectricResonatorAntenna();
   return 0;
 }

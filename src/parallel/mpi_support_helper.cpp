@@ -293,4 +293,12 @@ auto MpiSupport::allGather(const MpiConfig& config, const void* send_buf,
 #endif
 }
 
+auto MpiSupport::reduceSum(const MpiConfig& config, const double* send_buf,
+                           double* recv_buf, int count) -> void {
+#if defined(XFDTD_CORE_WITH_MPI)
+  MPI_Reduce(send_buf, recv_buf, count, MPI_DOUBLE, MPI_SUM, config.root(),
+             config.comm());
+#endif
+}
+
 }  // namespace xfdtd

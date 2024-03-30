@@ -44,8 +44,8 @@ void Resistor::init(std::shared_ptr<const GridSpace> grid_space,
                         xt::view(z, z_range));
   }};
 
-  _resistance_factor = rf(_resistance, nodeCountSubAxisA(), nodeCountSubAxisB(),
-                          nodeCountMainAxis());
+  _resistance_factor = rf(_resistance, globalCountSubAxisA(),
+                          globalCountSubAxisB(), globalCountMainAxis());
 
   auto g{gridSpacePtr()};
 

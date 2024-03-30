@@ -36,11 +36,8 @@ class XFDTDSimulationException : public XFDTDException {
 
 class Simulation {
  public:
-  Simulation(double dx, double dy, double dz, double cfl, int num_thread = 1,
-             Divider::Type divider_type = Divider::Type::UNDEFINED);
-
   Simulation(double dx, double dy, double dz, double cfl,
-             ThreadConfig thread_config);
+             ThreadConfig thread_config = ThreadConfig{1, 1, 1});
 
   ~Simulation();
 

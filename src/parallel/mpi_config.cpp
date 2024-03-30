@@ -2,8 +2,6 @@
 
 namespace xfdtd {
 
-
-
 auto MpiConfig::makeXFDTDComm(int rank, int color, int num_x, int num_y,
                               int num_z, int root) -> MpiConfig {
   MpiConfig mpi_config;
@@ -139,11 +137,11 @@ auto MpiConfig::toString() const -> std::string {
   ss << " Y: " << yPrev() << "<-" << id() << "->" << yNext() << "\n";
   ss << " Z: " << zPrev() << "<-" << id() << "->" << zNext() << "\n";
   ss << " Type: " << Divider::toString(dividerType());
-#if defined(XFDTD_CORE_WITH_MPI)
-  ss << "\n";
-  ss << " MPI Comm: " << comm() << "\n";
-  ss << " Cart Comm: " << cartComm();
-#endif
+  // #if defined(XFDTD_CORE_WITH_MPI)
+  // ss << "\n";
+  // ss << " MPI Comm: " << comm() << "\n";
+  // ss << " Cart Comm: " << cartComm();
+  // #endif
   return ss.str();
 }
 

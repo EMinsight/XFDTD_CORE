@@ -57,6 +57,12 @@ class LumpedElement : public Object {
 
   std::size_t nodeCountSubAxisB() const;
 
+  std::size_t globalCountMainAxis() const;
+
+  std::size_t globalCountSubAxisA() const;
+
+  std::size_t globalCountSubAxisB() const;
+
  protected:
   std::size_t _is, _ie, _js, _je, _ks, _ke;
 

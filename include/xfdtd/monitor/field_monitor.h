@@ -37,9 +37,19 @@ class FieldMonitor : public Monitor {
 
   EMF::Field field() const;
 
+  auto initParallelizedConfig() -> void override;
+
+ protected:
+
+  auto gatherData() -> void override;
+
  private:
   Axis::XYZ _axis;
   EMF::Field _field;
+
+  MpiSupport::Block _block;
+  std::vector<MpiSupport::Block::Profile> _profiles;
+  std::vector<MpiSupport::Block> _blocks_mpi;
 };
 
 }  // namespace xfdtd

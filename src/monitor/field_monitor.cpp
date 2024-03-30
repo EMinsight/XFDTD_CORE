@@ -27,6 +27,8 @@ void FieldMonitor::init(
         "FieldMonitor cannot be used in 1D simulation(not implemented)");
   }
 
+  // TODO(franzero): temporary way. need to be refactored
+  // Example: The box for Hx is. The box for Ex is
   auto offset_i = 0;
   auto offset_j = 0;
   auto offset_k = 0;
@@ -41,38 +43,43 @@ void FieldMonitor::init(
         gridSpacePtr()->dimension() == GridSpace::Dimension::THREE ? 1 : 0;
   }
 
-  auto new_global_box =
+  setGlobalGridBox(
       GridBox{globalGridBox().origin() + Grid{static_cast<size_t>(offset_i),
                                               static_cast<size_t>(offset_j),
                                               static_cast<size_t>(offset_k)},
               globalGridBox().size() - Grid{static_cast<size_t>(offset_i),
                                             static_cast<size_t>(offset_j),
-                                            static_cast<size_t>(offset_k)}};
+                                            static_cast<size_t>(offset_k)}});
 
-  globalGridBox() = new_global_box;
-
-  auto new_box =
+  setNodeGridBox(
       GridBox{nodeGridBox().origin() + Grid{static_cast<size_t>(offset_i),
                                             static_cast<size_t>(offset_j),
                                             static_cast<size_t>(offset_k)},
               nodeGridBox().size() - Grid{static_cast<size_t>(offset_i),
                                           static_cast<size_t>(offset_j),
-                                          static_cast<size_t>(offset_k)}};
-  nodeGridBox() = new_box;
+                                          static_cast<size_t>(offset_k)}});
 
-  nodeTask() =
+  setGlobalTask(Divider::makeIndexTask(
+      Divider::makeIndexRange(globalGridBox().origin().i(),
+                              globalGridBox().end().i()),
+      Divider::makeIndexRange(globalGridBox().origin().j(),
+                              globalGridBox().end().j()),
+      Divider::makeIndexRange(globalGridBox().origin().k(),
+                              globalGridBox().end().k())));
+
+  setNodeTask(
       Divider::makeIndexTask(Divider::makeIndexRange(nodeGridBox().origin().i(),
                                                      nodeGridBox().end().i()),
                              Divider::makeIndexRange(nodeGridBox().origin().j(),
                                                      nodeGridBox().end().j()),
                              Divider::makeIndexRange(nodeGridBox().origin().k(),
-                                                     nodeGridBox().end().k()));
+                                                     nodeGridBox().end().k())));
 }
 
 void FieldMonitor::update() {}
 
 void FieldMonitor::output() {
-  if (!nodeTask().valid()) {
+  if (!valid()) {
     return;
   }
   auto em_field{emfPtr()};
@@ -91,5 +98,87 @@ void FieldMonitor::output() {
 Axis::XYZ FieldMonitor::axis() const { return _axis; }
 
 EMF::Field FieldMonitor::field() const { return _field; }
+
+auto FieldMonitor::initParallelizedConfig() -> void {
+  makeMpiSubComm();
+  if (!valid()) {
+    return;
+  }
+
+  auto& mpi_support = MpiSupport::instance();
+
+#if defined(XFDTD_CORE_WITH_MPI)
+  const auto node_box_origin_in_global =
+      gridSpacePtr()->globalBox().origin() + nodeGridBox().origin();
+  const auto g_origin = globalGridBox().origin();
+
+  auto nx = nodeTask().xRange().size();
+  auto ny = nodeTask().yRange().size();
+  auto nz = nodeTask().zRange().size();
+  auto stride_elem = globalTask().zRange().size();
+  auto stride_vec = globalTask().zRange().size() * globalTask().yRange().size();
+  auto disp = (node_box_origin_in_global.i() - g_origin.i()) * stride_vec +
+              (node_box_origin_in_global.j() - g_origin.j()) * stride_elem +
+              (node_box_origin_in_global.k() - g_origin.k());
+
+  auto p = MpiSupport::Block::Profile{
+      static_cast<int>(nx),          static_cast<int>(ny),
+      static_cast<int>(nz),          static_cast<int>(stride_vec),
+      static_cast<int>(stride_elem), static_cast<int>(disp)};
+
+  if (monitorMpiConfig().isRoot()) {
+    _profiles.resize(monitorMpiConfig().size());
+  }
+
+  auto profile_type = MpiSupport::TypeGuard{};
+  MPI_Type_contiguous(sizeof(MpiSupport::Block::Profile), MPI_CHAR,
+                      &profile_type._type);
+  MPI_Type_commit(&profile_type._type);
+
+  _block = MpiSupport::Block::make(p);
+
+  mpi_support.gather(monitorMpiConfig(), &p, 1, profile_type, _profiles.data(),
+                     1, profile_type, monitorMpiConfig().root());
+
+  if (monitorMpiConfig().isRoot()) {
+    _blocks_mpi.reserve(_profiles.size());
+    for (const auto& profile : _profiles) {
+      _blocks_mpi.emplace_back(MpiSupport::Block::make(profile));
+    }
+  }
+#endif
+}
+
+auto FieldMonitor::gatherData() -> void {
+  if (!valid() || monitorMpiConfig().size() == 1) {
+    return;
+  }
+
+  auto& mpi_support = MpiSupport::instance();
+  if (monitorMpiConfig().isRoot()) {
+    xt::xarray<double> recv_buffer = xt::zeros<double>(
+        {globalTask().xRange().size(), globalTask().yRange().size(),
+         globalTask().zRange().size()});
+    for (int i = 1; i < monitorMpiConfig().size(); ++i) {
+      mpi_support.iRecv(monitorMpiConfig(), recv_buffer.data(), 1,
+                        _blocks_mpi[i], i, 0);
+    }
+
+    auto index =
+        mpi_support.iSendRecv(monitorMpiConfig(), data().data(), data().size(),
+                              monitorMpiConfig().rank(), 0, recv_buffer.data(),
+                              1, _block, monitorMpiConfig().rank(), 0);
+    mpi_support.waitAll();
+    if (index == -1) {
+      return;
+    }
+
+    data() = std::move(recv_buffer);
+  } else {
+    mpi_support.send(monitorMpiConfig(), data().data(),
+                     sizeof(double) * data().size(), monitorMpiConfig().root(),
+                     0);
+  }
+}
 
 }  // namespace xfdtd

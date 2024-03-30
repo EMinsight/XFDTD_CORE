@@ -33,12 +33,6 @@
 namespace xfdtd {
 
 Simulation::Simulation(double dx, double dy, double dz, double cfl,
-                       int num_thread, Divider::Type divider_type)
-    : _dx{dx}, _dy{dy}, _dz{dz}, _cfl{cfl}, _barrier(num_thread) {
-  throw XFDTDSimulationException("Deprecated constructor");
-}
-
-Simulation::Simulation(double dx, double dy, double dz, double cfl,
                        ThreadConfig thread_config)
     : _dx{dx},
       _dy{dy},
@@ -129,37 +123,90 @@ void Simulation::run(std::size_t time_step) {
     }
   }
 
-  MpiSupport::instance().barrier();
+  // MpiSupport::instance().barrier();
 
-  {
-    std::stringstream ss;
-    ss << "\n";
-    ss << "Rank: " << myRank() << "\n";
-    ss << _grid_space->toString();
-    std::cout << ss.str();
-    MpiSupport::instance().barrier();
-  }
+  // {
+  //   std::stringstream ss;
+  //   ss << "\n";
+  //   ss << "Rank: " << myRank() << "\n";
+  //   ss << _grid_space->toString();
+  //   std::cout << ss.str();
+  //   MpiSupport::instance().barrier();
+  // }
 
-  {
-    std::stringstream ss;
-    ss << "\n";
-    ss << "Rank: " << myRank() << "\n";
-    ss << MpiSupport::instance().config().toString() << "\n";
-    std::cout << ss.str();
-    MpiSupport::instance().barrier();
-  }
+  // {
+  //   std::stringstream ss;
+  //   ss << "\n";
+  //   ss << "Rank: " << myRank() << "\n";
+  //   ss << MpiSupport::instance().config().toString() << "\n";
+  //   std::cout << ss.str();
+  //   MpiSupport::instance().barrier();
+  // }
 
-  {
-    // std::stringstream ss;
-    // ss << "\n";
-    // for (const auto& d : _domains) {
-    //   ss << "Rank: " << myRank() << "\n";
-    //   ss << d->toString() << "\n";
-    //   std::cout << ss.str() << std::flush;
-    //   MpiSupport::instance().barrier();
-    //   ss.str("");
-    // }
-  }
+  // {
+  // std::stringstream ss;
+  // ss << "\n";
+  // for (const auto& d : _domains) {
+  //   ss << "Rank: " << myRank() << "\n";
+  //   ss << d->toString() << "\n";
+  //   std::cout << ss.str() << std::flush;
+  //   MpiSupport::instance().barrier();
+  //   ss.str("");
+  // }
+  // }
+
+  // {
+  //   std::stringstream ss;
+  //   ss << "\n";
+  //   for (const auto& m : _monitors) {
+  //     auto v = std::dynamic_pointer_cast<CurrentMonitor>(m);
+  //     if (v == nullptr) {
+  //       continue;
+  //     }
+
+  //     if (!v->valid()) {
+  //       continue;
+  //     }
+
+  //     if (!MpiSupport::instance().isRoot()) {
+  //       std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  //     }
+
+  //     ss << "Rank: " << myRank() << "\n";
+  //     ss << v->toString() << "\n";
+  //     std::cout << ss.str();
+  //     ss.str("");
+  //   }
+  // }
+
+  // auto& mpi_support = MpiSupport::instance();
+  // auto rank_str = std::to_string(mpi_support.rank());
+  // std::filesystem::path check_data = "./data/check_mpi_" + rank_str;
+
+  // if (!std::filesystem::exists(check_data)) {
+  //   std::filesystem::create_directory(check_data);
+  // }
+
+  // xt::dump_npy(check_data / "cexe.npy",
+  //              _calculation_param->fdtdCoefficient()->cexe());
+  // xt::dump_npy(check_data / "cexhy.npy",
+  //              _calculation_param->fdtdCoefficient()->cexhy());
+  // xt::dump_npy(check_data / "cexhz.npy",
+  //              _calculation_param->fdtdCoefficient()->cexhz());
+  // xt::dump_npy(check_data / "ceye.npy",
+  //              _calculation_param->fdtdCoefficient()->ceye());
+  // xt::dump_npy(check_data / "ceyhx.npy",
+  //              _calculation_param->fdtdCoefficient()->ceyhx());
+  // xt::dump_npy(check_data / "ceyhz.npy",
+  //              _calculation_param->fdtdCoefficient()->ceyhz());
+  // xt::dump_npy(check_data / "ceze.npy",
+  //              _calculation_param->fdtdCoefficient()->ceze());
+  // xt::dump_npy(check_data / "cezhy.npy",
+  //              _calculation_param->fdtdCoefficient()->cezhy());
+  // xt::dump_npy(check_data / "cezhx.npy",
+  //              _calculation_param->fdtdCoefficient()->cezhx());
+
+  // exit(0);
 
   {
     std::vector<std::thread> threads;

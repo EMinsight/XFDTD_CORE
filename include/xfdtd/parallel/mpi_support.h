@@ -197,7 +197,13 @@ class MpiSupport {
   };
 
  public:
-  static constexpr int INVALID_RANK = -1;
+#if defined(XFDTD_CORE_WITH_MPI)
+  inline static constexpr int ANY_SOURCE = MPI_ANY_SOURCE;
+  inline static constexpr int ANY_TAG = MPI_ANY_TAG;
+#else
+    inline static constexpr int ANY_SOURCE = -1;
+    inline static constexpr int ANY_TAG = -1;
+#endif
 
   inline static int exchange_hy_x_sr_tag = 0;
   inline static int exchange_hy_x_rs_tag = 1;
@@ -394,6 +400,9 @@ class MpiSupport {
 
   auto allGather(const MpiConfig& config, const void* send_buf, int send_count,
                  void* recv_buf, int recv_count) -> void;
+
+  auto reduceSum(const MpiConfig& config, const double* send_buf,
+                 double* recv_buf, int count) -> void;
 
  private:
   explicit MpiSupport(int argc = 0, char** argv = nullptr);

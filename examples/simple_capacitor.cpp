@@ -11,6 +11,7 @@
 #include "xfdtd/object/lumped_element/pec_plane.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
+#include "xfdtd/parallel/parallelized_config.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
@@ -67,7 +68,7 @@ double exactSimpleCapacitorSolver(double c, double r, double t, double t_0) {
   return 1 - std::exp(-t / (r * c));
 }
 
-void capacitorX(int num_thread) {
+void capacitorX() {
   // X: C A B
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -109,8 +110,7 @@ void capacitorX(int num_thread) {
           xfdtd::Vector{V_MONITOR_L_C, V_MONITOR_L_A, V_MONITOR_L_B}),
       xfdtd::Axis::Direction::XP, "data/simple_capacitor")};
 
-  auto simulation{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, num_thread,
-                                    xfdtd::Divider::Type::X}};
+  auto simulation{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98}};
   simulation.addObject(domain);
   simulation.addObject(plane);
   simulation.addObject(plane2);
@@ -169,7 +169,8 @@ void capacitorZ() {
           xfdtd::Vector{V_MONITOR_L_A, V_MONITOR_L_B, V_MONITOR_L_C}),
       xfdtd::Axis::Direction::ZP, "data/simple_capacitor")};
 
-  auto simulation{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98}};
+  auto simulation{
+      xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, xfdtd::ThreadConfig{1, 1, 1}}};
   simulation.addObject(domain);
   simulation.addObject(plane);
   simulation.addObject(plane2);
@@ -189,9 +190,6 @@ void capacitorZ() {
 }
 
 int main(int argc, char* argv[]) {
-  int num_thread = 1;
-  if (argc > 1) {
-    num_thread = std::stoi(argv[1]);
-  }
-  capacitorX(num_thread);
+  capacitorX();
+  return 0;
 }

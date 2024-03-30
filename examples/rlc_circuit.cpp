@@ -1,9 +1,9 @@
+#include <xfdtd/divider/divider.h>
 
 #include <memory>
 #include <xtensor.hpp>
 #include <xtensor/xnpy.hpp>
 
-#include <xfdtd/divider/divider.h>
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/monitor/voltage_monitor.h"
@@ -12,6 +12,8 @@
 #include "xfdtd/object/lumped_element/pec_plane.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
+#include "xfdtd/parallel/mpi_support.h"
+#include "xfdtd/parallel/parallelized_config.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
@@ -70,7 +72,7 @@ constexpr static double V_MONITOR_L_A{0 * SIZE};
 constexpr static double V_MONITOR_L_B{1 * SIZE};
 constexpr static double V_MONITOR_L_C{2 * SIZE};
 
-void rlcCircuit(int num_thread) {
+void rlcCircuit() {
   // Y : B C A
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -121,8 +123,8 @@ void rlcCircuit(int num_thread) {
           xfdtd::Vector{V_MONITOR_L_A, V_MONITOR_L_B, V_MONITOR_L_C}),
       xfdtd::Axis::Direction::ZP, "./data/rlc_circuit")};
 
-  auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, num_thread,
-                           xfdtd::Divider::Type::XY}};
+  auto s{
+      xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, xfdtd::ThreadConfig{2, 1, 1}}};
   s.addObject(domain);
   s.addObject(plane);
   s.addObject(plane1);
@@ -139,9 +141,6 @@ void rlcCircuit(int num_thread) {
 }
 
 int main(int argc, char *argv[]) {
-  int num_thread = 1;
-  if (argc > 1) {
-    num_thread = std::stoi(argv[1]);
-  }
-  rlcCircuit(num_thread);
+  xfdtd::MpiSupport::instance(argc, argv);
+  rlcCircuit();
 }

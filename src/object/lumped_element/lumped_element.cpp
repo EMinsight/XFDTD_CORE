@@ -1,6 +1,6 @@
+#include <xfdtd/divider/divider.h>
 #include <xfdtd/object/lumped_element/lumped_element.h>
 
-#include <xfdtd/divider/divider.h>
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/grid_space/grid_space.h"
 
@@ -89,6 +89,45 @@ std::size_t LumpedElement::nodeCountSubAxisB() const {
       return _ie - _is + 1;
     case Axis::XYZ::Z:
       return _je - _js + 1;
+    default:
+      throw std::runtime_error("Invalid xyz");
+  }
+}
+
+std::size_t LumpedElement::globalCountMainAxis() const {
+  switch (xyz()) {
+    case Axis::XYZ::X:
+      return globalGridBox().size().i();
+    case Axis::XYZ::Y:
+      return globalGridBox().size().j();
+    case Axis::XYZ::Z:
+      return globalGridBox().size().k();
+    default:
+      throw std::runtime_error("Invalid xyz");
+  }
+}
+
+std::size_t LumpedElement::globalCountSubAxisA() const {
+  switch (xyz()) {
+    case Axis::XYZ::X:
+      return globalGridBox().size().j() + 1;
+    case Axis::XYZ::Y:
+      return globalGridBox().size().k() + 1;
+    case Axis::XYZ::Z:
+      return globalGridBox().size().i() + 1;
+    default:
+      throw std::runtime_error("Invalid xyz");
+  }
+}
+
+std::size_t LumpedElement::globalCountSubAxisB() const {
+  switch (xyz()) {
+    case Axis::XYZ::X:
+      return globalGridBox().size().k() + 1;
+    case Axis::XYZ::Y:
+      return globalGridBox().size().i() + 1;
+    case Axis::XYZ::Z:
+      return globalGridBox().size().j() + 1;
     default:
       throw std::runtime_error("Invalid xyz");
   }

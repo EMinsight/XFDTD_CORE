@@ -1,4 +1,6 @@
 #include <xfdtd/divider/divider.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/object/lumped_element/voltage_source.h>
 
 #include <cstddef>
@@ -7,8 +9,6 @@
 #include <xtensor.hpp>
 
 #include "object/lumped_element_corrector.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
@@ -61,9 +61,9 @@ void VoltageSource::init(std::shared_ptr<const GridSpace> grid_space,
                         xt::view(z, z_range));
   }};
 
-  _resistance_factor = rf(_resistance, nodeCountSubAxisA(), nodeCountSubAxisB(),
-                          nodeCountMainAxis());
-  _voltage_amplitude_factor = vf(_waveform->amplitude(), nodeCountMainAxis());
+  _resistance_factor = rf(_resistance, globalCountSubAxisA(),
+                          globalCountSubAxisB(), globalCountMainAxis());
+  _voltage_amplitude_factor = vf(_waveform->amplitude(), globalCountMainAxis());
 
   auto g{gridSpacePtr()};
 

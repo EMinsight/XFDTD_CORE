@@ -40,8 +40,8 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
   auto dt{calculationParamPtr()->timeParam()->dt()};
   auto g{gridSpacePtr()};
 
-  _inductance_factor = in_f(_inductance, nodeCountSubAxisA(),
-                            nodeCountSubAxisB(), nodeCountMainAxis());
+  _inductance_factor = in_f(_inductance, globalCountSubAxisA(),
+                            globalCountSubAxisB(), globalCountMainAxis());
 
   if (xyz() == Axis::XYZ::X) {
     auto [dx, dy, dz] = dx_dy_dz(g->eSizeX(), g->hSizeY(), g->hSizeZ(),

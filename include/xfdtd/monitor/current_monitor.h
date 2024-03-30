@@ -1,6 +1,7 @@
 #ifndef _XFDTD_CORE_CURRENT_MONITOR_H_
 #define _XFDTD_CORE_CURRENT_MONITOR_H_
 
+#include <xfdtd/divider/divider.h>
 #include <xfdtd/monitor/monitor.h>
 
 namespace xfdtd {
@@ -26,13 +27,28 @@ class CurrentMonitor : public Monitor {
 
   void update() override;
 
+  auto output() -> void override;
+
+  auto initParallelizedConfig() -> void override;
+
   void initTimeDependentVariable() override;
+
+  auto gatherData() -> void override;
+
+  auto valid() const -> bool override;
+
+  auto toString() const -> std::string override;
 
  private:
   Axis::Direction _direction;
   std::size_t _is, _ie, _js, _je, _ks, _ke;
   xt::xarray<double> _da, _db;
   double _positive;
+
+  xt::xarray<double> _time;
+  xt::xarray<double> _node_data;
+  xt::xarray<double> _integral_a, _integral_b;
+  Divider::IndexRange _ha_range_bn, _ha_range_bp, _hb_range_an, _hb_range_ap;
 };
 
 }  // namespace xfdtd

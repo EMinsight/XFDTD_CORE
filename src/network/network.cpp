@@ -1,4 +1,5 @@
 #include <xfdtd/network/network.h>
+#include <xfdtd/parallel/mpi_support.h>
 
 #include <exception>
 #include <filesystem>
@@ -46,6 +47,10 @@ void Network::init(
 void Network::output() {
   for (auto& port : _ports) {
     port->calculateSParameters(_frequencies);
+  }
+
+  if (!MpiSupport::instance().isRoot()) {
+    return;
   }
 
   for (std::size_t i{0}; i < _ports.size(); ++i) {

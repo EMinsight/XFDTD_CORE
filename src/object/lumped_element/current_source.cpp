@@ -59,10 +59,10 @@ void CurrentSource::init(std::shared_ptr<const GridSpace> grid_space,
                         xt::view(z, z_range));
   }};
 
-  _resistance_factor = rf(_resistance, nodeCountSubAxisA(), nodeCountSubAxisB(),
-                          nodeCountMainAxis());
-  _current_amplitude_factor = cf(_waveform->amplitude(), nodeCountSubAxisA(),
-                                 nodeCountSubAxisB(), nodeCountMainAxis());
+  _resistance_factor = rf(_resistance, globalCountSubAxisA(),
+                          globalCountSubAxisB(), globalCountMainAxis());
+  _current_amplitude_factor = cf(_waveform->amplitude(), globalCountSubAxisA(),
+                                 globalCountSubAxisB(), globalCountMainAxis());
 
   auto g{gridSpacePtr()};
 

@@ -26,13 +26,24 @@ class VoltageMonitor : public Monitor {
 
   void update() override;
 
+  auto output() -> void override;
+
+  auto initParallelizedConfig() -> void override;
+
   void initTimeDependentVariable() override;
+
+  auto gatherData() -> void override;
+
+  auto toString() const -> std::string override;
 
  private:
   Axis::Direction _direction;
   std::size_t _is, _ie, _js, _je, _ks, _ke;
   xt::xarray<double> _dc;
   xt::xarray<double> _coff;
+
+  xt::xarray<double> _time;
+  xt::xarray<double> _node_data;
 };
 
 }  // namespace xfdtd

@@ -29,8 +29,8 @@ void Capacitor::init(std::shared_ptr<const GridSpace> grid_space,
                         xt::view(z, z_range));
   }};
 
-  _capacitance_factor = cf(_capacitance, nodeCountSubAxisA(),
-                           nodeCountSubAxisB(), nodeCountMainAxis());
+  _capacitance_factor = cf(_capacitance, globalCountSubAxisA(),
+                           globalCountSubAxisB(), globalCountMainAxis());
 
   auto g{gridSpacePtr()};
   if (xyz() == Axis::XYZ::X) {

@@ -1,3 +1,5 @@
+#include <xfdtd/parallel/parallelized_config.h>
+
 #include <memory>
 #include <xtensor.hpp>
 #include <xtensor/xnpy.hpp>
@@ -13,6 +15,7 @@
 #include "xfdtd/object/lumped_element/resistor.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
+#include "xfdtd/parallel/mpi_support.h"
 #include "xfdtd/simulation/simulation.h"
 
 void quarterWaveTransformer() {
@@ -131,7 +134,8 @@ void quarterWaveTransformer() {
   network->addPort(port_2);
   network->setFrequencies(xt::arange(2e7, 8e9, 1e7));
 
-  auto s{xfdtd::Simulation{size, size, size, 0.9}};
+  auto s{
+      xfdtd::Simulation{size, size, size, 0.9, xfdtd::ThreadConfig{1, 1, 1}}};
   s.addObject(domain);
   s.addObject(substrate);
   s.addObject(microstrip_0);
@@ -140,11 +144,11 @@ void quarterWaveTransformer() {
   s.addObject(ground_0);
   s.addObject(v_source);
   s.addObject(r);
-  // s.addObject(abs_object_zp);
-  // s.addObject(abs_object_xn);
-  // s.addObject(abs_object_xp);
-  // s.addObject(abs_object_yp);
-  // s.addObject(abs_object_yn);
+//   s.addObject(abs_object_zp);
+//   s.addObject(abs_object_xn);
+//   s.addObject(abs_object_xp);
+//   s.addObject(abs_object_yp);
+//   s.addObject(abs_object_yn);
   s.addMonitor(v1);
   s.addMonitor(v2);
   s.addMonitor(c1);
@@ -157,9 +161,10 @@ void quarterWaveTransformer() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
 
   s.run(5000);
-
-  std::cout << "Output Data..."
-            << "\n";
+  if (xfdtd::MpiSupport::instance().isRoot()) {
+    std::cout << "Output Data..."
+              << "\n";
+  }
 
   network->output();
   auto output_dir{std::string{"./data/quarter_wave_transformer"}};
@@ -175,8 +180,10 @@ void quarterWaveTransformer() {
                xt::stack(xt::xtuple(v_source->waveform()->time(),
                                     v_source->waveform()->value())));
 
-  std::cout << "Output Data Finished"
-            << "\n";
+  if (xfdtd::MpiSupport::instance().isRoot()) {
+    std::cout << "Output Data Finished"
+              << "\n";
+  }
 }
 
 int main() { quarterWaveTransformer(); }

@@ -48,6 +48,8 @@ class MovieMonitor : public xfdtd::Monitor {
 
   auto initParallelizedConfig() -> void override;
 
+  auto valid() const -> bool override;
+
  private:
   std::unique_ptr<xfdtd::Monitor> _frame;
 

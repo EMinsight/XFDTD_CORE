@@ -13,11 +13,12 @@
 #include "xfdtd/object/lumped_element/pec_plane.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
+#include "xfdtd/parallel/parallelized_config.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 
-void microstripLine(int num_thread, xfdtd::Divider::Type type) {
+void microstripLine() {
   constexpr double dx{0.203e-3};
   constexpr double dy{0.203e-3};
   constexpr double dz{0.1325e-3};
@@ -72,7 +73,7 @@ void microstripLine(int num_thread, xfdtd::Divider::Type type) {
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1},
       xt::linspace(2e7, 10e9, 500), "./data/microstrip_line")};
 
-  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, num_thread, type}};
+  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, xfdtd::ThreadConfig{1, 1, 1}}};
   s.addObject(domain);
   s.addObject(substrate);
   s.addObject(microstrip_0);
@@ -96,22 +97,6 @@ void microstripLine(int num_thread, xfdtd::Divider::Type type) {
 }
 
 int main(int argc, char *argv[]) {
-  int num_thread = 1;
-  xfdtd::Divider::Type divider_type = xfdtd::Divider::Type::X;
-  if (argc == 3) {
-    num_thread = std::stoi(argv[1]);
-    if (std::string(argv[2]) == "X") {
-      divider_type = xfdtd::Divider::Type::X;
-    }
-    if (std::string(argv[2]) == "Y") {
-      divider_type = xfdtd::Divider::Type::Y;
-    }
-    if (std::string(argv[2]) == "Z") {
-      divider_type = xfdtd::Divider::Type::Z;
-    }
-    if (std::string(argv[2]) == "XY") {
-      divider_type = xfdtd::Divider::Type::XY;
-    }
-  }
-  microstripLine(num_thread, divider_type);
+  microstripLine();
+  return 0;
 }

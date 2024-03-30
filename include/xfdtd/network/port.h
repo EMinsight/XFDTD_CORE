@@ -12,6 +12,10 @@ namespace xfdtd {
 
 class Port {
  public:
+  inline static constexpr int CURRENT_TAG = 31;
+  inline static constexpr int VOLTAGE_TAG = 32;
+
+ public:
   Port(std::size_t index, bool is_source, std::complex<double> impedance,
        std::shared_ptr<CurrentMonitor> current_monitor,
        std::shared_ptr<VoltageMonitor> voltage_monitor);

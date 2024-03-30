@@ -36,6 +36,7 @@ void Object::init(std::shared_ptr<const GridSpace> grid_space,
 
   _grid_box = std::make_unique<GridBox>(
       _grid_space->getGridBoxWithoutCheck(_shape.get()));
+  _global_grid_box = _grid_space->globalGridSpace()->getGridBox(_shape.get());
 }
 
 void Object::correctMaterialSpace(std::size_t index) {
@@ -247,5 +248,7 @@ CalculationParam* Object::calculationParamPtr() {
 EMF* Object::emfPtr() { return _emf.get(); }
 
 GridBox* Object::gridBoxPtr() const { return _grid_box.get(); }
+
+GridBox Object::globalGridBox() const { return _global_grid_box; }
 
 }  // namespace xfdtd

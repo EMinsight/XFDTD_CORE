@@ -91,6 +91,8 @@ class Object {
 
   GridBox* gridBoxPtr() const;
 
+  GridBox globalGridBox() const;
+
  private:
   std::string _name;
   std::unique_ptr<Shape> _shape;
@@ -101,6 +103,7 @@ class Object {
   std::shared_ptr<EMF> _emf;
 
   std::unique_ptr<GridBox> _grid_box;
+  GridBox _global_grid_box;
 };
 
 inline const auto& Object::material() const { return _material; }
