@@ -3,6 +3,7 @@
 
 #include <xfdtd/parallel/mpi_config.h>
 
+#include <complex>
 #include <xtensor/xarray.hpp>
 #if defined(XFDTD_CORE_WITH_MPI)
 #include <mpi.h>
@@ -201,8 +202,8 @@ class MpiSupport {
   inline static constexpr int ANY_SOURCE = MPI_ANY_SOURCE;
   inline static constexpr int ANY_TAG = MPI_ANY_TAG;
 #else
-    inline static constexpr int ANY_SOURCE = -1;
-    inline static constexpr int ANY_TAG = -1;
+  inline static constexpr int ANY_SOURCE = -1;
+  inline static constexpr int ANY_TAG = -1;
 #endif
 
   inline static int exchange_hy_x_sr_tag = 0;
@@ -403,6 +404,10 @@ class MpiSupport {
 
   auto reduceSum(const MpiConfig& config, const double* send_buf,
                  double* recv_buf, int count) -> void;
+
+  auto reduceSum(const MpiConfig& config, const std::complex<double>* send_buf,
+                 std::complex<double>* recv_buf, int count) const
+      -> void;
 
  private:
   explicit MpiSupport(int argc = 0, char** argv = nullptr);

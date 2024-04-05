@@ -301,4 +301,14 @@ auto MpiSupport::reduceSum(const MpiConfig& config, const double* send_buf,
 #endif
 }
 
+auto MpiSupport::reduceSum(const MpiConfig& config,
+                           const std::complex<double>* send_buf,
+                           std::complex<double>* recv_buf, int count) const
+    -> void {
+#if defined(XFDTD_CORE_WITH_MPI)
+  MPI_Reduce(send_buf, recv_buf, count, MPI_DOUBLE_COMPLEX, MPI_SUM,
+             config.root(), config.comm());
+#endif
+}
+
 }  // namespace xfdtd

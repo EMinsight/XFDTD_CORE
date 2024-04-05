@@ -302,6 +302,9 @@ void Simulation::init() {
   for (auto&& m : _monitors) {
     m->initParallelizedConfig();
   }
+  for (auto&& n : _nfffts) {
+    n->initParallelizedConfig();
+  }
 
   MpiSupport::instance().generateSlice(
       _grid_space->sizeX(), _grid_space->sizeY(), _grid_space->sizeZ());

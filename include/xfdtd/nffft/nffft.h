@@ -43,6 +43,8 @@ class NFFFT {
             std::shared_ptr<const CalculationParam> calculation_param,
             std::shared_ptr<const EMF> emf);
 
+  auto initParallelizedConfig() -> void;
+
   void initTimeDependentVariable();
 
   void update();
@@ -98,8 +100,6 @@ class NFFFT {
   auto nodeTaskSurfaceZP() const -> const Divider::IndexTask&;
 
   auto valid() const -> bool;
-
-  auto initParallelizedConfig() -> void;
 
   auto nffftMPIConfig() const -> const MpiConfig&;
 
@@ -165,7 +165,7 @@ class NFFFT {
       _node_task_surface_yn, _node_task_surface_yp, _node_task_surface_zn,
       _node_task_surface_zp;
 
-  MpiConfig _mpi_config;
+  MpiConfig _nffft_mpi_config;
 
   std::vector<FDPlaneData> _fd_plane_data;
 

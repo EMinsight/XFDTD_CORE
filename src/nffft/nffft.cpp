@@ -5,6 +5,7 @@
 #include <xfdtd/util/constant.h>
 #include <xfdtd/util/transform.h>
 
+#include <complex>
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
@@ -13,9 +14,11 @@
 #include <utility>
 #include <vector>
 #include <xtensor.hpp>
+#include <xtensor/xcomplex.hpp>
 #include <xtensor/xnpy.hpp>
 
 #include "nffft/nffft_fd_data.h"
+#include "xfdtd/parallel/mpi_config.h"
 
 namespace xfdtd {
 
@@ -46,81 +49,11 @@ NFFFT::NFFFT(std::size_t distance_x, std::size_t distance_y,
 
 NFFFT::~NFFFT() = default;
 
-auto NFFFT::distanceX() const -> std::size_t { return _distance_x; }
-
-auto NFFFT::distanceY() const -> std::size_t { return _distance_y; }
-
-auto NFFFT::distanceZ() const -> std::size_t { return _distance_z; }
-
-auto NFFFT::cube() const -> const Cube& { return *_cube; }
-
-auto NFFFT::globalBox() const -> const GridBox& { return _global_box; }
-
-auto NFFFT::nodeBox() const -> const GridBox& { return _node_box; }
-
-auto NFFFT::globalTaskSurfaceXN() const -> const Divider::IndexTask& {
-  return _global_task_surface_xn;
-}
-
-auto NFFFT::globalTaskSurfaceXP() const -> const Divider::IndexTask& {
-  return _global_task_surface_xp;
-}
-
-auto NFFFT::globalTaskSurfaceYN() const -> const Divider::IndexTask& {
-  return _global_task_surface_yn;
-}
-
-auto NFFFT::globalTaskSurfaceYP() const -> const Divider::IndexTask& {
-  return _global_task_surface_yp;
-}
-
-auto NFFFT::globalTaskSurfaceZN() const -> const Divider::IndexTask& {
-  return _global_task_surface_zn;
-}
-
-auto NFFFT::globalTaskSurfaceZP() const -> const Divider::IndexTask& {
-  return _global_task_surface_zp;
-}
-
-auto NFFFT::nodeTaskSurfaceXN() const -> const Divider::IndexTask& {
-  return _node_task_surface_xn;
-}
-
-auto NFFFT::nodeTaskSurfaceXP() const -> const Divider::IndexTask& {
-  return _node_task_surface_xp;
-}
-
-auto NFFFT::nodeTaskSurfaceYN() const -> const Divider::IndexTask& {
-  return _node_task_surface_yn;
-}
-
-auto NFFFT::nodeTaskSurfaceYP() const -> const Divider::IndexTask& {
-  return _node_task_surface_yp;
-}
-
-auto NFFFT::nodeTaskSurfaceZN() const -> const Divider::IndexTask& {
-  return _node_task_surface_zn;
-}
-
-auto NFFFT::nodeTaskSurfaceZP() const -> const Divider::IndexTask& {
-  return _node_task_surface_zp;
-}
-
-auto NFFFT::setOutputDir(const std::string& out_dir) -> void {
-  _output_dir = out_dir;
-}
-
 auto NFFFT::valid() const -> bool {
   return _node_task_surface_xn.valid() || _node_task_surface_xp.valid() ||
          _node_task_surface_yn.valid() || _node_task_surface_yp.valid() ||
          _node_task_surface_zn.valid() || _node_task_surface_zp.valid();
 }
-
-auto NFFFT::initParallelizedConfig() -> void {
-  throw XFDTDNFFFTException("Not implemented");
-}
-
-auto NFFFT::nffftMPIConfig() -> MpiConfig& { return _mpi_config; }
 
 void NFFFT::init(std::shared_ptr<const GridSpace> grid_space,
                  std::shared_ptr<const CalculationParam> calculation_param,
@@ -140,12 +73,27 @@ void NFFFT::init(std::shared_ptr<const GridSpace> grid_space,
   generateSurface();
 }
 
-auto NFFFT::update() -> void {
-  auto current_time_step{calculationParamPtr()->timeParam()->currentTimeStep()};
-  for (auto f{0}; f < _frequencies.size(); ++f) {
-    for (auto&& fd_data : _fd_plane_data) {
-      fd_data.update(current_time_step);
-    }
+auto NFFFT::initParallelizedConfig() -> void {
+  auto& mpi_support = MpiSupport::instance();
+  auto arr = std::vector<int>(mpi_support.size(), 0);
+
+  int is_valid = static_cast<int>(valid());
+
+  mpi_support.allGather(mpi_support.config(), &is_valid, sizeof(int),
+                        arr.data(), sizeof(int));
+#if defined(XFDTD_CORE_WITH_MPI)
+  int color = (arr[mpi_support.rank()] == 1) ? (0) : (MPI_UNDEFINED);
+#else
+  int color = 0;
+#endif
+
+  int counter =
+      std::count_if(arr.begin(), arr.end(), [](const auto& v) { return v; });
+
+  _nffft_mpi_config = MpiConfig::makeSub(mpi_support.config(), color, counter);
+
+  if (!valid() && mpi_support.size() <= 1) {
+    throw XFDTDNFFFTException("Invalid task");
   }
 }
 
@@ -156,6 +104,15 @@ void NFFFT::initTimeDependentVariable() {
   const auto dt{calculationParamPtr()->timeParam()->dt()};
   for (auto&& fd_data : _fd_plane_data) {
     fd_data.initDFT(total_time_step, dt);
+  }
+}
+
+auto NFFFT::update() -> void {
+  auto current_time_step{calculationParamPtr()->timeParam()->currentTimeStep()};
+  for (auto f{0}; f < _frequencies.size(); ++f) {
+    for (auto&& fd_data : _fd_plane_data) {
+      fd_data.update(current_time_step);
+    }
   }
 }
 
@@ -178,19 +135,32 @@ void NFFFT::outputRadiationPower() {
 
   auto num_freq = _fd_plane_data.size();
   xt::xtensor<double, 1> freq_arr = xt::zeros<double>({num_freq});
+  xt::xtensor<double, 1> node_power_arr = xt::zeros<double>({num_freq});
   xt::xtensor<double, 1> power_arr = xt::zeros<double>({num_freq});
 
   for (auto i = 0; i < num_freq; ++i) {
     freq_arr(i) = _fd_plane_data[i].frequency();
-    power_arr(i) = _fd_plane_data[i].power();
+    node_power_arr(i) = _fd_plane_data[i].power();
+  }
+
+  MpiSupport::instance().reduceSum(nffftMPIConfig(), node_power_arr.data(),
+                                   power_arr.data(), node_power_arr.size());
+
+  if (!nffftMPIConfig().isRoot()) {
+    return;
   }
 
   if (!std::filesystem::exists(_output_dir)) {
     std::filesystem::create_directories(_output_dir);
   }
+  std::cout << "Rank: " << nffftMPIConfig().rank() << " do check power"
+            << "\n";
 
   auto data = xt::stack(xt::xtuple(freq_arr, power_arr));
-  xt::dump_npy(_output_dir + "/power.npy", data);
+  xt::dump_npy((std::filesystem::path{_output_dir} / "power.npy").string(),
+               data);
+  std::cout << "Rank: " << nffftMPIConfig().rank() << " do write power done"
+            << "\n";
 }
 
 auto NFFFT::initGlobal() -> void {
@@ -385,26 +355,53 @@ auto NFFFT::processFarField(const xt::xtensor<double, 1>& theta,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
   if (!valid()) {
-    if (MpiSupport::instance().config().size() <= 1) {
-      throw XFDTDNFFFTException("Invalid task");
-    }
-
     return;
   }
 
-  auto save_npy = [](const auto& data, const std::string& path) {
-    xt::dump_npy(path, data);
-    // std::cout << "Save: " << path << "\n";
-  };
-
+  xt::xtensor<std::complex<double>, 1> node_data;
   for (const auto& f : _fd_plane_data) {
     const auto freq = f.frequency();
-    auto a_theta = f.aTheta(theta, phi, origin);
-    auto f_phi = f.fPhi(theta, phi, origin);
-    auto a_phi = f.aPhi(theta, phi, origin);
-    auto f_theta = f.fTheta(theta, phi, origin);
+    auto node_a_theta = f.aTheta(theta, phi, origin);
+    auto node_f_phi = f.fPhi(theta, phi, origin);
+    auto node_a_phi = f.aPhi(theta, phi, origin);
+    auto node_f_theta = f.fTheta(theta, phi, origin);
+
+    xt::xtensor<std::complex<double>, 1> a_theta = xt::zeros_like(node_a_theta);
+    xt::xtensor<std::complex<double>, 1> f_phi = xt::zeros_like(node_f_phi);
+    xt::xtensor<std::complex<double>, 1> a_phi = xt::zeros_like(node_a_phi);
+    xt::xtensor<std::complex<double>, 1> f_theta = xt::zeros_like(node_f_theta);
+
+    node_data = xt::concatenate(xt::xtuple(node_data, node_a_theta));
+    node_data = xt::concatenate(xt::xtuple(node_data, node_f_phi));
+    node_data = xt::concatenate(xt::xtuple(node_data, node_a_phi));
+    node_data = xt::concatenate(xt::xtuple(node_data, node_f_theta));
+  }
+
+  // rename later
+  auto nffft_gather_func =
+      [this](const xt::xtensor<std::complex<double>, 1>& send_data,
+             xt::xtensor<std::complex<double>, 1>& recv_data) {
+        if (this->nffftMPIConfig().size() <= 1) {
+          recv_data = send_data;
+          return;
+        }
+
+        MpiSupport::instance().reduceSum(this->nffftMPIConfig(),
+                                         send_data.data(), recv_data.data(),
+                                         send_data.size());
+      };
+
+  auto data = xt::zeros_like(node_data);
+  nffft_gather_func(node_data, data);
+
+  if (!nffftMPIConfig().isRoot()) {
+    return;
+  }
+
+  const auto offsets = theta.size() * phi.size();
+  for (auto i{0}; i < _fd_plane_data.size(); ++i) {
+    auto freq = _fd_plane_data[i].frequency();
     std::stringstream ss;
-    // save float as 0.2f
     ss << std::fixed << std::setprecision(2);
     ss << freq / 1e9 << "GHz";
     const auto prefix_file_name = ss.str();
@@ -413,22 +410,102 @@ auto NFFFT::processFarField(const xt::xtensor<double, 1>& theta,
       std::filesystem::create_directories(std::filesystem::path{_output_dir} /
                                           sub_dir);
     }
-    save_npy(a_theta, (std::filesystem::path{_output_dir} / sub_dir /
-                       (prefix_file_name + "_a_theta.npy"))
-                          .string());
-    save_npy(f_phi, (std::filesystem::path{_output_dir} / sub_dir /
-                     (prefix_file_name + "_f_phi.npy"))
-                        .string());
-    save_npy(a_phi, (std::filesystem::path{_output_dir} / sub_dir /
-                     (prefix_file_name + "_a_phi.npy"))
-                        .string());
-    save_npy(f_theta, (std::filesystem::path{_output_dir} / sub_dir /
-                       (prefix_file_name + "_f_theta.npy"))
-                          .string());
+
+    auto&& fd_data =
+        xt::view(data, xt::range(4 * i * offsets, (4 * i + 4) * offsets));
+    auto a_theta = xt::view(fd_data, xt::range(0, offsets));
+    auto f_phi = xt::view(fd_data, xt::range(offsets, 2 * offsets));
+    auto a_phi = xt::view(fd_data, xt::range(2 * offsets, 3 * offsets));
+    auto f_theta = xt::view(fd_data, xt::range(3 * offsets, 4 * offsets));
+
+    xt::dump_npy((std::filesystem::path{_output_dir} / sub_dir /
+                  (prefix_file_name + "_a_theta.npy"))
+                     .string(),
+                 a_theta);
+    xt::dump_npy((std::filesystem::path{_output_dir} / sub_dir /
+                  (prefix_file_name + "_f_phi.npy"))
+                     .string(),
+                 f_phi);
+    xt::dump_npy((std::filesystem::path{_output_dir} / sub_dir /
+                  (prefix_file_name + "_a_phi.npy"))
+                     .string(),
+                 a_phi);
+    xt::dump_npy((std::filesystem::path{_output_dir} / sub_dir /
+                  (prefix_file_name + "_f_theta.npy"))
+                     .string(),
+                 f_theta);
   }
 }
 
-auto NFFFT::nffftMPIConfig() const -> const MpiConfig& { return _mpi_config; }
+auto NFFFT::distanceX() const -> std::size_t { return _distance_x; }
+
+auto NFFFT::distanceY() const -> std::size_t { return _distance_y; }
+
+auto NFFFT::distanceZ() const -> std::size_t { return _distance_z; }
+
+auto NFFFT::cube() const -> const Cube& { return *_cube; }
+
+auto NFFFT::globalBox() const -> const GridBox& { return _global_box; }
+
+auto NFFFT::nodeBox() const -> const GridBox& { return _node_box; }
+
+auto NFFFT::globalTaskSurfaceXN() const -> const Divider::IndexTask& {
+  return _global_task_surface_xn;
+}
+
+auto NFFFT::globalTaskSurfaceXP() const -> const Divider::IndexTask& {
+  return _global_task_surface_xp;
+}
+
+auto NFFFT::globalTaskSurfaceYN() const -> const Divider::IndexTask& {
+  return _global_task_surface_yn;
+}
+
+auto NFFFT::globalTaskSurfaceYP() const -> const Divider::IndexTask& {
+  return _global_task_surface_yp;
+}
+
+auto NFFFT::globalTaskSurfaceZN() const -> const Divider::IndexTask& {
+  return _global_task_surface_zn;
+}
+
+auto NFFFT::globalTaskSurfaceZP() const -> const Divider::IndexTask& {
+  return _global_task_surface_zp;
+}
+
+auto NFFFT::nodeTaskSurfaceXN() const -> const Divider::IndexTask& {
+  return _node_task_surface_xn;
+}
+
+auto NFFFT::nodeTaskSurfaceXP() const -> const Divider::IndexTask& {
+  return _node_task_surface_xp;
+}
+
+auto NFFFT::nodeTaskSurfaceYN() const -> const Divider::IndexTask& {
+  return _node_task_surface_yn;
+}
+
+auto NFFFT::nodeTaskSurfaceYP() const -> const Divider::IndexTask& {
+  return _node_task_surface_yp;
+}
+
+auto NFFFT::nodeTaskSurfaceZN() const -> const Divider::IndexTask& {
+  return _node_task_surface_zn;
+}
+
+auto NFFFT::nodeTaskSurfaceZP() const -> const Divider::IndexTask& {
+  return _node_task_surface_zp;
+}
+
+auto NFFFT::setOutputDir(const std::string& out_dir) -> void {
+  _output_dir = out_dir;
+}
+
+auto NFFFT::nffftMPIConfig() -> MpiConfig& { return _nffft_mpi_config; }
+
+auto NFFFT::nffftMPIConfig() const -> const MpiConfig& {
+  return _nffft_mpi_config;
+}
 
 const GridSpace* NFFFT::gridSpacePtr() const { return _grid_space.get(); }
 
