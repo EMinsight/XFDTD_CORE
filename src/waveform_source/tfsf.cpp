@@ -37,10 +37,7 @@ void TFSF::initTimeDependentVariable() {
                    calculationParamPtr()->timeParam()->dt());
 }
 
-void TFSF::updateWaveformSourceE() {
-  for (std::size_t i{0}; i < _h_inc.size(); ++i) {
-    _h_inc(i) = _chih * _h_inc(i) + _chiei * (_e_inc(i + 1) - _e_inc(i));
-  }
+void TFSF::updateWaveformSource() {
   auto x{_e_inc(_e_inc.size() - 2)};
   auto y{_e_inc(_e_inc.size() - 1)};
   _e_inc(0) = waveform()->value()(
@@ -55,6 +52,10 @@ void TFSF::updateWaveformSourceE() {
   _a = x;
   _b = y;
 
+  for (std::size_t i{0}; i < _h_inc.size(); ++i) {
+    _h_inc(i) = _chih * _h_inc(i) + _chiei * (_e_inc(i + 1) - _e_inc(i));
+  }
+
   _ex_inc = _transform_e(0) * _e_inc;
   _ey_inc = _transform_e(1) * _e_inc;
   _ez_inc = _transform_e(2) * _e_inc;
@@ -62,8 +63,6 @@ void TFSF::updateWaveformSourceE() {
   _hy_inc = _transform_h(1) * _h_inc;
   _hz_inc = _transform_h(2) * _h_inc;
 }
-
-void TFSF::updateWaveformSourceH() {}
 
 std::size_t TFSF::x() const { return _x; }
 

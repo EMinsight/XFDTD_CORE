@@ -43,13 +43,11 @@ Domain::Domain(std::size_t id, Divider::IndexTask task,
 
 void Domain::run() {
   while (!isCalculationDone()) {
-    updateE();
-
-    threadSynchronize();
-
-    correctE();
-
-    threadSynchronize();
+    if (isMaster()) {
+      for (auto&& ws : _waveform_sources) {
+        ws->updateWaveformSource();
+      }
+    }
 
     updateH();
 
@@ -60,6 +58,14 @@ void Domain::run() {
     synchronize();
 
     exchangeH();
+
+    threadSynchronize();
+
+    updateE();
+
+    threadSynchronize();
+
+    correctE();
 
     threadSynchronize();
 
@@ -78,23 +84,9 @@ bool Domain::isCalculationDone() const {
          _calculation_param->timeParam()->currentTimeStep();
 }
 
-void Domain::updateE() {
-  _updator->updateE();
-  if (isMaster()) {
-    for (auto&& ws : _waveform_sources) {
-      ws->updateWaveformSourceE();
-    }
-  }
-}
+void Domain::updateE() { _updator->updateE(); }
 
-void Domain::updateH() {
-  _updator->updateH();
-  if (isMaster()) {
-    for (auto&& ws : _waveform_sources) {
-      ws->updateWaveformSourceH();
-    }
-  }
-}
+void Domain::updateH() { _updator->updateH(); }
 
 void Domain::correctE() {
   for (auto&& c : _correctors) {

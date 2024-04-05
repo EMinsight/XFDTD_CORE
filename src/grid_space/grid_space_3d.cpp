@@ -116,6 +116,24 @@ std::unique_ptr<GridSpace> GridSpace3D::subGridSpace(
 }
 
 void GridSpace3D::correctGridSpace() {
+  _max_x = eNodeX().back();
+  _max_y = eNodeY().back();
+  _max_z = eNodeZ().back();
+  _min_x = eNodeX().front();
+  _min_y = eNodeY().front();
+  _min_z = eNodeZ().front();
+  std::size_t nx = std::round<std::size_t>((_max_x - _min_x) / basedDx());
+  std::size_t ny = std::round<std::size_t>((_max_y - _min_y) / basedDy());
+  std::size_t nz = std::round<std::size_t>((_max_z - _min_z) / basedDz());
+  auto size_x = nx * basedDx();
+  auto size_y = ny * basedDy();
+  auto size_z = nz * basedDz();
+  _max_x = _min_x + size_x;
+  _max_y = _min_y + size_y;
+  _max_z = _min_z + size_z;
+  eNodeX() = xt::linspace<double>(_min_x, _max_x, nx + 1);
+  eNodeY() = xt::linspace<double>(_min_y, _max_y, ny + 1);
+  eNodeZ() = xt::linspace<double>(_min_z, _max_z, nz + 1);
   correctGridSpaceForOne(basedDx(), eNodeX(), hNodeX(), eSizeX(), hSizeX());
   correctGridSpaceForOne(basedDy(), eNodeY(), hNodeY(), eSizeY(), hSizeY());
   correctGridSpaceForOne(basedDz(), eNodeZ(), hNodeZ(), eSizeZ(), hSizeZ());

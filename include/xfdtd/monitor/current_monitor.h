@@ -2,11 +2,11 @@
 #define _XFDTD_CORE_CURRENT_MONITOR_H_
 
 #include <xfdtd/divider/divider.h>
-#include <xfdtd/monitor/monitor.h>
+#include <xfdtd/monitor/time_monitor.h>
 
 namespace xfdtd {
 
-class CurrentMonitor : public Monitor {
+class CurrentMonitor : public TimeMonitor {
  public:
   CurrentMonitor(std::string name, std::unique_ptr<Cube> cube,
                  Axis::Direction direction, std::string output_dir);
@@ -27,11 +27,9 @@ class CurrentMonitor : public Monitor {
 
   void update() override;
 
-  auto output() -> void override;
+  void initTimeDependentVariable() override;
 
   auto initParallelizedConfig() -> void override;
-
-  void initTimeDependentVariable() override;
 
   auto gatherData() -> void override;
 
@@ -45,7 +43,6 @@ class CurrentMonitor : public Monitor {
   xt::xarray<double> _da, _db;
   double _positive;
 
-  xt::xarray<double> _time;
   xt::xarray<double> _node_data;
   xt::xarray<double> _integral_a, _integral_b;
   Divider::IndexRange _ha_range_bn, _ha_range_bp, _hb_range_an, _hb_range_ap;

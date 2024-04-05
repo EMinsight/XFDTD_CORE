@@ -2,10 +2,11 @@
 #define _XFDTD_CORE_VOLTAGE_MONITOR_H_
 
 #include <xfdtd/monitor/monitor.h>
+#include <xfdtd/monitor/time_monitor.h>
 
 namespace xfdtd {
 
-class VoltageMonitor : public Monitor {
+class VoltageMonitor : public TimeMonitor {
  public:
   VoltageMonitor(std::string name, std::unique_ptr<Cube> cube,
                  Axis::Direction direction, std::string output_dir);
@@ -26,11 +27,9 @@ class VoltageMonitor : public Monitor {
 
   void update() override;
 
-  auto output() -> void override;
+  void initTimeDependentVariable() override;
 
   auto initParallelizedConfig() -> void override;
-
-  void initTimeDependentVariable() override;
 
   auto gatherData() -> void override;
 
@@ -42,7 +41,7 @@ class VoltageMonitor : public Monitor {
   xt::xarray<double> _dc;
   xt::xarray<double> _coff;
 
-  xt::xarray<double> _time;
+  // xt::xarray<double> _time;
   xt::xarray<double> _node_data;
 };
 

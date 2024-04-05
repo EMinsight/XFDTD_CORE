@@ -142,7 +142,7 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace3D(
   }
 
   auto region{GridSpace::GridSpaceRegion{{min_x, min_y, min_z},
-                                         {nx * dx, ny * dy, nz * dz}}};
+                                         {max_x - min_x, max_y - min_y, max_z - min_z}}};
 
   auto e_node_x{xt::linspace<double>(region.originX(), region.endX(), nx + 1)};
   auto e_node_y{xt::linspace<double>(region.originY(), region.endY(), ny + 1)};

@@ -18,9 +18,7 @@ void HardPoint::correctMaterialSpace() {}
 
 void HardPoint::correctUpdateCoefficient() {}
 
-void HardPoint::updateWaveformSourceE() {}
-
-void HardPoint::updateWaveformSourceH() {}
+void HardPoint::updateWaveformSource() {}
 
 // void HardPoint::correctE() {
 //   // center

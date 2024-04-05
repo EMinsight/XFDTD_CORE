@@ -118,15 +118,15 @@ void dielectricResonatorAntenna() {
   c1->output();
   nffft->outputRadiationPower();
   nffft->processFarField(
-      {xfdtd::constant::PI * 0.5},
+      xfdtd::constant::PI * 0.5,
       xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       "xy_plane", domain_cube->center());
   nffft->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), {0},
+      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
       "xz_plane", domain_cube->center());
   nffft->processFarField(
       xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
-      {xfdtd::constant::PI * 0.5}, "yz_plane", domain_cube->center());
+      xfdtd::constant::PI * 0.5, "yz_plane", domain_cube->center());
 }
 
 int main(int argc, char* argv[]) {

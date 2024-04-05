@@ -37,9 +37,7 @@ class WaveformSource {
 
   virtual void initTimeDependentVariable() = 0;
 
-  virtual void updateWaveformSourceE() = 0;
-
-  virtual void updateWaveformSourceH() = 0;
+  virtual void updateWaveformSource() = 0;
 
   const std::unique_ptr<Waveform> &waveform();
 

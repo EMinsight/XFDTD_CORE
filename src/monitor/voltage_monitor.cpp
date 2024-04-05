@@ -1,4 +1,3 @@
-#include <__fwd/get.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/divider/divider.h>
 #include <xfdtd/grid_space/grid_space.h>
@@ -17,7 +16,7 @@ namespace xfdtd {
 VoltageMonitor::VoltageMonitor(std::string name, std::unique_ptr<Cube> cube,
                                Axis::Direction direction,
                                std::string output_dir)
-    : Monitor{std::move(cube), std::move(name), std::move(output_dir)},
+    : TimeMonitor{std::move(name), std::move(cube), std::move(output_dir)},
       _direction{direction} {}
 
 void VoltageMonitor::init(
@@ -237,31 +236,13 @@ void VoltageMonitor::update() {
   }
 }
 
-void VoltageMonitor::output() {
-  if (!valid()) {
-    return;
-  }
-
-  gatherData();
-  auto temp = data();
-  data() = xt::stack(xt::xtuple(_time, data()));
-  Monitor::output();
-  data() = temp;
-}
-
-void VoltageMonitor::initParallelizedConfig() {
-  makeMpiSubComm();
-
-  if (!nodeTask().valid()) {
-    return;
-  }
-}
-
 void VoltageMonitor::initTimeDependentVariable() {
-  _time = calculationParamPtr()->timeParam()->eTime();
-  _node_data = xt::empty_like(_time);
-  data() = xt::empty_like(_time);
+  setTime(calculationParamPtr()->timeParam()->eTime());
+  _node_data = xt::empty_like(time());
+  data() = xt::empty_like(time());
 }
+
+void VoltageMonitor::initParallelizedConfig() { makeMpiSubComm(); }
 
 void VoltageMonitor::gatherData() {
   if (!valid()) {

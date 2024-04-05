@@ -152,7 +152,63 @@ class Axis : public Vector {
   static bool directionNegative(Axis::Direction direction);
 
   static bool directionPositive(Axis::Direction direction);
+
+  template <Axis::Direction direction>
+  static constexpr auto fromDirectionToXYZ() -> Axis::XYZ;
+
+  template <Axis::Direction direction>
+  static constexpr auto directionNegative() -> bool;
+
+  template <Axis::Direction direction>
+  static constexpr auto directionPositive() -> bool;
 };
+
+template <Axis::Direction direction>
+inline constexpr auto Axis::fromDirectionToXYZ() -> Axis::XYZ {
+  if constexpr (direction == Axis::Direction::XN ||
+                direction == Axis::Direction::XP) {
+    return Axis::XYZ::X;
+  } else if constexpr (direction == Axis::Direction::YN ||
+                       direction == Axis::Direction::YP) {
+    return Axis::XYZ::Y;
+  } else if constexpr (direction == Axis::Direction::ZN ||
+                       direction == Axis::Direction::ZP) {
+    return Axis::XYZ::Z;
+  }
+  return Axis::XYZ::Z;
+}
+
+template <Axis::Direction direction>
+inline constexpr auto Axis::directionNegative() -> bool {
+  if constexpr (direction == Axis::Direction::XN ||
+                direction == Axis::Direction::YN ||
+                direction == Axis::Direction::ZN) {
+    return true;
+  } else if constexpr (direction == Axis::Direction::XP ||
+                       direction == Axis::Direction::YP ||
+                       direction == Axis::Direction::ZP) {
+    return false;
+  } else {
+    throw XFDTDCoordinateSystemAxisDirectionException{
+        "directionNegative: Invalid direction value"};
+  }
+}
+
+template <Axis::Direction direction>
+inline constexpr auto Axis::directionPositive() -> bool {
+  if constexpr (direction == Axis::Direction::XN ||
+                direction == Axis::Direction::YN ||
+                direction == Axis::Direction::ZN) {
+    return false;
+  } else if constexpr (direction == Axis::Direction::XP ||
+                       direction == Axis::Direction::YP ||
+                       direction == Axis::Direction::ZP) {
+    return true;
+  } else {
+    throw XFDTDCoordinateSystemAxisDirectionException{
+        "directionPositive: Invalid direction value"};
+  }
+}
 
 class CoordinateSystem {
  public:

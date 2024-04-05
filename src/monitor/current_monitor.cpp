@@ -16,7 +16,7 @@ namespace xfdtd {
 CurrentMonitor::CurrentMonitor(std::string name, std::unique_ptr<Cube> cube,
                                Axis::Direction direction,
                                std::string output_dir)
-    : Monitor{std::move(cube), std::move(name), std::move(output_dir)},
+    : TimeMonitor{std::move(name), std::move(cube), std::move(output_dir)},
       _direction{direction} {}
 
 void CurrentMonitor::init(
@@ -299,6 +299,7 @@ void CurrentMonitor::update() {
             emf->hz()(_ie - 1, _je, k) * _db(k - _hb_range_ap.start());
       }
     }
+    _node_data(t) = _positive * (integral_z + integral_y);
     return;
   }
 
@@ -379,22 +380,10 @@ void CurrentMonitor::update() {
   }
 }
 
-void CurrentMonitor::output() {
-  if (!valid()) {
-    return;
-  }
-
-  gatherData();
-  auto temp = data();
-  data() = xt::stack(xt::xtuple(_time, temp));
-  Monitor::output();
-  data() = temp;
-}
-
 void CurrentMonitor::initTimeDependentVariable() {
-  _time = calculationParamPtr()->timeParam()->hTime();
-  _node_data = xt::empty_like(_time);
-  data() = xt::empty_like(_time);
+  setTime(calculationParamPtr()->timeParam()->hTime());
+  _node_data = xt::empty_like(time());
+  data() = xt::empty_like(time());
 }
 
 void CurrentMonitor::initParallelizedConfig() { makeMpiSubComm(); }
@@ -409,7 +398,7 @@ auto CurrentMonitor::gatherData() -> void {
     return;
   }
 
-  data() = xt::empty_like(_time);
+  data() = xt::empty_like(time());
 
   auto& mpi_support = MpiSupport::instance();
 

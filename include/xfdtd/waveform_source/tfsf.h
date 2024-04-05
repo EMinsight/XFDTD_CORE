@@ -30,9 +30,7 @@ class TFSF : public WaveformSource {
 
   void initTimeDependentVariable() override;
 
-  void updateWaveformSourceE() override;
-
-  void updateWaveformSourceH() override;
+  void updateWaveformSource() override;
 
   std::size_t x() const;
 
