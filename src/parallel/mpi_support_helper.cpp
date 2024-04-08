@@ -30,7 +30,7 @@ auto MpiSupport::send(const MpiConfig& config, const void* buf, int count,
 #endif
 }
 
-auto MpiSupport::send(const MpiConfig& config, const double* buf, int count,
+auto MpiSupport::send(const MpiConfig& config, const Real* buf, int count,
                       const Block& block, int dest, int tag) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Send(&buf[block.profile()._disp], count, block.block(), dest, tag,
@@ -61,7 +61,7 @@ auto MpiSupport::iSend(const MpiConfig& config, const void* buf, int count,
   return -1;
 }
 
-auto MpiSupport::iSend(const MpiConfig& config, const double* buf, int count,
+auto MpiSupport::iSend(const MpiConfig& config, const Real* buf, int count,
                        const Block& block, int dest, int tag) -> std::size_t {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request request;
@@ -88,7 +88,7 @@ auto MpiSupport::recv(const MpiConfig& config, void* buf, int count,
 #endif
 }
 
-auto MpiSupport::recv(const MpiConfig& config, double* buf, int count,
+auto MpiSupport::recv(const MpiConfig& config, Real* buf, int count,
                       const Block& block, int source, int tag) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Recv(&buf[block.profile()._disp], count, block.block(), source, tag,
@@ -119,7 +119,7 @@ auto MpiSupport::iRecv(const MpiConfig& config, void* buf, int count,
   return -1;
 }
 
-auto MpiSupport::iRecv(const MpiConfig& config, double* buf, int count,
+auto MpiSupport::iRecv(const MpiConfig& config, Real* buf, int count,
                        const Block& block, int source, int tag) -> std::size_t {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request request;
@@ -154,9 +154,9 @@ auto MpiSupport::sendRecv(const MpiConfig& config, const void* send_buf,
 #endif
 }
 
-auto MpiSupport::sendRecv(const MpiConfig& config, const double* send_buf,
+auto MpiSupport::sendRecv(const MpiConfig& config, const Real* send_buf,
                           int send_count, int dest, int send_tag,
-                          double* recv_buf, int recv_count,
+                          Real* recv_buf, int recv_count,
                           const Block& recv_block, int source, int recv_tag)
     -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
@@ -198,9 +198,9 @@ auto MpiSupport::iSendRecv(const MpiConfig& config, const void* send_buf,
   return -1;
 }
 
-auto MpiSupport::iSendRecv(const MpiConfig& config, const double* send_buf,
+auto MpiSupport::iSendRecv(const MpiConfig& config, const Real* send_buf,
                            int send_count, int dest, int send_tag,
-                           double* recv_buf, int recv_count,
+                           Real* recv_buf, int recv_count,
                            const Block& recv_block, int source, int recv_tag)
     -> std::size_t {
 #if defined(XFDTD_CORE_WITH_MPI)
@@ -233,8 +233,8 @@ auto MpiSupport::gather(const MpiConfig& config, const void* send_buf,
 #endif
 }
 
-auto MpiSupport::gather(const MpiConfig& config, const double* send_buf,
-                        int send_count, double* recv_buf, int recv_count,
+auto MpiSupport::gather(const MpiConfig& config, const Real* send_buf,
+                        int send_count, Real* recv_buf, int recv_count,
                         const Block& recv_block, int root) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Gather(send_buf, send_count, recv_block.block(),
@@ -270,8 +270,8 @@ auto MpiSupport::iGather(const MpiConfig& config, const void* send_buf,
   return -1;
 }
 
-auto MpiSupport::iGather(const MpiConfig& config, const double* send_buf,
-                         int send_count, double* recv_buf, int recv_count,
+auto MpiSupport::iGather(const MpiConfig& config, const Real* send_buf,
+                         int send_count, Real* recv_buf, int recv_count,
                          const Block& recv_block, int root) -> std::size_t {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request request;
@@ -293,8 +293,8 @@ auto MpiSupport::allGather(const MpiConfig& config, const void* send_buf,
 #endif
 }
 
-auto MpiSupport::reduceSum(const MpiConfig& config, const double* send_buf,
-                           double* recv_buf, int count) -> void {
+auto MpiSupport::reduceSum(const MpiConfig& config, const Real* send_buf,
+                           Real* recv_buf, int count) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Reduce(send_buf, recv_buf, count, MPI_DOUBLE, MPI_SUM, config.root(),
              config.comm());
@@ -302,12 +302,17 @@ auto MpiSupport::reduceSum(const MpiConfig& config, const double* send_buf,
 }
 
 auto MpiSupport::reduceSum(const MpiConfig& config,
-                           const std::complex<double>* send_buf,
-                           std::complex<double>* recv_buf, int count) const
+                           const std::complex<Real>* send_buf,
+                           std::complex<Real>* recv_buf, int count) const
     -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
+#if defined(XFDTD_CORE_SINGLE_PRECISION)
+  MPI_Reduce(send_buf, recv_buf, count, MPI_COMPLEX, MPI_SUM, config.root(),
+             config.comm());
+#else
   MPI_Reduce(send_buf, recv_buf, count, MPI_DOUBLE_COMPLEX, MPI_SUM,
              config.root(), config.comm());
+#endif
 #endif
 }
 

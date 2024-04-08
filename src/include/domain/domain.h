@@ -1,7 +1,7 @@
 #ifndef _XFDTD_CORE_DOMAIN_H_
 #define _XFDTD_CORE_DOMAIN_H_
 
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/nffft/nffft.h>
@@ -21,7 +21,7 @@ namespace xfdtd {
 
 class Domain {
  public:
-  Domain(std::size_t id, Divider::IndexTask task,
+  Domain(std::size_t id, IndexTask task,
          std::shared_ptr<GridSpace> grid_space,
          std::shared_ptr<CalculationParam> calculation_param,
          std::shared_ptr<EMF> emf, std::unique_ptr<Updator> updator,
@@ -31,7 +31,7 @@ class Domain {
          std::vector<std::shared_ptr<NFFFT>> nfffts, std::barrier<>& barrier,
          bool master = false);
 
-  Domain(std::size_t id, Divider::IndexTask task,
+  Domain(std::size_t id, IndexTask task,
          std::shared_ptr<GridSpace> grid_space,
          std::shared_ptr<CalculationParam> calculation_param,
          std::shared_ptr<EMF> emf, std::unique_ptr<Updator> updator,
@@ -115,7 +115,7 @@ class Domain {
 
  private:
   std::size_t _id;
-  Divider::IndexTask _task;
+  IndexTask _task;
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;

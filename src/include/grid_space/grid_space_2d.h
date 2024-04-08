@@ -7,15 +7,15 @@ namespace xfdtd {
 
 class GridSpace2D : public GridSpace {
  public:
-  GridSpace2D(double based_dx, double based_dy, xt::xarray<double> e_node_x,
-              xt::xarray<double> e_node_y);
+  GridSpace2D(Real based_dx, Real based_dy, Array1D<Real> e_node_x,
+              Array1D<Real> e_node_y);
 
-  GridSpace2D(Type type, GridBox global_box, double based_dx, double based_dy,
-              double min_dx, double min_dy, xt::xarray<double> e_node_x,
-              xt::xarray<double> e_node_y, xt::xarray<double> h_node_x,
-              xt::xarray<double> h_node_y, xt::xarray<double> e_size_x,
-              xt::xarray<double> e_size_y, xt::xarray<double> h_size_x,
-              xt::xarray<double> h_size_y);
+  GridSpace2D(Type type, GridBox global_box, Real based_dx, Real based_dy,
+              Real min_dx, Real min_dy, Array1D<Real> e_node_x,
+              Array1D<Real> e_node_y, Array1D<Real> h_node_x,
+              Array1D<Real> h_node_y, Array1D<Real> e_size_x,
+              Array1D<Real> e_size_y, Array1D<Real> h_size_x,
+              Array1D<Real> h_size_y);
 
   void correctGridSpace() override;
 
@@ -26,9 +26,9 @@ class GridSpace2D : public GridSpace {
                                           std::size_t end_k) const override;
 
  protected:
-  std::size_t handleTransformZ(double z) const override;
+  std::size_t handleTransformZ(Real z) const override;
 
-  std::size_t handleTransformZWithoutCheck(double z) const override;
+  std::size_t handleTransformZWithoutCheck(Real z) const override;
 };
 
 }  // namespace xfdtd

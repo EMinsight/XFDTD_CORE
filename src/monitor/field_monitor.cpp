@@ -1,5 +1,5 @@
 
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/field_monitor.h>
 #include <xfdtd/monitor/monitor.h>
@@ -59,20 +59,20 @@ void FieldMonitor::init(
                                           static_cast<size_t>(offset_j),
                                           static_cast<size_t>(offset_k)}});
 
-  setGlobalTask(Divider::makeIndexTask(
-      Divider::makeIndexRange(globalGridBox().origin().i(),
+  setGlobalTask(makeIndexTask(
+      makeIndexRange(globalGridBox().origin().i(),
                               globalGridBox().end().i()),
-      Divider::makeIndexRange(globalGridBox().origin().j(),
+      makeIndexRange(globalGridBox().origin().j(),
                               globalGridBox().end().j()),
-      Divider::makeIndexRange(globalGridBox().origin().k(),
+      makeIndexRange(globalGridBox().origin().k(),
                               globalGridBox().end().k())));
 
   setNodeTask(
-      Divider::makeIndexTask(Divider::makeIndexRange(nodeGridBox().origin().i(),
+      makeIndexTask(makeIndexRange(nodeGridBox().origin().i(),
                                                      nodeGridBox().end().i()),
-                             Divider::makeIndexRange(nodeGridBox().origin().j(),
+                             makeIndexRange(nodeGridBox().origin().j(),
                                                      nodeGridBox().end().j()),
-                             Divider::makeIndexRange(nodeGridBox().origin().k(),
+                             makeIndexRange(nodeGridBox().origin().k(),
                                                      nodeGridBox().end().k())));
 }
 
@@ -156,7 +156,7 @@ auto FieldMonitor::gatherData() -> void {
 
   auto& mpi_support = MpiSupport::instance();
   if (monitorMpiConfig().isRoot()) {
-    xt::xarray<double> recv_buffer = xt::zeros<double>(
+    Array3D<Real> recv_buffer = xt::zeros<Real>(
         {globalTask().xRange().size(), globalTask().yRange().size(),
          globalTask().zRange().size()});
     for (int i = 1; i < monitorMpiConfig().size(); ++i) {
@@ -176,7 +176,7 @@ auto FieldMonitor::gatherData() -> void {
     data() = std::move(recv_buffer);
   } else {
     mpi_support.send(monitorMpiConfig(), data().data(),
-                     sizeof(double) * data().size(), monitorMpiConfig().root(),
+                     sizeof(Real) * data().size(), monitorMpiConfig().root(),
                      0);
   }
 }

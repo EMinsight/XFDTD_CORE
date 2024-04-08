@@ -1,6 +1,6 @@
-#include <xfdtd/divider/divider.h>
-#include <xfdtd/util/constant.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/waveform_source/tfsf_2d.h>
+#include <xfdtd/common/index_task.h>
 
 #include <memory>
 
@@ -8,7 +8,7 @@
 
 namespace xfdtd {
 
-TFSF2D::TFSF2D(std::size_t distance_x, std::size_t distance_y, double phi,
+TFSF2D::TFSF2D(std::size_t distance_x, std::size_t distance_y, Real phi,
                std::unique_ptr<Waveform> waveform)
     : TFSF{distance_x, distance_y,         0, constant::PI * 0.5, phi,
            0,          std::move(waveform)} {}
@@ -21,7 +21,7 @@ void TFSF2D::init(std::shared_ptr<GridSpace> grid_space,
 }
 
 std::unique_ptr<Corrector> TFSF2D::generateCorrector(
-    const Divider::IndexTask &task) {
+    const IndexTask &task) {
   auto xn_task = nodeEzTaskXN(task);
   auto xp_task = nodeEzTaskXP(task);
   auto yn_task = nodeEzTaskYN(task);

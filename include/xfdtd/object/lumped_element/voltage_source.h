@@ -7,12 +7,13 @@
 #include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/object/lumped_element/lumped_element.h"
 #include "xfdtd/waveform/waveform.h"
+
 namespace xfdtd {
 
 class VoltageSource : public LumpedElement {
  public:
   VoltageSource(std::string name, std::unique_ptr<Cube> cube,
-                Axis::Direction direction, double resistance,
+                Axis::Direction direction, Real resistance,
                 std::unique_ptr<Waveform> waveform,
                 std::unique_ptr<Material> material = Material::createAir());
 
@@ -41,24 +42,24 @@ class VoltageSource : public LumpedElement {
   void correctH() override;
 
   std::unique_ptr<Corrector> generateCorrector(
-      const Divider::Task<std::size_t> &task) override;
+      const Task<std::size_t> &task) override;
 
   Axis::Direction direction() const;
 
-  double resistance() const;
+  Real resistance() const;
 
   const std::unique_ptr<Waveform> &waveform() const;
 
  private:
   Axis::Direction _direction;
-  double _resistance;
+  Real _resistance;
   std::unique_ptr<Waveform> _waveform;
 
-  double _resistance_factor;
-  double _voltage_amplitude_factor;
-  xt::xarray<double> _da, _db, _dc;
-  xt::xarray<double> _alpha, _beta;
-  xt::xarray<double> _coff_v;
+  Real _resistance_factor;
+  Real _voltage_amplitude_factor;
+  Array3D<Real> _da, _db, _dc;
+  Array3D<Real> _alpha, _beta;
+  Array3D<Real> _coff_v;
 };
 
 }  // namespace xfdtd

@@ -1,13 +1,13 @@
 #include <xfdtd/waveform_source/tfsf_3d.h>
-
+#include <xfdtd/common/index_task.h>
 #include <utility>
 
 #include "waveform_source/tfsf_corrector.h"
 
 namespace xfdtd {
 
-TFSF3D::TFSF3D(std::size_t x, std::size_t y, std::size_t z, double theta,
-               double phi, double psi, std::unique_ptr<Waveform> waveform)
+TFSF3D::TFSF3D(std::size_t x, std::size_t y, std::size_t z, Real theta,
+               Real phi, Real psi, std::unique_ptr<Waveform> waveform)
     : TFSF{x, y, z, theta, phi, psi, std::move(waveform)} {}
 
 void TFSF3D::init(std::shared_ptr<GridSpace> grid_space,
@@ -18,7 +18,7 @@ void TFSF3D::init(std::shared_ptr<GridSpace> grid_space,
 }
 
 std::unique_ptr<Corrector> TFSF3D::generateCorrector(
-    const Divider::IndexTask& task) {
+    const IndexTask& task) {
   auto global_ey_task_xn = nodeEyTaskXN(task);
 
   auto global_ez_task_xn = nodeEzTaskXN(task);

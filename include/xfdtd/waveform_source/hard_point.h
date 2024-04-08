@@ -21,7 +21,7 @@ class HardPoint : public WaveformSource {
   void updateWaveformSource() override;
 
   std::unique_ptr<Corrector> generateCorrector(
-      const Divider::IndexTask &task) override;
+      const IndexTask &task) override;
 };
 
 }  // namespace xfdtd

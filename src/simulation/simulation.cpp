@@ -1,7 +1,6 @@
 #include <xfdtd/boundary/pml.h>
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
-#include <xfdtd/divider/divider.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/grid_space/grid_space_generator.h>
 #include <xfdtd/material/dispersive_material.h>
@@ -29,10 +28,11 @@
 #include "updator/basic_updator.h"
 #include "updator/dispersive_material_updator.h"
 #include "updator/updator.h"
+#include "util/decompose_task.h"
 
 namespace xfdtd {
 
-Simulation::Simulation(double dx, double dy, double dz, double cfl,
+Simulation::Simulation(Real dx, Real dy, Real dz, Real cfl,
                        ThreadConfig thread_config)
     : _dx{dx},
       _dy{dy},
@@ -319,20 +319,18 @@ void Simulation::generateDomain() {
   }
 
   auto num_thread = numThread();
-  auto type = _thread_config.dividerType();
 
-  Divider::IndexTask problem = Divider::makeTask(
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()));
+  IndexTask problem = makeTask(makeRange<std::size_t>(0, _grid_space->sizeX()),
+                               makeRange<std::size_t>(0, _grid_space->sizeY()),
+                               makeRange<std::size_t>(0, _grid_space->sizeZ()));
 
-  auto tasks = std::vector<Divider::IndexTask>{Divider::makeTask(
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()))};
+  // auto tasks = std::vector<IndexTask>{
+  //     makeTask(makeRange<std::size_t>(0, _grid_space->sizeX()),
+  //              makeRange<std::size_t>(0, _grid_space->sizeY()),
+  //              makeRange<std::size_t>(0, _grid_space->sizeZ()))};
 
-  tasks = Divider::divide(problem, type, _thread_config.numX(),
-                          _thread_config.numY(), _thread_config.numZ());
+  auto tasks = decomposeTask(problem, _thread_config.numX(),
+                             _thread_config.numY(), _thread_config.numZ());
 
   // Corrector
   /*  IMPORTANT: the corrector can't be parallelized in thread model, the
@@ -471,57 +469,25 @@ void Simulation::generateEMF() {
 void Simulation::globalGridSpaceDecomposition() {
   auto my_mpi_rank = myRank();
   // auto mpi_size = numNode();
-  auto node_divider_type = MpiSupport::instance().config().dividerType();
   auto divide_nx = MpiSupport::instance().config().numX();
   auto divide_ny = MpiSupport::instance().config().numY();
   auto divide_nz = MpiSupport::instance().config().numZ();
 
-  auto global_problem = Divider::makeIndexTask(
-      Divider::makeRange<std::size_t>(0, _global_grid_space->sizeX()),
-      Divider::makeRange<std::size_t>(0, _global_grid_space->sizeY()),
-      Divider::makeRange<std::size_t>(0, _global_grid_space->sizeZ()));
+  auto global_problem =
+      makeIndexTask(makeRange<std::size_t>(0, _global_grid_space->sizeX()),
+                    makeRange<std::size_t>(0, _global_grid_space->sizeY()),
+                    makeRange<std::size_t>(0, _global_grid_space->sizeZ()));
 
-  auto global_task = Divider::divide(global_problem, node_divider_type,
-                                     divide_nx, divide_ny, divide_nz);
+  auto global_task =
+      decomposeTask(global_problem, divide_nx, divide_ny, divide_nz);
   auto my_task = global_task[my_mpi_rank];
 
-  auto overlap_offset =
-      std::tuple<std::size_t, std::size_t, std::size_t>{0, 0, 0};
+  auto overlap_x = (1 <= divide_nx) ? 1 : 0;
+  auto overlap_y = (1 <= divide_ny) ? 1 : 0;
+  auto overlap_z = (1 <= divide_nz) ? 1 : 0;
 
-  switch (node_divider_type) {
-    case Divider::Type::X: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{1, 0, 0};
-      break;
-    }
-    case Divider::Type::Y: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{0, 1, 0};
-      break;
-    }
-    case Divider::Type::Z: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{0, 0, 1};
-      break;
-    }
-    case Divider::Type::XY: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{1, 1, 0};
-      break;
-    }
-    case Divider::Type::XZ: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{1, 0, 1};
-      break;
-    }
-    case Divider::Type::YZ: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{0, 1, 1};
-      break;
-    }
-    default:
-      throw XFDTDSimulationException("Invalid node divider type");
-  }
+  auto overlap_offset = std::tuple<std::size_t, std::size_t, std::size_t>{
+      overlap_x, overlap_y, overlap_z};
 
   auto x_start = (my_task.xRange().start() == 0)
                      ? 0
@@ -550,9 +516,9 @@ void Simulation::globalGridSpaceDecomposition() {
     calculation node. And (nx) is the overlap with the next calculation
     node. */
   auto my_task_with_overlap =
-      Divider::makeIndexTask(Divider::makeRange<std::size_t>(x_start, x_end),
-                             Divider::makeRange<std::size_t>(y_start, y_end),
-                             Divider::makeRange<std::size_t>(z_start, z_end));
+      makeIndexTask(makeRange<std::size_t>(x_start, x_end),
+                    makeRange<std::size_t>(y_start, y_end),
+                    makeRange<std::size_t>(z_start, z_end));
 
   _grid_space = _global_grid_space->subGridSpace(
       my_task_with_overlap._x_range.start(),
@@ -657,8 +623,7 @@ std::unique_ptr<MaterialParam> Simulation::makeMaterialParam() {
   return material_param;
 }
 
-std::unique_ptr<Updator> Simulation::makeUpdator(
-    const Divider::IndexTask& task) {
+std::unique_ptr<Updator> Simulation::makeUpdator(const IndexTask& task) {
   bool dispersion = false;
   for (const auto& m : _calculation_param->materialParam()->materialArray()) {
     if (m->dispersion()) {

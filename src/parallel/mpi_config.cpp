@@ -1,4 +1,5 @@
 #include <xfdtd/parallel/mpi_config.h>
+#include <sstream>
 
 namespace xfdtd {
 
@@ -136,7 +137,6 @@ auto MpiConfig::toString() const -> std::string {
   ss << " X: " << xPrev() << "<-" << id() << "->" << xNext() << "\n";
   ss << " Y: " << yPrev() << "<-" << id() << "->" << yNext() << "\n";
   ss << " Z: " << zPrev() << "<-" << id() << "->" << zNext() << "\n";
-  ss << " Type: " << Divider::toString(dividerType());
   // #if defined(XFDTD_CORE_WITH_MPI)
   // ss << "\n";
   // ss << " MPI Comm: " << comm() << "\n";

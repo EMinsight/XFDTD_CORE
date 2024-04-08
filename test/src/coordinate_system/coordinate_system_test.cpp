@@ -1,5 +1,5 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
-#include <xfdtd/util/constant.h>
+#include <xfdtd/common/constant.h>
 
 #include <cassert>
 

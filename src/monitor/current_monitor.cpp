@@ -1,5 +1,4 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
-#include <xfdtd/divider/divider.h>
 #include <xfdtd/monitor/current_monitor.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/parallel/mpi_support.h>
@@ -36,26 +35,26 @@ void CurrentMonitor::init(
   const auto [global_offset_a, global_offset_b, global_offset_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(global_offset.i(), global_offset.j(), global_offset.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   const auto global_lower = gridSpacePtr()->globalGridSpace()->box().origin();
   const auto [global_lower_a, global_lower_b, global_lower_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(global_lower.i(), global_lower.j(), global_lower.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   const auto global_upper = gridSpacePtr()->globalGridSpace()->box().end();
   const auto [global_upper_a, global_upper_b, global_upper_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(global_upper.i(), global_upper.j(), global_upper.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   // correct global task
   auto g_abc = xfdtd::transform::xYZToABC(
       std::tuple(globalTask().xRange(), globalTask().yRange(),
                  globalTask().zRange()),
-      Axis::formDirectionToXYZ(_direction));
-  auto global_range_c = Divider::makeIndexRange(std::get<2>(g_abc).end() - 1,
+      Axis::fromDirectionToXYZ(_direction));
+  auto global_range_c = makeIndexRange(std::get<2>(g_abc).end() - 1,
                                                 std::get<2>(g_abc).end());
   auto global_c_e = global_range_c.end();
   if (global_c_e == 0) {
@@ -79,30 +78,30 @@ void CurrentMonitor::init(
   auto [global_range_x, global_range_y, global_range_z] =
       xfdtd::transform::aBCToXYZ(
           std::tuple(std::get<0>(g_abc), std::get<1>(g_abc), global_range_c),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
   setGlobalTask(
-      Divider::makeIndexTask(global_range_x, global_range_y, global_range_z));
+      makeIndexTask(global_range_x, global_range_y, global_range_z));
 
   // correct node task
   const auto node_lower = gridSpacePtr()->box().origin();
   const auto [node_lower_a, node_lower_b, node_lower_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(node_lower.i(), node_lower.j(), node_lower.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
   const auto node_upper = gridSpacePtr()->box().end();
   const auto [node_upper_a, node_upper_b, node_upper_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(node_upper.i(), node_upper.j(), node_upper.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   auto n_abc = xfdtd::transform::xYZToABC(
       std::tuple(nodeTask().xRange(), nodeTask().yRange(), nodeTask().zRange()),
-      Axis::formDirectionToXYZ(_direction));
-  auto node_range_a = Divider::makeIndexRange(std::get<0>(n_abc).start(),
+      Axis::fromDirectionToXYZ(_direction));
+  auto node_range_a = makeIndexRange(std::get<0>(n_abc).start(),
                                               std::get<0>(n_abc).end());
-  auto node_range_b = Divider::makeIndexRange(std::get<1>(n_abc).start(),
+  auto node_range_b = makeIndexRange(std::get<1>(n_abc).start(),
                                               std::get<1>(n_abc).end());
-  auto node_range_c = Divider::makeIndexRange(std::get<2>(n_abc).end() - 1,
+  auto node_range_c = makeIndexRange(std::get<2>(n_abc).end() - 1,
                                               std::get<2>(n_abc).end());
 
   if (node_range_c.end() == 0) {
@@ -111,16 +110,16 @@ void CurrentMonitor::init(
 
   if (node_range_c.end() + global_offset_c != global_c_e) {
     // make it invalid
-    setNodeTask(Divider::makeIndexTask(
+    setNodeTask(makeIndexTask(
         nodeTask().xRange(), nodeTask().yRange(),
-        Divider::makeIndexRange(node_range_c.end(), node_range_c.end())));
+        makeIndexRange(node_range_c.end(), node_range_c.end())));
     return;
   }
 
   auto [node_range_x, node_range_y, node_range_z] = xfdtd::transform::aBCToXYZ(
       std::tuple(node_range_a, node_range_b, node_range_c),
-      Axis::formDirectionToXYZ(_direction));
-  setNodeTask(Divider::makeIndexTask(node_range_x, node_range_y, node_range_z));
+      Axis::fromDirectionToXYZ(_direction));
+  setNodeTask(makeIndexTask(node_range_x, node_range_y, node_range_z));
   _is = node_range_x.start();
   _ie = node_range_x.end();
   _js = node_range_y.start();
@@ -141,19 +140,19 @@ void CurrentMonitor::init(
       end = node_a_upper - 1;
     }
 
-    auto range_n = Divider::makeIndexRange(0, 0);
-    auto range_p = Divider::makeIndexRange(0, 0);
+    auto range_n = makeIndexRange(0, 0);
+    auto range_p = makeIndexRange(0, 0);
 
     if (node_task_b_start != 0 && node_task_b_start != node_b_upper - 1 &&
         node_task_b_start != node_b_upper &&
         node_task_b_start + global_b_offset == global_b_start) {
-      range_n = Divider::makeIndexRange(start, end);
+      range_n = makeIndexRange(start, end);
     }
 
     if (node_task_b_end != node_b_upper &&
         node_task_b_end != node_b_upper - 1 && node_task_b_end != 0 &&
         node_task_b_end + global_b_offset == global_b_end) {
-      range_p = Divider::makeIndexRange(start, end);
+      range_p = makeIndexRange(start, end);
     }
 
     return std::pair{range_n, range_p};
@@ -175,7 +174,7 @@ void CurrentMonitor::init(
   _hb_range_an = hb_an;
   _hb_range_ap = hb_ap;
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::X) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::X) {
     // _da = xt::view(gridSpacePtr()->eSizeY(), xt::range(_js, _je + 1));
     // _db = xt::view(gridSpacePtr()->eSizeZ(), xt::range(_ks, _ke + 1));
     if (_ha_range_bn.valid()) {
@@ -200,7 +199,7 @@ void CurrentMonitor::init(
     }
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Y) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Y) {
     // _da = xt::view(gridSpacePtr()->eSizeZ(), xt::range(_ks, _ke + 1));
     // _db = xt::view(gridSpacePtr()->eSizeX(), xt::range(_is, _ie + 1));
     if (_ha_range_bn.valid()) {
@@ -225,7 +224,7 @@ void CurrentMonitor::init(
     }
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Z) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Z) {
     // _da = xt::view(gridSpacePtr()->eSizeX(), xt::range(_is, _ie + 1));
     // _db = xt::view(gridSpacePtr()->eSizeY(), xt::range(_js, _je + 1));
     if (_ha_range_bn.valid()) {
@@ -255,15 +254,15 @@ void CurrentMonitor::init(
 void CurrentMonitor::update() {
   auto emf{emfPtr()};
   auto t{calculationParamPtr()->timeParam()->currentTimeStep()};
-  double integral_x{0};
-  double integral_y{0};
-  double integral_z{0};
+  Real integral_x{0};
+  Real integral_y{0};
+  Real integral_z{0};
 
   if (!valid()) {
     return;
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::X) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::X) {
     // for (size_t j{_js}; j <= _je; ++j) {
     //   integral_y +=
     //       (emf->hy()(_ie - 1, j, _ks - 1) - emf->hy()(_ie - 1, j, _ke)) *
@@ -303,7 +302,7 @@ void CurrentMonitor::update() {
     return;
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Y) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Y) {
     // for (size_t k{_ks}; k <= _ke; ++k) {
     //   integral_z +=
     //       (emf->hz()(_is - 1, _je - 1, k) - emf->hz()(_ie, _je - 1, k)) *
@@ -346,7 +345,7 @@ void CurrentMonitor::update() {
     return;
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Z) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Z) {
     if (_ha_range_bn.valid()) {
       for (auto i{_ha_range_bn.start()}; i < _ha_range_bn.end(); ++i) {
         integral_x +=

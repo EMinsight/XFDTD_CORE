@@ -6,7 +6,7 @@
 #include "material/dispersive_solver_common.h"
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/util/constant.h"
+#include "xfdtd/common/constant.h"
 
 namespace xfdtd {
 

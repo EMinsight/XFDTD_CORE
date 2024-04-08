@@ -10,7 +10,7 @@
 namespace xfdtd {
 
 Inductor::Inductor(std::string name, std::unique_ptr<Cube> cube, Axis::XYZ xyz,
-                   double inductance, std::unique_ptr<Material> material)
+                   Real inductance, std::unique_ptr<Material> material)
     : LumpedElement{std::move(name), std::move(cube), xyz, std::move(material)},
       _inductance{inductance} {
   if (_inductance == 0) {
@@ -26,12 +26,12 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
   LumpedElement::init(std::move(grid_space), std::move(calculation_param),
                       std::move(emf));
 
-  auto in_f{[](double i, std::size_t na, std::size_t nb, std::size_t nc) {
+  auto in_f{[](Real i, std::size_t na, std::size_t nb, std::size_t nc) {
     return i * na * nb / nc;
   }};
 
-  auto dx_dy_dz{[](const xt::xarray<double>& x, const xt::xarray<double>& y,
-                   const xt::xarray<double>& z, auto&& x_range, auto&& y_range,
+  auto dx_dy_dz{[](const auto& x, const auto& y,
+                   const auto& z, auto&& x_range, auto&& y_range,
                    auto&& z_range) {
     return xt::meshgrid(xt::view(x, x_range), xt::view(y, y_range),
                         xt::view(z, z_range));
@@ -71,7 +71,7 @@ void Inductor::init(std::shared_ptr<const GridSpace> grid_space,
   }
 
   _cjcec = dt * _dc / (_inductance_factor * _da * _db);
-  _j = xt::zeros<double>({nodeCountX(), nodeCountY(), nodeCountZ()});
+  _j = xt::zeros<Real>({nodeCountX(), nodeCountY(), nodeCountZ()});
 }
 
 void Inductor::correctUpdateCoefficient() {
@@ -110,25 +110,25 @@ void Inductor::correctE() {}
 void Inductor::correctH() {}
 
 std::unique_ptr<Corrector> Inductor::generateCorrector(
-    const Divider::Task<std::size_t>& task) {
+    const Task<std::size_t>& task) {
   if (!taskContainLumpedElement(task)) {
     return nullptr;
   }
 
   auto domain = makeIndexTask();
-  auto intersection = Divider::taskIntersection(task, domain);
+  auto intersection = taskIntersection(task, domain);
 
   if (!intersection.has_value()) {
     return nullptr;
   }
 
-  auto local_task = Divider::makeTask(
-      Divider::makeRange(intersection->_x_range[0] - domain._x_range[0],
-                         intersection->_x_range[1] - domain._x_range[0]),
-      Divider::makeRange(intersection->_y_range[0] - domain._y_range[0],
-                         intersection->_y_range[1] - domain._y_range[0]),
-      Divider::makeRange(intersection->_z_range[0] - domain._z_range[0],
-                         intersection->_z_range[1] - domain._z_range[0]));
+  auto local_task = makeTask(
+      makeRange(intersection->xRange().start() - domain.xRange().start(),
+                         intersection->xRange().end() - domain.xRange().start()),
+      makeRange(intersection->yRange().start() - domain.yRange().start(),
+                         intersection->yRange().end() - domain.yRange().start()),
+      makeRange(intersection->zRange().start() - domain.zRange().start(),
+                         intersection->zRange().end() - domain.zRange().start()));
 
   return std::make_unique<InductorCorrector>(
       intersection.value(), local_task, calculationParam(),

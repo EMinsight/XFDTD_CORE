@@ -8,7 +8,7 @@
 #include "xfdtd/object/object.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
-#include "xfdtd/util/constant.h"
+#include "xfdtd/common/constant.h"
 #include "xfdtd/waveform/waveform.h"
 #include "xfdtd/waveform_source/tfsf_3d.h"
 

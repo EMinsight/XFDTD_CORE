@@ -1,17 +1,16 @@
 #include <xfdtd/waveform_source/tfsf.h>
-
+#include <xfdtd/common/index_task.h>
 #include <cmath>
 #include <cstdlib>
 #include <xtensor-blas/xlinalg.hpp>
 
-#include "xfdtd/divider/divider.h"
 #include "xfdtd/grid_space/grid_space.h"
-#include "xfdtd/util/constant.h"
+#include "xfdtd/common/constant.h"
 
 namespace xfdtd {
 
-TFSF::TFSF(std::size_t x, std::size_t y, std::size_t z, double theta,
-           double phi, double psi, std::unique_ptr<Waveform> waveform)
+TFSF::TFSF(std::size_t x, std::size_t y, std::size_t z, Real theta,
+           Real phi, Real psi, std::unique_ptr<Waveform> waveform)
     : WaveformSource{std::move(waveform)},
       _x{x},
       _y{y},
@@ -70,29 +69,29 @@ std::size_t TFSF::y() const { return _y; }
 
 std::size_t TFSF::z() const { return _z; }
 
-double TFSF::theta() const { return _theta; }
+Real TFSF::theta() const { return _theta; }
 
-double TFSF::phi() const { return _phi; }
+Real TFSF::phi() const { return _phi; }
 
-double TFSF::psi() const { return _psi; }
+Real TFSF::psi() const { return _psi; }
 
-double TFSF::sinTheta() const { return _sin_theta; }
+Real TFSF::sinTheta() const { return _sin_theta; }
 
-double TFSF::cosTheta() const { return _cos_theta; }
+Real TFSF::cosTheta() const { return _cos_theta; }
 
-double TFSF::sinPhi() const { return _sin_phi; }
+Real TFSF::sinPhi() const { return _sin_phi; }
 
-double TFSF::cosPhi() const { return _cos_phi; }
+Real TFSF::cosPhi() const { return _cos_phi; }
 
-double TFSF::sinPsi() const { return _sin_psi; }
+Real TFSF::sinPsi() const { return _sin_psi; }
 
-double TFSF::cosPsi() const { return _cos_psi; }
+Real TFSF::cosPsi() const { return _cos_psi; }
 
 Vector TFSF::k() const { return _k; }
 
 GridBox TFSF::globalBox() const { return _global_box; }
 
-Divider::IndexTask TFSF::taskXN() const {
+IndexTask TFSF::taskXN() const {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
@@ -100,12 +99,12 @@ Divider::IndexTask TFSF::taskXN() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return Divider::makeIndexTask(Divider::makeIndexRange(is, is + 1),
-                                Divider::makeIndexRange(js, je),
-                                Divider::makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(is, is + 1),
+                                makeIndexRange(js, je),
+                                makeIndexRange(ks, ke));
 }
 
-Divider::IndexTask TFSF::taskXP() const {
+IndexTask TFSF::taskXP() const {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
@@ -113,12 +112,12 @@ Divider::IndexTask TFSF::taskXP() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return Divider::makeIndexTask(Divider::makeIndexRange(ie, ie + 1),
-                                Divider::makeIndexRange(js, je),
-                                Divider::makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(ie, ie + 1),
+                                makeIndexRange(js, je),
+                                makeIndexRange(ks, ke));
 }
 
-Divider::IndexTask TFSF::taskYN() const {
+IndexTask TFSF::taskYN() const {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
@@ -126,12 +125,12 @@ Divider::IndexTask TFSF::taskYN() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return Divider::makeIndexTask(Divider::makeIndexRange(is, ie),
-                                Divider::makeIndexRange(js, js + 1),
-                                Divider::makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(is, ie),
+                                makeIndexRange(js, js + 1),
+                                makeIndexRange(ks, ke));
 }
 
-Divider::IndexTask TFSF::taskYP() const {
+IndexTask TFSF::taskYP() const {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
@@ -139,12 +138,12 @@ Divider::IndexTask TFSF::taskYP() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return Divider::makeIndexTask(Divider::makeIndexRange(is, ie),
-                                Divider::makeIndexRange(je, je + 1),
-                                Divider::makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(is, ie),
+                                makeIndexRange(je, je + 1),
+                                makeIndexRange(ks, ke));
 }
 
-Divider::IndexTask TFSF::taskZN() const {
+IndexTask TFSF::taskZN() const {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
@@ -152,12 +151,12 @@ Divider::IndexTask TFSF::taskZN() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return Divider::makeIndexTask(Divider::makeIndexRange(is, ie),
-                                Divider::makeIndexRange(js, je),
-                                Divider::makeIndexRange(ks, ks + 1));
+  return makeIndexTask(makeIndexRange(is, ie),
+                                makeIndexRange(js, je),
+                                makeIndexRange(ks, ks + 1));
 }
 
-Divider::IndexTask TFSF::taskZP() const {
+IndexTask TFSF::taskZP() const {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
@@ -165,96 +164,96 @@ Divider::IndexTask TFSF::taskZP() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return Divider::makeIndexTask(Divider::makeIndexRange(is, ie),
-                                Divider::makeIndexRange(js, je),
-                                Divider::makeIndexRange(ke, ke + 1));
+  return makeIndexTask(makeIndexRange(is, ie),
+                                makeIndexRange(js, je),
+                                makeIndexRange(ke, ke + 1));
 }
 
-Divider::IndexTask TFSF::globalEyTaskXN() const {
+IndexTask TFSF::globalEyTaskXN() const {
   auto task = taskXN();
-  return Divider::makeTask(
+  return makeTask(
       task.xRange(), task.yRange(),
-      Divider::makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
+      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
 }
 
-Divider::IndexTask TFSF::globalEzTaskXN() const {
+IndexTask TFSF::globalEzTaskXN() const {
   auto task = taskXN();
-  return Divider::makeTask(
+  return makeTask(
       task.xRange(),
-      Divider::makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
+      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
       task.zRange());
 }
 
-Divider::IndexTask TFSF::globalEyTaskXP() const {
+IndexTask TFSF::globalEyTaskXP() const {
   auto task = taskXP();
-  return Divider::makeTask(
+  return makeTask(
       task.xRange(), task.yRange(),
-      Divider::makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
+      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
 }
 
-Divider::IndexTask TFSF::globalEzTaskXP() const {
+IndexTask TFSF::globalEzTaskXP() const {
   auto task = taskXP();
-  return Divider::makeIndexTask(
+  return makeIndexTask(
       task.xRange(),
-      Divider::makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
+      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
       task.zRange());
 }
 
-Divider::IndexTask TFSF::globalEzTaskYN() const {
+IndexTask TFSF::globalEzTaskYN() const {
   auto task = taskYN();
-  return Divider::makeIndexTask(
-      Divider::makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
+  return makeIndexTask(
+      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
       task.yRange(), task.zRange());
 }
 
-Divider::IndexTask TFSF::globalExTaskYN() const {
+IndexTask TFSF::globalExTaskYN() const {
   auto task = taskYN();
-  return Divider::makeIndexTask(
+  return makeIndexTask(
       task.xRange(), task.yRange(),
-      Divider::makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
+      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
 }
 
-Divider::IndexTask TFSF::globalEzTaskYP() const {
+IndexTask TFSF::globalEzTaskYP() const {
   auto task = taskYP();
-  return Divider::makeIndexTask(
-      Divider::makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
+  return makeIndexTask(
+      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
       task.yRange(), task.zRange());
 }
 
-Divider::IndexTask TFSF::globalExTaskYP() const {
+IndexTask TFSF::globalExTaskYP() const {
   auto task = taskYP();
-  return Divider::makeIndexTask(
+  return makeIndexTask(
       task.xRange(), task.yRange(),
-      Divider::makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
+      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
 }
 
-Divider::IndexTask TFSF::globalExTaskZN() const {
+IndexTask TFSF::globalExTaskZN() const {
   auto task = taskZN();
-  return Divider::makeIndexTask(
+  return makeIndexTask(
       task.xRange(),
-      Divider::makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
+      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
       task.zRange());
 }
 
-Divider::IndexTask TFSF::globalEyTaskZN() const {
+IndexTask TFSF::globalEyTaskZN() const {
   auto task = taskZN();
-  return Divider::makeIndexTask(
-      Divider::makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
+  return makeIndexTask(
+      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
       task.yRange(), task.zRange());
 }
 
-Divider::IndexTask TFSF::globalExTaskZP() const {
+IndexTask TFSF::globalExTaskZP() const {
   auto task = taskZP();
-  return Divider::makeIndexTask(
+  return makeIndexTask(
       task.xRange(),
-      Divider::makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
+      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
       task.zRange());
 }
 
-Divider::IndexTask TFSF::globalEyTaskZP() const {
+IndexTask TFSF::globalEyTaskZP() const {
   auto task = taskZP();
-  return Divider::makeIndexTask(
-      Divider::makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
+  return makeIndexTask(
+      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
       task.yRange(), task.zRange());
 }
 
@@ -294,14 +293,14 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
 
   calculateProjection();
 
-  _e_inc = xt::zeros<double>({_auxiliary_size});
-  _ex_inc = xt::zeros<double>({_auxiliary_size});
-  _ey_inc = xt::zeros<double>({_auxiliary_size});
-  _ez_inc = xt::zeros<double>({_auxiliary_size});
-  _h_inc = xt::zeros<double>({_auxiliary_size - 1});
-  _hx_inc = xt::zeros<double>({_auxiliary_size - 1});
-  _hy_inc = xt::zeros<double>({_auxiliary_size - 1});
-  _hz_inc = xt::zeros<double>({_auxiliary_size - 1});
+  _e_inc = xt::zeros<Real>({_auxiliary_size});
+  _ex_inc = xt::zeros<Real>({_auxiliary_size});
+  _ey_inc = xt::zeros<Real>({_auxiliary_size});
+  _ez_inc = xt::zeros<Real>({_auxiliary_size});
+  _h_inc = xt::zeros<Real>({_auxiliary_size - 1});
+  _hx_inc = xt::zeros<Real>({_auxiliary_size - 1});
+  _hy_inc = xt::zeros<Real>({_auxiliary_size - 1});
+  _hz_inc = xt::zeros<Real>({_auxiliary_size - 1});
 
   if (gridSpacePtr()->dimension() == GridSpace::Dimension::ONE) {
     _scaled_dl = gridSpacePtr()->basedDz() / _ratio_delta;
@@ -327,7 +326,7 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
       (constant::C_0 * calculationParamPtr()->timeParam()->dt() + _scaled_dl);
 }
 
-double TFSF::exInc(std::size_t i, std::size_t j, std::size_t k) {
+Real TFSF::exInc(std::size_t i, std::size_t j, std::size_t k) {
   i = i - globalBox().origin().i() + 1;
   j = j - globalBox().origin().j();
   k = k - globalBox().origin().k();
@@ -338,7 +337,7 @@ double TFSF::exInc(std::size_t i, std::size_t j, std::size_t k) {
   return (1 - weight) * _ex_inc(index) + weight * _ex_inc(index + 1);
 }
 
-double TFSF::eyInc(std::size_t i, std::size_t j, std::size_t k) {
+Real TFSF::eyInc(std::size_t i, std::size_t j, std::size_t k) {
   i = i - globalBox().origin().i();
   j = j - globalBox().origin().j() + 1;
   k = k - globalBox().origin().k();
@@ -349,7 +348,7 @@ double TFSF::eyInc(std::size_t i, std::size_t j, std::size_t k) {
   return (1 - weight) * _ey_inc(index) + weight * _ey_inc(index + 1);
 }
 
-double TFSF::ezInc(std::size_t i, std::size_t j, std::size_t k) {
+Real TFSF::ezInc(std::size_t i, std::size_t j, std::size_t k) {
   i = i - globalBox().origin().i();
   j = j - globalBox().origin().j();
   k = k - globalBox().origin().k() + 1;
@@ -360,7 +359,7 @@ double TFSF::ezInc(std::size_t i, std::size_t j, std::size_t k) {
   return (1 - weight) * _ez_inc(index) + weight * _ez_inc(index + 1);
 }
 
-double TFSF::hxInc(std::size_t i, std::size_t j, std::size_t k) {
+Real TFSF::hxInc(std::size_t i, std::size_t j, std::size_t k) {
   i = i - globalBox().origin().i();
   j = j - globalBox().origin().j() + 1;
   k = k - globalBox().origin().k() + 1;
@@ -371,7 +370,7 @@ double TFSF::hxInc(std::size_t i, std::size_t j, std::size_t k) {
   return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
 }
 
-double TFSF::hyInc(std::size_t i, std::size_t j, std::size_t k) {
+Real TFSF::hyInc(std::size_t i, std::size_t j, std::size_t k) {
   i = i - globalBox().origin().i() + 1;
   j = j - globalBox().origin().j();
   k = k - globalBox().origin().k() + 1;
@@ -382,7 +381,7 @@ double TFSF::hyInc(std::size_t i, std::size_t j, std::size_t k) {
   return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);
 }
 
-double TFSF::hzInc(std::size_t i, std::size_t j, std::size_t k) {
+Real TFSF::hzInc(std::size_t i, std::size_t j, std::size_t k) {
   i = i - globalBox().origin().i() + 1;
   j = j - globalBox().origin().j() + 1;
   k = k - globalBox().origin().k();
@@ -393,47 +392,47 @@ double TFSF::hzInc(std::size_t i, std::size_t j, std::size_t k) {
   return (1 - weight) * _hz_inc(index) + weight * _hz_inc(index + 1);
 }
 
-double TFSF::cax() {
+Real TFSF::cax() {
   return calculationParamPtr()->timeParam()->dt() /
          (constant::EPSILON_0 * gridSpacePtr()->basedDx());
 }
 
-double TFSF::cay() {
+Real TFSF::cay() {
   return calculationParamPtr()->timeParam()->dt() /
          (constant::EPSILON_0 * gridSpacePtr()->basedDy());
 }
 
-double TFSF::caz() {
+Real TFSF::caz() {
   return calculationParamPtr()->timeParam()->dt() /
          (constant::EPSILON_0 * gridSpacePtr()->basedDz());
 }
 
-double TFSF::cbx() {
+Real TFSF::cbx() {
   return calculationParamPtr()->timeParam()->dt() /
          (constant::MU_0 * gridSpacePtr()->basedDx());
 }
 
-double TFSF::cby() {
+Real TFSF::cby() {
   return calculationParamPtr()->timeParam()->dt() /
          (constant::MU_0 * gridSpacePtr()->basedDy());
 }
 
-double TFSF::cbz() {
+Real TFSF::cbz() {
   return calculationParamPtr()->timeParam()->dt() /
          (constant::MU_0 * gridSpacePtr()->basedDz());
 }
 
 static auto intersectionTask(const GridBox& valid_box,
-                             const Divider::IndexTask& my_task) {
-  auto valid_task = Divider::makeTask(
-      Divider::makeIndexRange(valid_box.origin().i(), valid_box.end().i()),
-      Divider::makeIndexRange(valid_box.origin().j(), valid_box.end().j()),
-      Divider::makeIndexRange(valid_box.origin().k(), valid_box.end().k()));
-  auto intersection = Divider::taskIntersection(my_task, valid_task);
+                             const IndexTask& my_task) {
+  auto valid_task = makeTask(
+      makeIndexRange(valid_box.origin().i(), valid_box.end().i()),
+      makeIndexRange(valid_box.origin().j(), valid_box.end().j()),
+      makeIndexRange(valid_box.origin().k(), valid_box.end().k()));
+  auto intersection = taskIntersection(my_task, valid_task);
   return intersection;
 }
 
-Divider::IndexTask TFSF::nodeEyTaskXN(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEyTaskXN(const IndexTask& task) const {
   const auto& my_task = globalEyTaskXN();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box = gridSpace()->validGridBoxEy();
@@ -444,12 +443,12 @@ Divider::IndexTask TFSF::nodeEyTaskXN(const Divider::IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : Divider::makeIndexTask(my_task.xRange(),
-                                      Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(),
+                                      makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeEzTaskXN(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEzTaskXN(const IndexTask& task) const {
   const auto& my_task = globalEzTaskXN();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box = gridSpace()->validGridBoxEz();
@@ -460,12 +459,12 @@ Divider::IndexTask TFSF::nodeEzTaskXN(const Divider::IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : Divider::makeIndexTask(my_task.xRange(),
-                                      Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(),
+                                      makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeEyTaskXP(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEyTaskXP(const IndexTask& task) const {
   const auto& my_task = globalEyTaskXP();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box = gridSpace()->validGridBoxEy();
@@ -476,12 +475,12 @@ Divider::IndexTask TFSF::nodeEyTaskXP(const Divider::IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : Divider::makeIndexTask(my_task.xRange(),
-                                      Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(),
+                                      makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeEzTaskXP(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEzTaskXP(const IndexTask& task) const {
   const auto& my_task = globalEzTaskXP();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box = gridSpace()->validGridBoxEz();
@@ -492,12 +491,12 @@ Divider::IndexTask TFSF::nodeEzTaskXP(const Divider::IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : Divider::makeIndexTask(my_task.xRange(),
-                                      Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(),
+                                      makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeExTaskYN(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeExTaskYN(const IndexTask& task) const {
   const auto& my_task = globalExTaskYN();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box = gridSpace()->validGridBoxEx();
@@ -508,12 +507,12 @@ Divider::IndexTask TFSF::nodeExTaskYN(const Divider::IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
                                       my_task.yRange(),
-                                      Divider::makeIndexRange(1, 0));
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeEzTaskYN(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEzTaskYN(const IndexTask& task) const {
   const auto& my_task = globalEzTaskYN();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box = gridSpace()->validGridBoxEz();
@@ -524,12 +523,12 @@ Divider::IndexTask TFSF::nodeEzTaskYN(const Divider::IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
                                       my_task.yRange(),
-                                      Divider::makeIndexRange(1, 0));
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeExTaskYP(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeExTaskYP(const IndexTask& task) const {
   const auto& my_total_global_task_yp = globalExTaskYP();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box_ex = gridSpace()->validGridBoxEx();
@@ -541,12 +540,12 @@ Divider::IndexTask TFSF::nodeExTaskYP(const Divider::IndexTask& task) const {
 
   return intersection_ex.has_value()
              ? intersection_ex.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
                                       my_total_global_task_yp.yRange(),
-                                      Divider::makeIndexRange(1, 0));
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeEzTaskYP(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEzTaskYP(const IndexTask& task) const {
   const auto& my_total_global_task_yp = globalEzTaskYP();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box_ez = gridSpace()->validGridBoxEz();
@@ -558,12 +557,12 @@ Divider::IndexTask TFSF::nodeEzTaskYP(const Divider::IndexTask& task) const {
 
   return intersection_ez.has_value()
              ? intersection_ez.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
                                       my_total_global_task_yp.yRange(),
-                                      Divider::makeIndexRange(1, 0));
+                                      makeIndexRange(1, 0));
 }
 
-Divider::IndexTask TFSF::nodeExTaskZN(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeExTaskZN(const IndexTask& task) const {
   const auto& my_total_global_task_zn = globalExTaskZN();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box_ex = gridSpace()->validGridBoxEx();
@@ -575,12 +574,12 @@ Divider::IndexTask TFSF::nodeExTaskZN(const Divider::IndexTask& task) const {
 
   return intersection_ex.has_value()
              ? intersection_ex.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0),
                                       my_total_global_task_zn.zRange());
 }
 
-Divider::IndexTask TFSF::nodeEyTaskZN(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEyTaskZN(const IndexTask& task) const {
   const auto& my_total_global_task_zn = globalEyTaskZN();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box_ey = gridSpace()->validGridBoxEy();
@@ -592,12 +591,12 @@ Divider::IndexTask TFSF::nodeEyTaskZN(const Divider::IndexTask& task) const {
 
   return intersection_ey.has_value()
              ? intersection_ey.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0),
                                       my_total_global_task_zn.zRange());
 }
 
-Divider::IndexTask TFSF::nodeExTaskZP(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeExTaskZP(const IndexTask& task) const {
   const auto& my_total_global_task_zp = globalExTaskZP();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box_ex = gridSpace()->validGridBoxEx();
@@ -609,12 +608,12 @@ Divider::IndexTask TFSF::nodeExTaskZP(const Divider::IndexTask& task) const {
 
   return intersection_ex.has_value()
              ? intersection_ex.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0),
                                       my_total_global_task_zp.zRange());
 }
 
-Divider::IndexTask TFSF::nodeEyTaskZP(const Divider::IndexTask& task) const {
+IndexTask TFSF::nodeEyTaskZP(const IndexTask& task) const {
   const auto& my_total_global_task_zp = globalEyTaskZP();
   const auto& offset = gridSpace()->globalBox().origin();
   const auto& valid_box_ey = gridSpace()->validGridBoxEy();
@@ -626,8 +625,8 @@ Divider::IndexTask TFSF::nodeEyTaskZP(const Divider::IndexTask& task) const {
 
   return intersection_ey.has_value()
              ? intersection_ey.value()
-             : Divider::makeIndexTask(Divider::makeIndexRange(1, 0),
-                                      Divider::makeIndexRange(1, 0),
+             : makeIndexTask(makeIndexRange(1, 0),
+                                      makeIndexRange(1, 0),
                                       my_total_global_task_zp.zRange());
 }
 
@@ -641,7 +640,7 @@ void TFSF::initTransform() {
 
   _k = Vector{sin_theta * cos_phi, sin_theta * sin_phi, cos_theta};
 
-  _rotation_matrix = xt::xtensor<double, 2>{
+  _rotation_matrix = Array2D<Real>{
       {-_sin_phi, _cos_theta * _cos_phi, _sin_theta * _cos_phi},
       {_cos_phi, _cos_theta * _sin_phi, _sin_theta * _sin_phi},
       {0, -_sin_theta, _cos_theta}};
@@ -652,17 +651,17 @@ void TFSF::initTransform() {
 }
 
 void TFSF::calculateProjection() {
-  auto get_int{[](std::size_t n, double inc_point, double tfsf_origin, double k,
-                  double ratio_delta) {
-    xt::xarray<double> arr = xt::zeros<double>({n});
+  auto get_int{[](std::size_t n, Real inc_point, Real tfsf_origin, Real k,
+                  Real ratio_delta) {
+    Array1D<Real> arr = xt::zeros<Real>({n});
     for (std::size_t i = 0; i < n; ++i) {
       arr(i) = (i + tfsf_origin - inc_point) * k * ratio_delta;
     }
     return arr;
   }};
-  auto get_half{[](std::size_t n, double tfsf_origin, double inc_point,
-                   double k, double ratio_delta) {
-    xt::xarray<double> arr = xt::zeros<double>({n});
+  auto get_half{[](std::size_t n, Real tfsf_origin, Real inc_point,
+                   Real k, Real ratio_delta) {
+    Array1D<Real> arr = xt::zeros<Real>({n});
     for (std::size_t i = 0; i < n; ++i) {
       arr(i) = (i + tfsf_origin - inc_point - 0.5) * k * ratio_delta;
     }

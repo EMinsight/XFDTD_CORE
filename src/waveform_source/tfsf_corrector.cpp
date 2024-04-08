@@ -29,7 +29,7 @@ std::string TFSFCorrector::toString() const {
   return ss.str();
 }
 
-double TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i() + 1;
   j = j - globalStart().j();
   k = k - globalStart().k();
@@ -40,7 +40,7 @@ double TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _ex_inc(index) + weight * _ex_inc(index + 1);
 }
 
-double TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i();
   j = j - globalStart().j() + 1;
   k = k - globalStart().k();
@@ -51,7 +51,7 @@ double TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _ey_inc(index) + weight * _ey_inc(index + 1);
 }
 
-double TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i();
   j = j - globalStart().j();
   k = k - globalStart().k() + 1;
@@ -62,7 +62,7 @@ double TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _ez_inc(index) + weight * _ez_inc(index + 1);
 }
 
-double TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i();
   j = j - globalStart().j() + 1;
   k = k - globalStart().k() + 1;
@@ -73,7 +73,7 @@ double TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
 }
 
-double TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i() + 1;
   j = j - globalStart().j();
   k = k - globalStart().k() + 1;
@@ -84,7 +84,7 @@ double TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);
 }
 
-double TFSFCorrector::hzInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::hzInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i() + 1;
   j = j - globalStart().j() + 1;
   k = k - globalStart().k();
@@ -694,51 +694,51 @@ void TFSFCorrector::correctHyZP() {
   }
 }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskXN() const {
+IndexTask TFSFCorrector::globalEyTaskXN() const {
   return _global_ey_task_xn;
 }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskXN() const {
+IndexTask TFSFCorrector::globalEzTaskXN() const {
   return _global_ez_task_xn;
 }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskXP() const {
+IndexTask TFSFCorrector::globalEyTaskXP() const {
   return _global_ey_task_xp;
 }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskXP() const {
+IndexTask TFSFCorrector::globalEzTaskXP() const {
   return _global_ez_task_xp;
 }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskYN() const {
+IndexTask TFSFCorrector::globalEzTaskYN() const {
   return _global_ez_task_yn;
 }
 
-Divider::IndexTask TFSFCorrector::globalExTaskYN() const {
+IndexTask TFSFCorrector::globalExTaskYN() const {
   return _global_ex_task_yn;
 }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskYP() const {
+IndexTask TFSFCorrector::globalEzTaskYP() const {
   return _global_ez_task_yp;
 }
 
-Divider::IndexTask TFSFCorrector::globalExTaskYP() const {
+IndexTask TFSFCorrector::globalExTaskYP() const {
   return _global_ex_task_yp;
 }
 
-Divider::IndexTask TFSFCorrector::globalExTaskZN() const {
+IndexTask TFSFCorrector::globalExTaskZN() const {
   return _global_ex_task_zn;
 }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskZN() const {
+IndexTask TFSFCorrector::globalEyTaskZN() const {
   return _global_ey_task_zn;
 }
 
-Divider::IndexTask TFSFCorrector::globalExTaskZP() const {
+IndexTask TFSFCorrector::globalExTaskZP() const {
   return _global_ex_task_zp;
 }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskZP() const {
+IndexTask TFSFCorrector::globalEyTaskZP() const {
   return _global_ey_task_zp;
 }
 

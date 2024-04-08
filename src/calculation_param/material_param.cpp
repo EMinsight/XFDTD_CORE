@@ -1,6 +1,8 @@
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/material/material.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/util/fdtd_basic.h>
 
 #include <memory>
@@ -107,31 +109,31 @@ MaterialParam::Property MaterialParam::fromAttributeAndXYZ(Attribute attribute,
   }
 }
 
-const xt::xarray<double>& MaterialParam::epsX() const { return _eps_x; }
+const Array3D<Real>& MaterialParam::epsX() const { return _eps_x; }
 
-const xt::xarray<double>& MaterialParam::epsY() const { return _eps_y; }
+const Array3D<Real>& MaterialParam::epsY() const { return _eps_y; }
 
-const xt::xarray<double>& MaterialParam::epsZ() const { return _eps_z; }
+const Array3D<Real>& MaterialParam::epsZ() const { return _eps_z; }
 
-const xt::xarray<double>& MaterialParam::muX() const { return _mu_x; }
+const Array3D<Real>& MaterialParam::muX() const { return _mu_x; }
 
-const xt::xarray<double>& MaterialParam::muY() const { return _mu_y; }
+const Array3D<Real>& MaterialParam::muY() const { return _mu_y; }
 
-const xt::xarray<double>& MaterialParam::muZ() const { return _mu_z; }
+const Array3D<Real>& MaterialParam::muZ() const { return _mu_z; }
 
-const xt::xarray<double>& MaterialParam::sigmaEX() const { return _sigma_e_x; }
+const Array3D<Real>& MaterialParam::sigmaEX() const { return _sigma_e_x; }
 
-const xt::xarray<double>& MaterialParam::sigmaEY() const { return _sigma_e_y; }
+const Array3D<Real>& MaterialParam::sigmaEY() const { return _sigma_e_y; }
 
-const xt::xarray<double>& MaterialParam::sigmaEZ() const { return _sigma_e_z; }
+const Array3D<Real>& MaterialParam::sigmaEZ() const { return _sigma_e_z; }
 
-const xt::xarray<double>& MaterialParam::sigmaMX() const { return _sigma_m_x; }
+const Array3D<Real>& MaterialParam::sigmaMX() const { return _sigma_m_x; }
 
-const xt::xarray<double>& MaterialParam::sigmaMY() const { return _sigma_m_y; }
+const Array3D<Real>& MaterialParam::sigmaMY() const { return _sigma_m_y; }
 
-const xt::xarray<double>& MaterialParam::sigmaMZ() const { return _sigma_m_z; }
+const Array3D<Real>& MaterialParam::sigmaMZ() const { return _sigma_m_z; }
 
-const xt::xarray<double>& MaterialParam::property(
+const Array3D<Real>& MaterialParam::property(
     MaterialParam::Property property) const {
   switch (property) {
     case MaterialParam::Property::EPS_X:
@@ -163,8 +165,8 @@ const xt::xarray<double>& MaterialParam::property(
   }
 }
 
-const xt::xarray<double>& MaterialParam::property(
-    MaterialParam::Attribute attribute, Axis::XYZ xyz) const {
+const Array3D<Real>& MaterialParam::property(MaterialParam::Attribute attribute,
+                                             Axis::XYZ xyz) const {
   switch (attribute) {
     case MaterialParam::Attribute::EPSILON:
       switch (xyz) {
@@ -219,31 +221,31 @@ void MaterialParam::addMaterial(std::shared_ptr<Material> material) {
   _materials.emplace_back(std::move(material));
 }
 
-xt::xarray<double>& MaterialParam::epsX() { return _eps_x; }
+Array3D<Real>& MaterialParam::epsX() { return _eps_x; }
 
-xt::xarray<double>& MaterialParam::epsY() { return _eps_y; }
+Array3D<Real>& MaterialParam::epsY() { return _eps_y; }
 
-xt::xarray<double>& MaterialParam::epsZ() { return _eps_z; }
+Array3D<Real>& MaterialParam::epsZ() { return _eps_z; }
 
-xt::xarray<double>& MaterialParam::muX() { return _mu_x; }
+Array3D<Real>& MaterialParam::muX() { return _mu_x; }
 
-xt::xarray<double>& MaterialParam::muY() { return _mu_y; }
+Array3D<Real>& MaterialParam::muY() { return _mu_y; }
 
-xt::xarray<double>& MaterialParam::muZ() { return _mu_z; }
+Array3D<Real>& MaterialParam::muZ() { return _mu_z; }
 
-xt::xarray<double>& MaterialParam::sigmaEX() { return _sigma_e_x; }
+Array3D<Real>& MaterialParam::sigmaEX() { return _sigma_e_x; }
 
-xt::xarray<double>& MaterialParam::sigmaEY() { return _sigma_e_y; }
+Array3D<Real>& MaterialParam::sigmaEY() { return _sigma_e_y; }
 
-xt::xarray<double>& MaterialParam::sigmaEZ() { return _sigma_e_z; }
+Array3D<Real>& MaterialParam::sigmaEZ() { return _sigma_e_z; }
 
-xt::xarray<double>& MaterialParam::sigmaMX() { return _sigma_m_x; }
+Array3D<Real>& MaterialParam::sigmaMX() { return _sigma_m_x; }
 
-xt::xarray<double>& MaterialParam::sigmaMY() { return _sigma_m_y; }
+Array3D<Real>& MaterialParam::sigmaMY() { return _sigma_m_y; }
 
-xt::xarray<double>& MaterialParam::sigmaMZ() { return _sigma_m_z; }
+Array3D<Real>& MaterialParam::sigmaMZ() { return _sigma_m_z; }
 
-xt::xarray<double>& MaterialParam::property(MaterialParam::Property property) {
+Array3D<Real>& MaterialParam::property(MaterialParam::Property property) {
   switch (property) {
     case MaterialParam::Property::EPS_X:
       return _eps_x;
@@ -274,8 +276,8 @@ xt::xarray<double>& MaterialParam::property(MaterialParam::Property property) {
   }
 }
 
-xt::xarray<double>& MaterialParam::property(MaterialParam::Attribute attribute,
-                                            Axis::XYZ xyz) {
+Array3D<Real>& MaterialParam::property(MaterialParam::Attribute attribute,
+                                       Axis::XYZ xyz) {
   switch (attribute) {
     case MaterialParam::Attribute::EPSILON:
       switch (xyz) {
@@ -326,41 +328,67 @@ xt::xarray<double>& MaterialParam::property(MaterialParam::Attribute attribute,
   }
 }
 
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline static auto makeArr(std::size_t nx, std::size_t ny, std::size_t nz)
+    -> Array3D<Real> {
+  if constexpr (a == EMF::Attribute::E) {
+    if constexpr (xyz == Axis::XYZ::X) {
+      const auto e_x_n = basic::GridStructure::exSize(nx, ny, nz);
+      return xt::zeros<Real>(e_x_n);
+    } else if constexpr (xyz == Axis::XYZ::Y) {
+      const auto e_y_n = basic::GridStructure::eySize(nx, ny, nz);
+      return xt::zeros<Real>(e_y_n);
+    } else if constexpr (xyz == Axis::XYZ::Z) {
+      const auto e_z_n = basic::GridStructure::ezSize(nx, ny, nz);
+      return xt::zeros<Real>(e_z_n);
+    } else {
+      throw XFDTDCalculationParamException{"Invalid Axis::XYZ"};
+    }
+  } else if constexpr (a == EMF::Attribute::H) {
+    if constexpr (xyz == Axis::XYZ::X) {
+      const auto h_x_n = basic::GridStructure::hxSize(nx, ny, nz);
+      return xt::zeros<Real>(h_x_n);
+    } else if constexpr (xyz == Axis::XYZ::Y) {
+      const auto h_y_n = basic::GridStructure::hySize(nx, ny, nz);
+      return xt::zeros<Real>(h_y_n);
+    } else if constexpr (xyz == Axis::XYZ::Z) {
+      const auto h_z_n = basic::GridStructure::hzSize(nx, ny, nz);
+      return xt::zeros<Real>(h_z_n);
+    } else {
+      throw XFDTDCalculationParamException{"Invalid Axis::XYZ"};
+    }
+  } else {
+    throw XFDTDCalculationParamException{"Invalid EMF::Attribute"};
+  }
+}
+
 void MaterialParam::allocate(std::size_t nx, std::size_t ny, std::size_t nz) {
-  const auto e_x_n = basic::GridStructure::exSize(nx, ny, nz);
-  const auto e_y_n = basic::GridStructure::eySize(nx, ny, nz);
-  const auto e_z_n = basic::GridStructure::ezSize(nx, ny, nz);
-  const auto h_x_n = basic::GridStructure::hxSize(nx, ny, nz);
-  const auto h_y_n = basic::GridStructure::hySize(nx, ny, nz);
-  const auto h_z_n = basic::GridStructure::hzSize(nx, ny, nz);
-
-  _eps_x = xt::zeros<double>(e_x_n);
-  _eps_y = xt::zeros<double>(e_y_n);
-  _eps_z = xt::zeros<double>(e_z_n);
-
+  _eps_x = makeArr<EMF::Attribute::E, Axis::XYZ::X>(nx, ny, nz);
   _eps_x.fill(constant::EPSILON_0);
+  _eps_y = makeArr<EMF::Attribute::E, Axis::XYZ::Y>(nx, ny, nz);
   _eps_y.fill(constant::EPSILON_0);
+  _eps_z = makeArr<EMF::Attribute::E, Axis::XYZ::Z>(nx, ny, nz);
   _eps_z.fill(constant::EPSILON_0);
 
-  _mu_x = xt::zeros<double>(h_x_n);
-  _mu_y = xt::zeros<double>(h_y_n);
-  _mu_z = xt::zeros<double>(h_z_n);
+  _mu_x = makeArr<EMF::Attribute::H, Axis::XYZ::X>(nx, ny, nz);
   _mu_x.fill(constant::MU_0);
+  _mu_y = makeArr<EMF::Attribute::H, Axis::XYZ::Y>(nx, ny, nz);
   _mu_y.fill(constant::MU_0);
+  _mu_z = makeArr<EMF::Attribute::H, Axis::XYZ::Z>(nx, ny, nz);
   _mu_z.fill(constant::MU_0);
 
-  _sigma_e_x = xt::zeros<double>(e_x_n);
-  _sigma_e_y = xt::zeros<double>(e_y_n);
-  _sigma_e_z = xt::zeros<double>(e_z_n);
+  _sigma_e_x = makeArr<EMF::Attribute::E, Axis::XYZ::X>(nx, ny, nz);
   _sigma_e_x.fill(constant::SIGMA_E_ZERO_APPROX);
+  _sigma_e_y = makeArr<EMF::Attribute::E, Axis::XYZ::Y>(nx, ny, nz);
   _sigma_e_y.fill(constant::SIGMA_E_ZERO_APPROX);
+  _sigma_e_z = makeArr<EMF::Attribute::E, Axis::XYZ::Z>(nx, ny, nz);
   _sigma_e_z.fill(constant::SIGMA_E_ZERO_APPROX);
 
-  _sigma_m_x = xt::zeros<double>(h_x_n);
-  _sigma_m_y = xt::zeros<double>(h_y_n);
-  _sigma_m_z = xt::zeros<double>(h_z_n);
+  _sigma_m_x = makeArr<EMF::Attribute::H, Axis::XYZ::X>(nx, ny, nz);
   _sigma_m_x.fill(constant::SIGMA_M_ZERO_APPROX);
+  _sigma_m_y = makeArr<EMF::Attribute::H, Axis::XYZ::Y>(nx, ny, nz);
   _sigma_m_y.fill(constant::SIGMA_M_ZERO_APPROX);
+  _sigma_m_z = makeArr<EMF::Attribute::H, Axis::XYZ::Z>(nx, ny, nz);
   _sigma_m_z.fill(constant::SIGMA_M_ZERO_APPROX);
 }
 

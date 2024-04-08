@@ -1,4 +1,4 @@
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/object/lumped_element/lumped_element.h>
 
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -133,7 +133,7 @@ std::size_t LumpedElement::globalCountSubAxisB() const {
   }
 }
 
-xt::xarray<double>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
+Array3D<Real>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
   switch (xyz()) {
     case Axis::XYZ::X:
       return emfPtr()->field(attribute, EMF::Component::X);
@@ -147,14 +147,14 @@ xt::xarray<double>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
 }
 
 bool LumpedElement::taskContainLumpedElement(
-    const Divider::Task<std::size_t>& task) const {
-  return Divider::intersected(task, makeIndexTask());
+    const Task<std::size_t>& task) const {
+  return intersected(task, makeIndexTask());
 }
 
-Divider::IndexTask LumpedElement::makeIndexTask() const {
-  return Divider::makeTask(Divider::makeRange(_is, _is + nodeCountX()),
-                           Divider::makeRange(_js, _js + nodeCountY()),
-                           Divider::makeRange(_ks, _ks + nodeCountZ()));
+IndexTask LumpedElement::makeIndexTask() const {
+  return makeTask(makeRange(_is, _is + nodeCountX()),
+                           makeRange(_js, _js + nodeCountY()),
+                           makeRange(_ks, _ks + nodeCountZ()));
 }
 
 }  // namespace xfdtd

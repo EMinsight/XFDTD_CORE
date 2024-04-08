@@ -24,7 +24,7 @@ class LinearDispersiveMaterialADEUpdator : public BasicUpdator {
   LinearDispersiveMaterialADEUpdator(
       std::shared_ptr<const GridSpace> grid_space,
       std::shared_ptr<const CalculationParam> calculation_param,
-      std::shared_ptr<EMF> emf, Divider::IndexTask task);
+      std::shared_ptr<EMF> emf, IndexTask task);
 
   LinearDispersiveMaterialADEUpdator(
       const LinearDispersiveMaterialADEUpdator&) = delete;
@@ -57,7 +57,7 @@ class LorentzADEUpdator : public LinearDispersiveMaterialADEUpdator {
  public:
   LorentzADEUpdator(std::shared_ptr<const GridSpace> grid_space,
                     std::shared_ptr<const CalculationParam> calculation_param,
-                    std::shared_ptr<EMF> emf, Divider::IndexTask task);
+                    std::shared_ptr<EMF> emf, IndexTask task);
 
   LorentzADEUpdator(const LorentzADEUpdator&) = delete;
 
@@ -90,7 +90,7 @@ class DrudeADEUpdator : public LinearDispersiveMaterialADEUpdator {
  public:
   DrudeADEUpdator(std::shared_ptr<const GridSpace> grid_space,
                   std::shared_ptr<const CalculationParam> calculation_param,
-                  std::shared_ptr<EMF> emf, Divider::IndexTask task);
+                  std::shared_ptr<EMF> emf, IndexTask task);
 
   DrudeADEUpdator(const DrudeADEUpdator&) = delete;
 
@@ -123,7 +123,7 @@ class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
  public:
   DebyeADEUpdator(std::shared_ptr<const GridSpace> grid_space,
                   std::shared_ptr<const CalculationParam> calculation_param,
-                  std::shared_ptr<EMF> emf, Divider::IndexTask task);
+                  std::shared_ptr<EMF> emf, IndexTask task);
 
   DebyeADEUpdator(const DebyeADEUpdator&) = delete;
 

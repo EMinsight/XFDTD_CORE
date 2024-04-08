@@ -16,8 +16,8 @@
 namespace xfdtd {
 
 std::unique_ptr<GridSpace> GridSpaceGenerator::generateUniformGridSpace(
-    const std::vector<const Shape*>& shapes, double based_dx, double based_dy,
-    double based_dz) {
+    const std::vector<const Shape*>& shapes, Real based_dx, Real based_dy,
+    Real based_dz) {
   auto domain = Shape::makeWrappedCube(shapes);
 
   auto dimension{decideDimension(domain.get())};
@@ -60,12 +60,12 @@ GridSpace::Dimension GridSpaceGenerator::decideDimension(const Shape* shape) {
 }
 
 std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace1D(
-    const Cube* domain, double dz) {
+    const Cube* domain, Real dz) {
   std::size_t nx{1};
   std::size_t ny{1};
   std::size_t nz{1};
-  auto min_z{std::numeric_limits<double>::max()};
-  auto max_z{std::numeric_limits<double>::min()};
+  auto min_z{std::numeric_limits<Real>::max()};
+  auto max_z{std::numeric_limits<Real>::min()};
 
   auto cube{domain->wrappedCube()};
   min_z = std::min(min_z, cube->originZ());
@@ -77,17 +77,17 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace1D(
   }
 
   auto region{GridSpace::GridSpaceRegion{
-      {-1 * std::numeric_limits<double>::infinity(),
-       -1 * std::numeric_limits<double>::infinity(), min_z},
-      {std::numeric_limits<double>::infinity(),
-       std::numeric_limits<double>::infinity(), nz * dz}}};
-  auto e_node_z{xt::linspace<double>(region.originZ(), region.endZ(), nz + 1)};
+      {-1 * std::numeric_limits<Real>::infinity(),
+       -1 * std::numeric_limits<Real>::infinity(), min_z},
+      {std::numeric_limits<Real>::infinity(),
+       std::numeric_limits<Real>::infinity(), nz * dz}}};
+  auto e_node_z{xt::linspace<Real>(region.originZ(), region.endZ(), nz + 1)};
 
   return std::make_unique<GridSpace1D>(dz, std::move(e_node_z));
 }
 
 std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace2D(
-    const Cube* domain, double dx, double dy) {
+    const Cube* domain, Real dx, Real dy) {
   std::size_t nx{1};
   std::size_t ny{1};
   std::size_t nz{1};
@@ -104,28 +104,28 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace2D(
   }
 
   auto region{GridSpace::GridSpaceRegion{
-      {min_x, min_y, -1 * std::numeric_limits<double>::infinity()},
-      {nx * dx, ny * dy, std::numeric_limits<double>::infinity()}}};
+      {min_x, min_y, -1 * std::numeric_limits<Real>::infinity()},
+      {nx * dx, ny * dy, std::numeric_limits<Real>::infinity()}}};
 
-  auto e_node_x{xt::linspace<double>(region.originX(), region.endX(), nx + 1)};
-  auto e_node_y{xt::linspace<double>(region.originY(), region.endY(), ny + 1)};
+  auto e_node_x{xt::linspace<Real>(region.originX(), region.endX(), nx + 1)};
+  auto e_node_y{xt::linspace<Real>(region.originY(), region.endY(), ny + 1)};
 
   return std::make_unique<GridSpace2D>(dx, dy, std::move(e_node_x),
                                        std::move(e_node_y));
 }
 
 std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace3D(
-    const Cube* domain, double dx, double dy, double dz) {
+    const Cube* domain, Real dx, Real dy, Real dz) {
   std::size_t nx{1};
   std::size_t ny{1};
   std::size_t nz{1};
 
-  auto min_x{std::numeric_limits<double>::max()};
-  auto max_x{std::numeric_limits<double>::min()};
-  auto min_y{std::numeric_limits<double>::max()};
-  auto max_y{std::numeric_limits<double>::min()};
-  auto min_z{std::numeric_limits<double>::max()};
-  auto max_z{std::numeric_limits<double>::min()};
+  auto min_x{std::numeric_limits<Real>::max()};
+  auto max_x{std::numeric_limits<Real>::min()};
+  auto min_y{std::numeric_limits<Real>::max()};
+  auto max_y{std::numeric_limits<Real>::min()};
+  auto min_z{std::numeric_limits<Real>::max()};
+  auto max_z{std::numeric_limits<Real>::min()};
 
   min_x = domain->originX();
   max_x = domain->endX();
@@ -144,9 +144,9 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace3D(
   auto region{GridSpace::GridSpaceRegion{{min_x, min_y, min_z},
                                          {max_x - min_x, max_y - min_y, max_z - min_z}}};
 
-  auto e_node_x{xt::linspace<double>(region.originX(), region.endX(), nx + 1)};
-  auto e_node_y{xt::linspace<double>(region.originY(), region.endY(), ny + 1)};
-  auto e_node_z{xt::linspace<double>(region.originZ(), region.endZ(), nz + 1)};
+  auto e_node_x{xt::linspace<Real>(region.originX(), region.endX(), nx + 1)};
+  auto e_node_y{xt::linspace<Real>(region.originY(), region.endY(), ny + 1)};
+  auto e_node_z{xt::linspace<Real>(region.originZ(), region.endZ(), nz + 1)};
 
   return std::make_unique<GridSpace3D>(dx, dy, dz, std::move(e_node_x),
                                        std::move(e_node_y),

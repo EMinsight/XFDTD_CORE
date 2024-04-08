@@ -8,7 +8,7 @@ namespace xfdtd {
 class Inductor : public LumpedElement {
  public:
   Inductor(std::string name, std::unique_ptr<Cube> cube, Axis::XYZ xyz,
-           double inductance,
+           Real inductance,
            std::unique_ptr<Material> material = Material::createAir());
 
   Inductor(const Inductor&) = delete;
@@ -34,16 +34,16 @@ class Inductor : public LumpedElement {
   void correctH() override;
 
   std::unique_ptr<Corrector> generateCorrector(
-      const Divider::Task<std::size_t>& task) override;
+      const Task<std::size_t>& task) override;
 
  private:
-  double _inductance;
-  double _inductance_factor;
+  Real _inductance;
+  Real _inductance_factor;
 
-  xt::xarray<double> _da, _db, _dc;
-  xt::xarray<double> _beta;
-  xt::xarray<double> _cecjc, _cjcec;
-  xt::xarray<double> _j;
+  Array3D<Real> _da, _db, _dc;
+  Array3D<Real> _beta;
+  Array3D<Real> _cecjc, _cjcec;
+  Array3D<Real> _j;
 };
 
 }  // namespace xfdtd

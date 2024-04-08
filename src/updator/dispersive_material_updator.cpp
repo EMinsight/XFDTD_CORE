@@ -38,7 +38,7 @@ static void handleDispersiveMaterialADEUpdator(
 LinearDispersiveMaterialADEUpdator::LinearDispersiveMaterialADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    std::shared_ptr<EMF> emf, IndexTask task)
     : BasicUpdator(std::move(grid_space), std::move(calculation_param),
                    std::move(emf), task) {
   if (_grid_space->type() != GridSpace::Type::UNIFORM) {
@@ -49,7 +49,7 @@ LinearDispersiveMaterialADEUpdator::LinearDispersiveMaterialADEUpdator(
 LorentzADEUpdator::LorentzADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    std::shared_ptr<EMF> emf, IndexTask task)
     : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
                                          std::move(calculation_param),
                                          std::move(emf), task} {
@@ -269,7 +269,7 @@ void LorentzADEUpdator::allocate() {
 DrudeADEUpdator::DrudeADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    std::shared_ptr<EMF> emf, IndexTask task)
     : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
                                          std::move(calculation_param),
                                          std::move(emf), task} {
@@ -460,7 +460,7 @@ void DrudeADEUpdator::updateE() {
 DebyeADEUpdator::DebyeADEUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    std::shared_ptr<EMF> emf, IndexTask task)
     : LinearDispersiveMaterialADEUpdator{std::move(grid_space),
                                          std::move(calculation_param),
                                          std::move(emf), task} {

@@ -3,7 +3,7 @@
 
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/nffft/nffft.h>
@@ -22,74 +22,74 @@ class FDPlaneData {
 
  public:
   FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
-              std::shared_ptr<const EMF> emf, double freq,
-              const Divider::IndexTask& task_xn,
-              const Divider::IndexTask& task_xp,
-              const Divider::IndexTask& task_yn,
-              const Divider::IndexTask& task_yp,
-              const Divider::IndexTask& task_zn,
-              const Divider::IndexTask& task_zp);
+              std::shared_ptr<const EMF> emf, Real freq,
+              const IndexTask& task_xn,
+              const IndexTask& task_xp,
+              const IndexTask& task_yn,
+              const IndexTask& task_yp,
+              const IndexTask& task_zn,
+              const IndexTask& task_zp);
 
-  auto frequency() const -> double;
+  auto frequency() const -> Real;
 
   auto update(std::size_t current_time_step) -> void;
 
-  auto aTheta(const xt::xtensor<double, 1>& theta,
-              const xt::xtensor<double, 1>& phi, const Vector& origin) const
-      -> xt::xtensor<std::complex<double>, 1>;
-  auto fPhi(const xt::xtensor<double, 1>& theta,
-            const xt::xtensor<double, 1>& phi, const Vector& origin) const
-      -> xt::xtensor<std::complex<double>, 1>;
+  auto aTheta(const Array1D<Real>& theta,
+              const Array1D<Real>& phi, const Vector& origin) const
+      -> Array1D<std::complex<Real>>;
+  auto fPhi(const Array1D<Real>& theta,
+            const Array1D<Real>& phi, const Vector& origin) const
+      -> Array1D<std::complex<Real>>;
 
-  auto aPhi(const xt::xtensor<double, 1>& theta,
-            const xt::xtensor<double, 1>& phi, const Vector& origin) const
-      -> xt::xtensor<std::complex<double>, 1>;
-  auto fTheta(const xt::xtensor<double, 1>& theta,
-              const xt::xtensor<double, 1>& phi, const Vector& origin) const
-      -> xt::xtensor<std::complex<double>, 1>;
+  auto aPhi(const Array1D<Real>& theta,
+            const Array1D<Real>& phi, const Vector& origin) const
+      -> Array1D<std::complex<Real>>;
+  auto fTheta(const Array1D<Real>& theta,
+              const Array1D<Real>& phi, const Vector& origin) const
+      -> Array1D<std::complex<Real>>;
 
-  auto power() const -> double;
+  auto power() const -> Real;
 
-  auto initDFT(std::size_t total_time_step, double dt) -> void;
+  auto initDFT(std::size_t total_time_step, Real dt) -> void;
 
   template <Potential p, transform::SCS scs>
-  auto getPotential(const xt::xtensor<double, 1>& theta,
-                    const xt::xtensor<double, 1>& phi,
+  auto getPotential(const Array1D<Real>& theta,
+                    const Array1D<Real>& phi,
                     const Vector& origin) const
-      -> xt::xtensor<std::complex<double>, 1>;
+      -> Array1D<std::complex<Real>>;
 
  private:
   template <Potential potential, Axis::Direction direction>
   auto calculatePotential(
-      const xt::xtensor<double, 1>& theta, const xt::xtensor<double, 1>& phi,
+      const Array1D<Real>& theta, const Array1D<Real>& phi,
       const Vector& origin,
-      const xt::xtensor<std::complex<double>, 1>& transform_a,
-      const xt::xtensor<std::complex<double>, 1>& transform_b) const
-      -> xt::xtensor<std::complex<double>, 1>;
+      const Array1D<std::complex<Real>>& transform_a,
+      const Array1D<std::complex<Real>>& transform_b) const
+      -> Array1D<std::complex<Real>>;
 
   template <Axis::Direction direction>
-  auto calculatePower() const -> std::complex<double>;
+  auto calculatePower() const -> std::complex<Real>;
 
   template <Axis::XYZ xyz>
   auto rVector(size_t i, std::size_t j, std::size_t k) const -> Vector;
 
   template <Axis::XYZ xyz>
-  auto ds(size_t i, std::size_t j, std::size_t k) const -> double;
+  auto ds(size_t i, std::size_t j, std::size_t k) const -> Real;
 
  private:
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const EMF> _emf;
-  double _freq;
-  Divider::IndexTask _task_xn, _task_xp, _task_yn, _task_yp, _task_zn, _task_zp;
-  xt::xtensor<std::complex<double>, 3> _jx_yn, _jx_yp, _jx_zn, _jx_zp;
-  xt::xtensor<std::complex<double>, 3> _jy_xn, _jy_xp, _jy_zn, _jy_zp;
-  xt::xtensor<std::complex<double>, 3> _jz_xn, _jz_xp, _jz_yn, _jz_yp;
-  xt::xtensor<std::complex<double>, 3> _mx_yn, _mx_yp, _mx_zn, _mx_zp;
-  xt::xtensor<std::complex<double>, 3> _my_xn, _my_xp, _my_zn, _my_zp;
-  xt::xtensor<std::complex<double>, 3> _mz_xn, _mz_xp, _mz_yn, _mz_yp;
+  Real _freq;
+  IndexTask _task_xn, _task_xp, _task_yn, _task_yp, _task_zn, _task_zp;
+  Array3D<std::complex<Real>> _jx_yn, _jx_yp, _jx_zn, _jx_zp;
+  Array3D<std::complex<Real>> _jy_xn, _jy_xp, _jy_zn, _jy_zp;
+  Array3D<std::complex<Real>> _jz_xn, _jz_xp, _jz_yn, _jz_yp;
+  Array3D<std::complex<Real>> _mx_yn, _mx_yp, _mx_zn, _mx_zp;
+  Array3D<std::complex<Real>> _my_xn, _my_xp, _my_zn, _my_zp;
+  Array3D<std::complex<Real>> _mz_xn, _mz_xp, _mz_yn, _mz_yp;
 
-  xt::xtensor<std::complex<double>, 1> _transform_e;
-  xt::xtensor<std::complex<double>, 1> _transform_h;
+  Array1D<std::complex<Real>> _transform_e;
+  Array1D<std::complex<Real>> _transform_h;
 
   template <Axis::Direction direction>
   auto calculateJ(std::size_t current_time_step) -> void;
@@ -98,7 +98,7 @@ class FDPlaneData {
   auto calculateM(std::size_t current_time_step) -> void;
 
   template <Axis::Direction direction>
-  auto task() const -> const Divider::IndexTask&;
+  auto task() const -> const IndexTask&;
 
   template <Axis::XYZ xyz>
   static constexpr auto tangentialHaFieldEnum() -> EMF::Field;
@@ -114,38 +114,38 @@ class FDPlaneData {
 
   template <Axis::XYZ xyz, EMF::Field f>
   auto interpolate(const std::size_t& i, const std::size_t& j,
-                   const std::size_t& k) -> double;
+                   const std::size_t& k) -> Real;
 
   template <Potential potential, Axis::Direction direction>
-  auto surfaceCurrent() -> std::tuple<xt::xtensor<std::complex<double>, 3>&,
-                                      xt::xtensor<std::complex<double>, 3>&>;
+  auto surfaceCurrent() -> std::tuple<Array3D<std::complex<Real>>&,
+                                      Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
-  auto surfaceJ() -> std::tuple<xt::xtensor<std::complex<double>, 3>&,
-                                xt::xtensor<std::complex<double>, 3>&>;
+  auto surfaceJ() -> std::tuple<Array3D<std::complex<Real>>&,
+                                Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
-  auto surfaceM() -> std::tuple<xt::xtensor<std::complex<double>, 3>&,
-                                xt::xtensor<std::complex<double>, 3>&>;
+  auto surfaceM() -> std::tuple<Array3D<std::complex<Real>>&,
+                                Array3D<std::complex<Real>>&>;
 
   template <Potential potential, Axis::Direction direction>
   auto surfaceCurrent() const
-      -> std::tuple<const xt::xtensor<std::complex<double>, 3>&,
-                    const xt::xtensor<std::complex<double>, 3>&>;
+      -> std::tuple<const Array3D<std::complex<Real>>&,
+                    const Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
   auto surfaceJ() const
-      -> std::tuple<const xt::xtensor<std::complex<double>, 3>&,
-                    const xt::xtensor<std::complex<double>, 3>&>;
+      -> std::tuple<const Array3D<std::complex<Real>>&,
+                    const Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
   auto surfaceM() const
-      -> std::tuple<const xt::xtensor<std::complex<double>, 3>&,
-                    const xt::xtensor<std::complex<double>, 3>&>;
+      -> std::tuple<const Array3D<std::complex<Real>>&,
+                    const Array3D<std::complex<Real>>&>;
 };
 
 template <Axis::Direction direction>
-inline auto FDPlaneData::task() const -> const Divider::IndexTask& {
+inline auto FDPlaneData::task() const -> const IndexTask& {
   if constexpr (direction == Axis::Direction::XN) {
     return _task_xn;
   } else if constexpr (direction == Axis::Direction::XP) {
@@ -165,8 +165,8 @@ inline auto FDPlaneData::task() const -> const Divider::IndexTask& {
 
 template <FDPlaneData::Potential potential, Axis::Direction direction>
 inline auto FDPlaneData::surfaceCurrent()
-    -> std::tuple<xt::xtensor<std::complex<double>, 3>&,
-                  xt::xtensor<std::complex<double>, 3>&> {
+    -> std::tuple<Array3D<std::complex<Real>>&,
+                  Array3D<std::complex<Real>>&> {
   if constexpr (potential == Potential::A) {
     return surfaceJ<direction>();
   } else if constexpr (potential == Potential::F) {
@@ -178,8 +178,8 @@ inline auto FDPlaneData::surfaceCurrent()
 
 template <Axis::Direction direction>
 inline auto FDPlaneData::surfaceJ()
-    -> std::tuple<xt::xtensor<std::complex<double>, 3>&,
-                  xt::xtensor<std::complex<double>, 3>&> {
+    -> std::tuple<Array3D<std::complex<Real>>&,
+                  Array3D<std::complex<Real>>&> {
   if constexpr (direction == Axis::Direction::XN) {
     return std::make_tuple(std::ref(_jy_xn), std::ref(_jz_xn));
   } else if constexpr (direction == Axis::Direction::XP) {
@@ -199,8 +199,8 @@ inline auto FDPlaneData::surfaceJ()
 
 template <Axis::Direction direction>
 inline auto FDPlaneData::surfaceM()
-    -> std::tuple<xt::xtensor<std::complex<double>, 3>&,
-                  xt::xtensor<std::complex<double>, 3>&> {
+    -> std::tuple<Array3D<std::complex<Real>>&,
+                  Array3D<std::complex<Real>>&> {
   if constexpr (direction == Axis::Direction::XN) {
     return std::make_tuple(std::ref(_my_xn), std::ref(_mz_xn));
   } else if constexpr (direction == Axis::Direction::XP) {
@@ -220,8 +220,8 @@ inline auto FDPlaneData::surfaceM()
 
 template <FDPlaneData::Potential potential, Axis::Direction direction>
 inline auto FDPlaneData::surfaceCurrent() const
-    -> std::tuple<const xt::xtensor<std::complex<double>, 3>&,
-                  const xt::xtensor<std::complex<double>, 3>&> {
+    -> std::tuple<const Array3D<std::complex<Real>>&,
+                  const Array3D<std::complex<Real>>&> {
   if constexpr (potential == Potential::A) {
     return surfaceJ<direction>();
   } else if constexpr (potential == Potential::F) {
@@ -233,8 +233,8 @@ inline auto FDPlaneData::surfaceCurrent() const
 
 template <Axis::Direction direction>
 inline auto FDPlaneData::surfaceJ() const
-    -> std::tuple<const xt::xtensor<std::complex<double>, 3>&,
-                  const xt::xtensor<std::complex<double>, 3>&> {
+    -> std::tuple<const Array3D<std::complex<Real>>&,
+                  const Array3D<std::complex<Real>>&> {
   if constexpr (direction == Axis::Direction::XN) {
     return std::make_tuple(std::ref(_jy_xn), std::ref(_jz_xn));
   } else if constexpr (direction == Axis::Direction::XP) {
@@ -254,8 +254,8 @@ inline auto FDPlaneData::surfaceJ() const
 
 template <Axis::Direction direction>
 inline auto FDPlaneData::surfaceM() const
-    -> std::tuple<const xt::xtensor<std::complex<double>, 3>&,
-                  const xt::xtensor<std::complex<double>, 3>&> {
+    -> std::tuple<const Array3D<std::complex<Real>>&,
+                  const Array3D<std::complex<Real>>&> {
   if constexpr (direction == Axis::Direction::XN) {
     return std::make_tuple(std::ref(_my_xn), std::ref(_mz_xn));
   } else if constexpr (direction == Axis::Direction::XP) {

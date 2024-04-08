@@ -2,13 +2,13 @@
 #define _XFDTD_CORE_WAVEFORM_H_
 
 #include <functional>
-#include <xtensor/xarray.hpp>
+#include <xfdtd/common/type_define.h>
 
 namespace xfdtd {
 
 class Waveform {
  public:
-  explicit Waveform(std::function<double(double)> func, double amplitude = 1.0);
+  explicit Waveform(std::function<Real(Real)> func, Real amplitude = 1.0);
 
   Waveform(const Waveform&) = default;
 
@@ -21,49 +21,49 @@ class Waveform {
   ~Waveform() = default;
 
   // TODO(franzero): use std::unique_ptr<Waveform> instead of Waveform
-  static Waveform sine(double frequency, double amplitude = 1.0);
+  static Waveform sine(Real frequency, Real amplitude = 1.0);
 
-  static Waveform cosine(double frequency, double amplitude = 1.0);
+  static Waveform cosine(Real frequency, Real amplitude = 1.0);
 
-  static Waveform square(double frequency, double amplitude = 1.0);
+  static Waveform square(Real frequency, Real amplitude = 1.0);
 
-  static Waveform triangle(double frequency, double amplitude = 1.0);
+  static Waveform triangle(Real frequency, Real amplitude = 1.0);
 
-  static Waveform sawtooth(double frequency, double amplitude = 1.0);
+  static Waveform sawtooth(Real frequency, Real amplitude = 1.0);
 
-  static Waveform gaussian(double tau, double t_0, double amplitude = 1.0);
+  static Waveform gaussian(Real tau, Real t_0, Real amplitude = 1.0);
 
-  static Waveform cosineModulatedGaussian(double tau, double t_0,
-                                          double frequency,
-                                          double amplitude = 1.0);
+  static Waveform cosineModulatedGaussian(Real tau, Real t_0,
+                                          Real frequency,
+                                          Real amplitude = 1.0);
 
-  static Waveform step(double t_0, double amplitude = 1.0);
+  static Waveform step(Real t_0, Real amplitude = 1.0);
 
-  double operator()(double t);
+  Real operator()(Real t);
 
-  std::function<double(double)> func() const;
+  std::function<Real(Real)> func() const;
 
-  double amplitude() const;
+  Real amplitude() const;
 
-  const xt::xarray<double>& value() const;
+  const Array1D<Real>& value() const;
 
-  const xt::xarray<double>& time() const;
+  const Array1D<Real>& time() const;
 
-  xt::xarray<double>& value();
+  Array1D<Real>& value();
 
-  xt::xarray<double>& time();
+  Array1D<Real>& time();
 
-  void init(xt::xarray<double> time);
+  void init(Array1D<Real> time);
 
-  void setAmplitude(double amplitude);
+  void setAmplitude(Real amplitude);
 
  private:
-  std::function<double(double)> _func;
+  std::function<Real(Real)> _func;
 
-  double _amplitude;
+  Real _amplitude;
 
-  xt::xarray<double> _time;
-  xt::xarray<double> _value;
+  Array1D<Real> _time;
+  Array1D<Real> _value;
 };
 
 }  // namespace xfdtd

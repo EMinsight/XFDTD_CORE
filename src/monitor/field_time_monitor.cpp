@@ -70,20 +70,20 @@ auto FieldTimeMonitor::init(
                                           static_cast<size_t>(offset_j),
                                           static_cast<size_t>(offset_k)}});
 
-  setGlobalTask(Divider::makeIndexTask(
-      Divider::makeIndexRange(globalGridBox().origin().i(),
+  setGlobalTask(makeIndexTask(
+      makeIndexRange(globalGridBox().origin().i(),
                               globalGridBox().end().i()),
-      Divider::makeIndexRange(globalGridBox().origin().j(),
+      makeIndexRange(globalGridBox().origin().j(),
                               globalGridBox().end().j()),
-      Divider::makeIndexRange(globalGridBox().origin().k(),
+      makeIndexRange(globalGridBox().origin().k(),
                               globalGridBox().end().k())));
 
   setNodeTask(
-      Divider::makeIndexTask(Divider::makeIndexRange(nodeGridBox().origin().i(),
+      makeIndexTask(makeIndexRange(nodeGridBox().origin().i(),
                                                      nodeGridBox().end().i()),
-                             Divider::makeIndexRange(nodeGridBox().origin().j(),
+                             makeIndexRange(nodeGridBox().origin().j(),
                                                      nodeGridBox().end().j()),
-                             Divider::makeIndexRange(nodeGridBox().origin().k(),
+                             makeIndexRange(nodeGridBox().origin().k(),
                                                      nodeGridBox().end().k())));
 }
 
@@ -116,7 +116,7 @@ auto FieldTimeMonitor::initTimeDependentVariable() -> void {
       throw XFDTDEMFException("Invalid attribute type");
   }
 
-  data() = xt::zeros<double>({time().size()});
+  data() = xt::zeros<Real>({time().size()});
 }
 
 auto FieldTimeMonitor::initParallelizedConfig() -> void {

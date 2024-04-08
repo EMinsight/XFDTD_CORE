@@ -1,3 +1,4 @@
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/network/port.h>
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/util/dft.h>
@@ -6,7 +7,7 @@
 
 namespace xfdtd {
 
-Port::Port(std::size_t index, bool is_source, std::complex<double> impedance,
+Port::Port(std::size_t index, bool is_source, std::complex<Real> impedance,
            std::shared_ptr<CurrentMonitor> current_monitor,
            std::shared_ptr<VoltageMonitor> voltage_monitor)
     : _index{index},
@@ -19,7 +20,7 @@ std::size_t Port::index() const { return _index; }
 
 bool Port::isSource() const { return _is_source; }
 
-std::complex<double> Port::impedance() const { return _impedance; }
+std::complex<Real> Port::impedance() const { return _impedance; }
 
 const std::shared_ptr<CurrentMonitor>& Port::currentMonitor() const {
   return _current_monitor;
@@ -29,9 +30,9 @@ const std::shared_ptr<VoltageMonitor>& Port::voltageMonitor() const {
   return _voltage_monitor;
 }
 
-const xt::xarray<std::complex<double>>& Port::a() const { return _a; }
+const Array1D<std::complex<Real>>& Port::a() const { return _a; }
 
-const xt::xarray<std::complex<double>>& Port::b() const { return _b; }
+const Array1D<std::complex<Real>>& Port::b() const { return _b; }
 
 void Port::init(
     const std::shared_ptr<const GridSpace>& grid_space,
@@ -40,12 +41,12 @@ void Port::init(
   _dt = calculation_param->timeParam()->dt();
 }
 
-void Port::calculateSParameters(const xt::xarray<double>& frequencies) {
+void Port::calculateSParameters(const Array1D<Real>& frequencies) {
   const auto& c_const = *_current_monitor;
   const auto& v_const = *_voltage_monitor;
 
-  xt::xarray<double> current = xt::zeros_like(c_const.data());
-  xt::xarray<double> voltage = xt::zeros_like(v_const.data());
+  Array1D<Real> current = xt::zeros_like(c_const.data());
+  Array1D<Real> voltage = xt::zeros_like(v_const.data());
 
   /**
    * @brief Only root in the xfdtd comm can write data to file. First, let the
@@ -65,13 +66,14 @@ void Port::calculateSParameters(const xt::xarray<double>& frequencies) {
       }
 
       if (mpi_support.size() <= 1) {
-        throw XFDTDException("Port: Monitor is not valid, but MPI size is not 1. Please make sure you had add monitor to the simulation.");
+        throw XFDTDException(
+            "Port: Monitor is not valid, but MPI size is not 1. Please make "
+            "sure you had add monitor to the simulation.");
       }
 
       // xfdtd root is not in the monitor comm.
       mpi_support.recv(mpi_support.config(), data.data(),
-                       sizeof(double) * data.size(), MpiSupport::ANY_SOURCE,
-                       tag);
+                       sizeof(Real) * data.size(), MpiSupport::ANY_SOURCE, tag);
       return;
     }
 
@@ -87,8 +89,8 @@ void Port::calculateSParameters(const xt::xarray<double>& frequencies) {
     if (!mpi_support.isRoot() && const_monitor.monitorMpiConfig().isRoot()) {
       // monitor root send data to xfdtd root.
       mpi_support.send(mpi_support.config(), data.data(),
-                       sizeof(double) * data.size(),
-                       mpi_support.config().root(), tag);
+                       sizeof(Real) * data.size(), mpi_support.config().root(),
+                       tag);
       return;
     }
 
@@ -96,8 +98,7 @@ void Port::calculateSParameters(const xt::xarray<double>& frequencies) {
       // xfdtd root is in the monitor comm, but not the root of the monitor
       // comm.
       mpi_support.recv(mpi_support.config(), data.data(),
-                       sizeof(double) * data.size(), MpiSupport::ANY_SOURCE,
-                       tag);
+                       sizeof(Real) * data.size(), MpiSupport::ANY_SOURCE, tag);
     }
 
     // 1. not root in the xfdtd comm and not root in the monitor comm.

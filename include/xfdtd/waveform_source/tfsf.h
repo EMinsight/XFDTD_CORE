@@ -5,18 +5,18 @@
 
 #include <cstddef>
 #include <memory>
-#include <xtensor/xtensor.hpp>
+#include <xfdtd/common/type_define.h>
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
-#include "xfdtd/divider/divider.h"
+#include <xfdtd/common/index_task.h>
 #include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
 
 class TFSF : public WaveformSource {
  public:
-  TFSF(std::size_t x, std::size_t y, std::size_t z, double theta, double phi,
-       double psi, std::unique_ptr<Waveform> waveform);
+  TFSF(std::size_t x, std::size_t y, std::size_t z, Real theta, Real phi,
+       Real psi, std::unique_ptr<Waveform> waveform);
 
   TFSF(TFSF &&) noexcept = default;
 
@@ -38,157 +38,157 @@ class TFSF : public WaveformSource {
 
   std::size_t z() const;
 
-  double theta() const;
+  Real theta() const;
 
-  double phi() const;
+  Real phi() const;
 
-  double psi() const;
+  Real psi() const;
 
-  double sinTheta() const;
+  Real sinTheta() const;
 
-  double cosTheta() const;
+  Real cosTheta() const;
 
-  double sinPhi() const;
+  Real sinPhi() const;
 
-  double cosPhi() const;
+  Real cosPhi() const;
 
-  double sinPsi() const;
+  Real sinPsi() const;
 
-  double cosPsi() const;
+  Real cosPsi() const;
 
   Vector k() const;
 
   GridBox globalBox() const;
 
-  Divider::IndexTask taskXN() const;
+  IndexTask taskXN() const;
 
-  Divider::IndexTask taskXP() const;
+  IndexTask taskXP() const;
 
-  Divider::IndexTask taskYN() const;
+  IndexTask taskYN() const;
 
-  Divider::IndexTask taskYP() const;
+  IndexTask taskYP() const;
 
-  Divider::IndexTask taskZN() const;
+  IndexTask taskZN() const;
 
-  Divider::IndexTask taskZP() const;
+  IndexTask taskZP() const;
 
-  Divider::IndexTask globalEyTaskXN() const;
+  IndexTask globalEyTaskXN() const;
 
-  Divider::IndexTask globalEzTaskXN() const;
+  IndexTask globalEzTaskXN() const;
 
-  Divider::IndexTask globalEyTaskXP() const;
+  IndexTask globalEyTaskXP() const;
 
-  Divider::IndexTask globalEzTaskXP() const;
+  IndexTask globalEzTaskXP() const;
 
-  Divider::IndexTask globalEzTaskYN() const;
+  IndexTask globalEzTaskYN() const;
 
-  Divider::IndexTask globalExTaskYN() const;
+  IndexTask globalExTaskYN() const;
 
-  Divider::IndexTask globalEzTaskYP() const;
+  IndexTask globalEzTaskYP() const;
 
-  Divider::IndexTask globalExTaskYP() const;
+  IndexTask globalExTaskYP() const;
 
-  Divider::IndexTask globalExTaskZN() const;
+  IndexTask globalExTaskZN() const;
 
-  Divider::IndexTask globalEyTaskZN() const;
+  IndexTask globalEyTaskZN() const;
 
-  Divider::IndexTask globalExTaskZP() const;
+  IndexTask globalExTaskZP() const;
 
-  Divider::IndexTask globalEyTaskZP() const;
+  IndexTask globalEyTaskZP() const;
 
  protected:
   void defaultInit(std::shared_ptr<GridSpace> grid_space,
                    std::shared_ptr<CalculationParam> calculation_param,
                    std::shared_ptr<EMF> emf) override;
 
-  double exInc(std::size_t i, std::size_t j, std::size_t k);
+  Real exInc(std::size_t i, std::size_t j, std::size_t k);
 
-  double eyInc(std::size_t i, std::size_t j, std::size_t k);
+  Real eyInc(std::size_t i, std::size_t j, std::size_t k);
 
-  double ezInc(std::size_t i, std::size_t j, std::size_t k);
+  Real ezInc(std::size_t i, std::size_t j, std::size_t k);
 
-  double hxInc(std::size_t i, std::size_t j, std::size_t k);
+  Real hxInc(std::size_t i, std::size_t j, std::size_t k);
 
-  double hyInc(std::size_t i, std::size_t j, std::size_t k);
+  Real hyInc(std::size_t i, std::size_t j, std::size_t k);
 
-  double hzInc(std::size_t i, std::size_t j, std::size_t k);
+  Real hzInc(std::size_t i, std::size_t j, std::size_t k);
 
-  double cax();
+  Real cax();
 
-  double cay();
+  Real cay();
 
-  double caz();
+  Real caz();
 
-  double cbx();
+  Real cbx();
 
-  double cby();
+  Real cby();
 
-  double cbz();
+  Real cbz();
 
-  Divider::IndexTask nodeEyTaskXN(const Divider::IndexTask &task) const;
+  IndexTask nodeEyTaskXN(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEzTaskXN(const Divider::IndexTask &task) const;
+  IndexTask nodeEzTaskXN(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEyTaskXP(const Divider::IndexTask &task) const;
+  IndexTask nodeEyTaskXP(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEzTaskXP(const Divider::IndexTask &task) const;
+  IndexTask nodeEzTaskXP(const IndexTask &task) const;
 
-  Divider::IndexTask nodeExTaskYN(const Divider::IndexTask &task) const;
+  IndexTask nodeExTaskYN(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEzTaskYN(const Divider::IndexTask &task) const;
+  IndexTask nodeEzTaskYN(const IndexTask &task) const;
 
-  Divider::IndexTask nodeExTaskYP(const Divider::IndexTask &task) const;
+  IndexTask nodeExTaskYP(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEzTaskYP(const Divider::IndexTask &task) const;
+  IndexTask nodeEzTaskYP(const IndexTask &task) const;
 
-  Divider::IndexTask nodeExTaskZN(const Divider::IndexTask &task) const;
+  IndexTask nodeExTaskZN(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEyTaskZN(const Divider::IndexTask &task) const;
+  IndexTask nodeEyTaskZN(const IndexTask &task) const;
 
-  Divider::IndexTask nodeExTaskZP(const Divider::IndexTask &task) const;
+  IndexTask nodeExTaskZP(const IndexTask &task) const;
 
-  Divider::IndexTask nodeEyTaskZP(const Divider::IndexTask &task) const;
+  IndexTask nodeEyTaskZP(const IndexTask &task) const;
 
  protected:
-  xt::xarray<double> _projection_x_int;
-  xt::xarray<double> _projection_y_int;
-  xt::xarray<double> _projection_z_int;
-  xt::xarray<double> _projection_x_half;
-  xt::xarray<double> _projection_y_half;
-  xt::xarray<double> _projection_z_half;
+  Array1D<Real> _projection_x_int;
+  Array1D<Real> _projection_y_int;
+  Array1D<Real> _projection_z_int;
+  Array1D<Real> _projection_x_half;
+  Array1D<Real> _projection_y_half;
+  Array1D<Real> _projection_z_half;
 
-  xt::xarray<double> _ex_inc;
-  xt::xarray<double> _ey_inc;
-  xt::xarray<double> _ez_inc;
-  xt::xarray<double> _hx_inc;
-  xt::xarray<double> _hy_inc;
-  xt::xarray<double> _hz_inc;
+  Array1D<Real> _ex_inc;
+  Array1D<Real> _ey_inc;
+  Array1D<Real> _ez_inc;
+  Array1D<Real> _hx_inc;
+  Array1D<Real> _hy_inc;
+  Array1D<Real> _hz_inc;
 
  private:
   std::size_t _x, _y, _z;
-  double _theta, _phi, _psi;
-  double _sin_theta, _cos_theta, _sin_phi, _cos_phi, _sin_psi, _cos_psi;
+  Real _theta, _phi, _psi;
+  Real _sin_theta, _cos_theta, _sin_phi, _cos_phi, _sin_psi, _cos_psi;
   Vector _k;
-  xt::xtensor<double, 2> _rotation_matrix;
+  xt::xtensor<Real, 2> _rotation_matrix;
   Vector _k_e;
-  xt::xarray<double> _transform_e, _transform_h;
+  xt::xarray<Real> _transform_e, _transform_h;
 
   //   std::unique_ptr<GridBox> _box;
   GridBox _global_box;
-  double _ratio_delta;
+  Real _ratio_delta;
   std::size_t _auxiliary_size;
 
   // IFA
-  xt::xarray<double> _e_inc;
-  xt::xarray<double> _h_inc;
+  Array1D<Real> _e_inc;
+  Array1D<Real> _h_inc;
 
-  double _scaled_dl;
-  double _ceie;
-  double _chih;
-  double _ceihi;
-  double _chiei;
-  double _abc_coff_0, _abc_coff_1;
-  double _a, _b;
+  Real _scaled_dl;
+  Real _ceie;
+  Real _chih;
+  Real _ceihi;
+  Real _chiei;
+  Real _abc_coff_0, _abc_coff_1;
+  Real _a, _b;
 
   void initTransform();
 

@@ -2,7 +2,7 @@
 #include <numeric>
 
 #include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/util/constant.h"
+#include "xfdtd/common/constant.h"
 
 namespace xfdtd {
 

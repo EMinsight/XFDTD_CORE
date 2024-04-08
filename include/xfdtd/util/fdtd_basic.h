@@ -1,9 +1,12 @@
 #ifndef __XFDTD_BASIC_FDTD_BASIC_H__
 #define __XFDTD_BASIC_FDTD_BASIC_H__
 
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/index_task.h>
 
 #include <type_traits>
+
+#include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 
 namespace xfdtd::basic {
 
@@ -41,26 +44,26 @@ class GridStructure {
   static auto exFDTDUpdateZEnd(const Number auto& end_z) { return end_z; }
 
   template <Number T>
-  static auto exFDTDUpdateXRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(exFDTDUpdateXStart(range.start()),
+  static auto exFDTDUpdateXRange(const Range<T>& range) {
+    return makeRange(exFDTDUpdateXStart(range.start()),
                               exFDTDUpdateXEnd(range.end()));
   }
 
   template <Number T>
-  static auto exFDTDUpdateYRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(exFDTDUpdateYStart(range.start()),
+  static auto exFDTDUpdateYRange(const Range<T>& range) {
+    return makeRange(exFDTDUpdateYStart(range.start()),
                               exFDTDUpdateYEnd(range.end()));
   }
 
   template <Number T>
-  static auto exFDTDUpdateZRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(exFDTDUpdateZStart(range.start()),
+  static auto exFDTDUpdateZRange(const Range<T>& range) {
+    return makeRange(exFDTDUpdateZStart(range.start()),
                               exFDTDUpdateZEnd(range.end()));
   }
 
   template <Number T>
-  static auto exFDTDUpdateTask(const Divider::Task<T>& task) {
-    return Divider::makeTask(exFDTDUpdateXRange(task.xRange()),
+  static auto exFDTDUpdateTask(const Task<T>& task) {
+    return makeTask(exFDTDUpdateXRange(task.xRange()),
                              exFDTDUpdateYRange(task.yRange()),
                              exFDTDUpdateZRange(task.zRange()));
   }
@@ -93,26 +96,26 @@ class GridStructure {
   static auto eyFDTDUpdateZEnd(const Number auto& end_z) { return end_z; }
 
   template <Number T>
-  static auto eyFDTDUpdateXRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(eyFDTDUpdateXStart(range.start()),
+  static auto eyFDTDUpdateXRange(const Range<T>& range) {
+    return makeRange(eyFDTDUpdateXStart(range.start()),
                               eyFDTDUpdateXEnd(range.end()));
   }
 
   template <Number T>
-  static auto eyFDTDUpdateYRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(eyFDTDUpdateYStart(range.start()),
+  static auto eyFDTDUpdateYRange(const Range<T>& range) {
+    return makeRange(eyFDTDUpdateYStart(range.start()),
                               eyFDTDUpdateYEnd(range.end()));
   }
 
   template <Number T>
-  static auto eyFDTDUpdateZRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(eyFDTDUpdateZStart(range.start()),
+  static auto eyFDTDUpdateZRange(const Range<T>& range) {
+    return makeRange(eyFDTDUpdateZStart(range.start()),
                               eyFDTDUpdateZEnd(range.end()));
   }
 
   template <Number T>
-  static auto eyFDTDUpdateTask(const Divider::Task<T>& task) {
-    return Divider::makeTask(eyFDTDUpdateXRange(task.xRange()),
+  static auto eyFDTDUpdateTask(const Task<T>& task) {
+    return makeTask(eyFDTDUpdateXRange(task.xRange()),
                              eyFDTDUpdateYRange(task.yRange()),
                              eyFDTDUpdateZRange(task.zRange()));
   }
@@ -145,26 +148,26 @@ class GridStructure {
   static auto ezFDTDUpdateZEnd(const Number auto& end_z) { return end_z; }
 
   template <Number T>
-  static auto ezFDTDUpdateXRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(ezFDTDUpdateXStart(range.start()),
+  static auto ezFDTDUpdateXRange(const Range<T>& range) {
+    return makeRange(ezFDTDUpdateXStart(range.start()),
                               ezFDTDUpdateXEnd(range.end()));
   }
 
   template <Number T>
-  static auto ezFDTDUpdateYRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(ezFDTDUpdateYStart(range.start()),
+  static auto ezFDTDUpdateYRange(const Range<T>& range) {
+    return makeRange(ezFDTDUpdateYStart(range.start()),
                               ezFDTDUpdateYEnd(range.end()));
   }
 
   template <Number T>
-  static auto ezFDTDUpdateZRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(ezFDTDUpdateZStart(range.start()),
+  static auto ezFDTDUpdateZRange(const Range<T>& range) {
+    return makeRange(ezFDTDUpdateZStart(range.start()),
                               ezFDTDUpdateZEnd(range.end()));
   }
 
   template <Number T>
-  static auto ezFDTDUpdateTask(const Divider::Task<T>& task) {
-    return Divider::makeTask(ezFDTDUpdateXRange(task.xRange()),
+  static auto ezFDTDUpdateTask(const Task<T>& task) {
+    return makeTask(ezFDTDUpdateXRange(task.xRange()),
                              ezFDTDUpdateYRange(task.yRange()),
                              ezFDTDUpdateZRange(task.zRange()));
   }
@@ -221,26 +224,26 @@ class GridStructure {
   }
 
   template <Number T>
-  static auto hFDTDUpdateXRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(hFDTDUpdateXStart(range.start()),
+  static auto hFDTDUpdateXRange(const Range<T>& range) {
+    return makeRange(hFDTDUpdateXStart(range.start()),
                               hFDTDUpdateXEnd(range.end()));
   }
 
   template <Number T>
-  static auto hFDTDUpdateYRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(hFDTDUpdateYStart(range.start()),
+  static auto hFDTDUpdateYRange(const Range<T>& range) {
+    return makeRange(hFDTDUpdateYStart(range.start()),
                               hFDTDUpdateYEnd(range.end()));
   }
 
   template <Number T>
-  static auto hFDTDUpdateZRange(const Divider::Range<T>& range) {
-    return Divider::makeRange(hFDTDUpdateZStart(range.start()),
+  static auto hFDTDUpdateZRange(const Range<T>& range) {
+    return makeRange(hFDTDUpdateZStart(range.start()),
                               hFDTDUpdateZEnd(range.end()));
   }
 
   template <Number T>
-  static auto hFDTDUpdateTask(const Divider::Task<T>& task) {
-    return Divider::makeTask(hFDTDUpdateXRange(task.xRange()),
+  static auto hFDTDUpdateTask(const Task<T>& task) {
+    return makeTask(hFDTDUpdateXRange(task.xRange()),
                              hFDTDUpdateYRange(task.yRange()),
                              hFDTDUpdateZRange(task.zRange()));
   }
@@ -307,6 +310,58 @@ class GridStructure {
 };
 
 class FieldStruture {};
+
+namespace grid_layout {
+
+template <Number T, EMF::Attribute attribute_c, Axis::XYZ xyz_c>
+inline auto diffPreNodeAxisA(T& i, T& j, T& k) {
+  if constexpr (attribute_c == EMF::Attribute::E) {
+    throw std::invalid_argument("not implemented");
+  } else if constexpr (attribute_c == EMF::Attribute::H) {
+    return;
+  }
+}
+
+template <Number T, EMF::Attribute attribute_c, Axis::XYZ xyz_c>
+inline auto diffPreNodeAxisB(T& i, T& j, T& k) {
+  if constexpr (attribute_c == EMF::Attribute::E) {
+    throw std::invalid_argument("not implemented");
+  } else if constexpr (attribute_c == EMF::Attribute::H) {
+    return;
+  }
+}
+
+template <Number T, EMF::Attribute attribute_c, Axis::XYZ xyz_c>
+inline auto diffNexNodeAxisA(T& i, T& j, T& k) {
+  if constexpr (attribute_c == EMF::Attribute::E) {
+    return;
+  } else if constexpr (attribute_c == EMF::Attribute::H) {
+    if constexpr (xyz_c == Axis::XYZ::X) {
+      ++k;
+    } else if constexpr (xyz_c == Axis::XYZ::Y) {
+      ++i;
+    } else if constexpr (xyz_c == Axis::XYZ::Z) {
+      ++j;
+    }
+  }
+}
+
+template <Number T, EMF::Attribute attribute_c, Axis::XYZ xyz_c>
+inline auto diffNexNodeAxisB(T& i, T& j, T& k) {
+  if constexpr (attribute_c == EMF::Attribute::E) {
+    return;
+  } else if constexpr (attribute_c == EMF::Attribute::H) {
+    if constexpr (xyz_c == Axis::XYZ::X) {
+      ++j;
+    } else if constexpr (xyz_c == Axis::XYZ::Y) {
+      ++k;
+    } else if constexpr (xyz_c == Axis::XYZ::Z) {
+      ++i;
+    }
+  }
+}
+
+}  // namespace grid_layout
 
 }  // namespace xfdtd::basic
 

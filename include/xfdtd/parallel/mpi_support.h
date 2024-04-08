@@ -1,10 +1,12 @@
 #ifndef __XFDTD_CORE_MPI_SUPPORT_H__
 #define __XFDTD_CORE_MPI_SUPPORT_H__
 
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/exception/exception.h>
 #include <xfdtd/parallel/mpi_config.h>
 
 #include <complex>
-#include <xtensor/xarray.hpp>
+
 #if defined(XFDTD_CORE_WITH_MPI)
 #include <mpi.h>
 #endif
@@ -13,8 +15,9 @@ namespace xfdtd {
 
 class XFDTDMpiSupportException : public XFDTDException {
  public:
-  explicit XFDTDMpiSupportException(const std::string& message)
-      : XFDTDException("XFDTD Mpi Support Exception: " + message) {}
+  explicit XFDTDMpiSupportException(
+      const std::string& message = "XFDTD Mpi Support Exception")
+      : XFDTDException(message) {}
 };
 
 class MpiSupport {
@@ -265,29 +268,29 @@ class MpiSupport {
 
   auto zPrev() const -> int;
 
-  auto sendRecvHyXHead(xt::xarray<double>& hy) -> void;
+  auto sendRecvHyXHead(Array3D<Real>& hy) -> void;
 
-  auto recvSendHyXTail(xt::xarray<double>& hy) -> void;
+  auto recvSendHyXTail(Array3D<Real>& hy) -> void;
 
-  auto sendRecvHzXHead(xt::xarray<double>& hz) -> void;
+  auto sendRecvHzXHead(Array3D<Real>& hz) -> void;
 
-  auto recvSendHzXTail(xt::xarray<double>& hz) -> void;
+  auto recvSendHzXTail(Array3D<Real>& hz) -> void;
 
-  auto sendRecvHzYHead(xt::xarray<double>& hz) -> void;
+  auto sendRecvHzYHead(Array3D<Real>& hz) -> void;
 
-  auto recvSendHzYTail(xt::xarray<double>& hz) -> void;
+  auto recvSendHzYTail(Array3D<Real>& hz) -> void;
 
-  auto sendRecvHxYHead(xt::xarray<double>& hx) -> void;
+  auto sendRecvHxYHead(Array3D<Real>& hx) -> void;
 
-  auto recvSendHxYTail(xt::xarray<double>& hx) -> void;
+  auto recvSendHxYTail(Array3D<Real>& hx) -> void;
 
-  auto sendRecvHxZHead(xt::xarray<double>& hx) -> void;
+  auto sendRecvHxZHead(Array3D<Real>& hx) -> void;
 
-  auto recvSendHxZTail(xt::xarray<double>& hx) -> void;
+  auto recvSendHxZTail(Array3D<Real>& hx) -> void;
 
-  auto sendRecvHyZHead(xt::xarray<double>& hy) -> void;
+  auto sendRecvHyZHead(Array3D<Real>& hy) -> void;
 
-  auto recvSendHyZTail(xt::xarray<double>& hy) -> void;
+  auto recvSendHyZTail(Array3D<Real>& hy) -> void;
 
   auto waitAll() -> void;
 
@@ -308,7 +311,7 @@ class MpiSupport {
   auto send(const MpiConfig& config, const void* buf, int count,
             const TypeGuard& type, int dest, int tag) -> void;
 
-  auto send(const MpiConfig& config, const double* buf, int count,
+  auto send(const MpiConfig& config, const Real* buf, int count,
             const Block& block, int dest, int tag) -> void;
 
   /**
@@ -329,7 +332,7 @@ class MpiSupport {
   auto iSend(const MpiConfig& config, const void* buf, int count,
              const TypeGuard& type, int dest, int tag) -> std::size_t;
 
-  auto iSend(const MpiConfig& config, const double* buf, int count,
+  auto iSend(const MpiConfig& config, const Real* buf, int count,
              const Block& block, int dest, int tag) -> std::size_t;
 
   auto recv(const MpiConfig& config, void* buf, int count, int source, int tag)
@@ -338,7 +341,7 @@ class MpiSupport {
   auto recv(const MpiConfig& config, void* buf, int count,
             const TypeGuard& type, int source, int tag) -> void;
 
-  auto recv(const MpiConfig& config, double* buf, int count, const Block& block,
+  auto recv(const MpiConfig& config, Real* buf, int count, const Block& block,
             int source, int tag) -> void;
 
   auto iRecv(const MpiConfig& config, void* buf, int count, int source, int tag)
@@ -347,7 +350,7 @@ class MpiSupport {
   auto iRecv(const MpiConfig& config, void* buf, int count,
              const TypeGuard& type, int source, int tag) -> std::size_t;
 
-  auto iRecv(const MpiConfig& config, double* buf, int count,
+  auto iRecv(const MpiConfig& config, Real* buf, int count,
              const Block& block, int source, int tag) -> std::size_t;
 
   auto sendRecv(const MpiConfig& config, const void* send_buf, int send_count,
@@ -359,8 +362,8 @@ class MpiSupport {
                 void* recv_buf, int recv_count, const TypeGuard& recv_type,
                 int source, int recv_tag) -> void;
 
-  auto sendRecv(const MpiConfig& config, const double* send_buf, int send_count,
-                int dest, int send_tag, double* recv_buf, int recv_count,
+  auto sendRecv(const MpiConfig& config, const Real* send_buf, int send_count,
+                int dest, int send_tag, Real* recv_buf, int recv_count,
                 const Block& recv_block, int source, int recv_tag) -> void;
 
   auto iSendRecv(const MpiConfig& config, const void* send_buf, int send_count,
@@ -372,8 +375,8 @@ class MpiSupport {
                  void* recv_buf, int recv_count, const TypeGuard& recv_type,
                  int source, int recv_tag) -> std::size_t;
 
-  auto iSendRecv(const MpiConfig& config, const double* send_buf,
-                 int send_count, int dest, int send_tag, double* recv_buf,
+  auto iSendRecv(const MpiConfig& config, const Real* send_buf,
+                 int send_count, int dest, int send_tag, Real* recv_buf,
                  int recv_count, const Block& recv_block, int source,
                  int recv_tag) -> std::size_t;
 
@@ -384,8 +387,8 @@ class MpiSupport {
               const TypeGuard& send_type, void* recv_buf, int recv_count,
               const TypeGuard& recv_type, int root) -> void;
 
-  auto gather(const MpiConfig& config, const double* send_buf, int send_count,
-              double* recv_buf, int recv_count, const Block& recv_block,
+  auto gather(const MpiConfig& config, const Real* send_buf, int send_count,
+              Real* recv_buf, int recv_count, const Block& recv_block,
               int root) -> void;
 
   auto iGather(const MpiConfig& config, const void* send_buf, int send_count,
@@ -395,19 +398,18 @@ class MpiSupport {
                const TypeGuard& send_type, void* recv_buf, int recv_count,
                const TypeGuard& recv_type, int root) -> std::size_t;
 
-  auto iGather(const MpiConfig& config, const double* send_buf, int send_count,
-               double* recv_buf, int recv_count, const Block& recv_block,
+  auto iGather(const MpiConfig& config, const Real* send_buf, int send_count,
+               Real* recv_buf, int recv_count, const Block& recv_block,
                int root) -> std::size_t;
 
   auto allGather(const MpiConfig& config, const void* send_buf, int send_count,
                  void* recv_buf, int recv_count) -> void;
 
-  auto reduceSum(const MpiConfig& config, const double* send_buf,
-                 double* recv_buf, int count) -> void;
+  auto reduceSum(const MpiConfig& config, const Real* send_buf,
+                 Real* recv_buf, int count) -> void;
 
-  auto reduceSum(const MpiConfig& config, const std::complex<double>* send_buf,
-                 std::complex<double>* recv_buf, int count) const
-      -> void;
+  auto reduceSum(const MpiConfig& config, const std::complex<Real>* send_buf,
+                 std::complex<Real>* recv_buf, int count) const -> void;
 
  private:
   explicit MpiSupport(int argc = 0, char** argv = nullptr);

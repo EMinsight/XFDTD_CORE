@@ -1,10 +1,9 @@
 #include <xfdtd/boundary/pml.h>
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
-#include <xfdtd/divider/divider.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
-#include <xfdtd/util/constant.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/util/transform.h>
 
 #include <cassert>
@@ -22,12 +21,12 @@
 namespace xfdtd {
 
 PML::PML(int thickness, Axis::Direction direction, int order,
-         double sigma_ratio, double alpha_min, double alpha_max,
-         double kappa_max)
+         Real sigma_ratio, Real alpha_min, Real alpha_max,
+         Real kappa_max)
     : _thickness{thickness},
       _n{static_cast<std::size_t>(std::abs(thickness))},
       _direction{direction},
-      _main_axis{Axis::formDirectionToXYZ(direction)},
+      _main_axis{Axis::fromDirectionToXYZ(direction)},
       _order{order},
       _sigma_ratio{sigma_ratio},
       _alpha_min{alpha_min},
@@ -92,11 +91,11 @@ std::size_t PML::n() const { return _n; }
 
 std::size_t PML::nodeN() const { return _pml_node_task_abc.zRange().size(); }
 
-const xt::xarray<double>& PML::globalESize() const { return _global_e_size; }
+const Array1D<Real>& PML::globalESize() const { return _global_e_size; }
 
-const xt::xarray<double>& PML::globalHSize() const { return _global_h_size; }
+const Array1D<Real>& PML::globalHSize() const { return _global_h_size; }
 
-xt::xarray<double>& PML::eaF() {
+Array3D<Real>& PML::eaF() {
   switch (mainAxis()) {
     case Axis::XYZ::X:
       return emfPtr()->ey();
@@ -109,7 +108,7 @@ xt::xarray<double>& PML::eaF() {
   }
 }
 
-xt::xarray<double>& PML::ebF() {
+Array3D<Real>& PML::ebF() {
   switch (mainAxis()) {
     case Axis::XYZ::X:
       return emfPtr()->ez();
@@ -122,8 +121,8 @@ xt::xarray<double>& PML::ebF() {
   }
 }
 
-xt::xarray<double>& PML::haF() {
-  switch (Axis::formDirectionToXYZ(_direction)) {
+Array3D<Real>& PML::haF() {
+  switch (Axis::fromDirectionToXYZ(_direction)) {
     case Axis::XYZ::X:
       return emfPtr()->hy();
     case Axis::XYZ::Y:
@@ -135,7 +134,7 @@ xt::xarray<double>& PML::haF() {
   }
 }
 
-xt::xarray<double>& PML::hbF() {
+Array3D<Real>& PML::hbF() {
   switch (mainAxis()) {
     case Axis::XYZ::X:
       return emfPtr()->hz();
@@ -198,39 +197,39 @@ void PML::init(std::shared_ptr<const GridSpace> grid_space,
   _global_nb = global_space->eSize(subAxisB()).size();
 
   auto node_global_box = gridSpacePtr()->globalBox();
-  auto node_global_task = Divider::makeIndexTask(
-      Divider::makeIndexRange(node_global_box.origin().i(),
+  auto node_global_task = makeIndexTask(
+      makeIndexRange(node_global_box.origin().i(),
                               node_global_box.end().i()),
-      Divider::makeIndexRange(node_global_box.origin().j(),
+      makeIndexRange(node_global_box.origin().j(),
                               node_global_box.end().j()),
-      Divider::makeIndexRange(node_global_box.origin().k(),
+      makeIndexRange(node_global_box.origin().k(),
                               node_global_box.end().k()));
 
-  _pml_global_task_abc = Divider::makeIndexTask(
-      Divider::makeIndexRange(0, _global_na),
-      Divider::makeIndexRange(0, _global_nb),
-      Divider::makeIndexRange(globalHNodeStartIndexMainAxis(),
+  _pml_global_task_abc = makeIndexTask(
+      makeIndexRange(0, _global_na),
+      makeIndexRange(0, _global_nb),
+      makeIndexRange(globalHNodeStartIndexMainAxis(),
                               globalHNodeStartIndexMainAxis() + n()));
   auto [x, y, z] =
       transform::aBCToXYZ(std::make_tuple(_pml_global_task_abc.xRange(),
                                           _pml_global_task_abc.yRange(),
                                           _pml_global_task_abc.zRange()),
                           mainAxis());
-  _pml_global_task = Divider::makeIndexTask(x, y, z);
+  _pml_global_task = makeIndexTask(x, y, z);
 
-  auto t = Divider::taskIntersection(node_global_task, _pml_global_task);
+  auto t = taskIntersection(node_global_task, _pml_global_task);
   if (!t.has_value()) {
-    _pml_node_task = Divider::makeIndexTask(Divider::makeIndexRange(0, 0),
-                                            Divider::makeIndexRange(0, 0),
-                                            Divider::makeIndexRange(0, 0));
-    _pml_node_task_abc = Divider::makeIndexTask(Divider::makeIndexRange(0, 0),
-                                                Divider::makeIndexRange(0, 0),
-                                                Divider::makeIndexRange(0, 0));
+    _pml_node_task = makeIndexTask(makeIndexRange(0, 0),
+                                            makeIndexRange(0, 0),
+                                            makeIndexRange(0, 0));
+    _pml_node_task_abc = makeIndexTask(makeIndexRange(0, 0),
+                                                makeIndexRange(0, 0),
+                                                makeIndexRange(0, 0));
     return;
   }
 
   _pml_node_task = t.value();
-  _pml_node_task = Divider::makeIndexTask(
+  _pml_node_task = makeIndexTask(
       _pml_node_task.xRange() - node_global_box.origin().i(),
       _pml_node_task.yRange() - node_global_box.origin().j(),
       _pml_global_task.zRange() - node_global_box.origin().k());
@@ -239,7 +238,7 @@ void PML::init(std::shared_ptr<const GridSpace> grid_space,
       std::make_tuple(_pml_node_task.xRange(), _pml_node_task.yRange(),
                       _pml_node_task.zRange()),
       mainAxis());
-  _pml_node_task_abc = Divider::makeIndexTask(a, b, c);
+  _pml_node_task_abc = makeIndexTask(a, b, c);
 
   if (Axis::directionNegative(direction())) {
     _node_e_start_index = _pml_node_task_abc.zRange().start() + 1;
@@ -285,12 +284,12 @@ void PML::correctUpdateCoefficient() {
 }
 
 std::unique_ptr<Corrector> PML::generateDomainCorrector(
-    const Divider::Task<std::size_t>& task) {
-  if (!_pml_node_task.valid() || !Divider::intersected(task, _pml_node_task)) {
+    const Task<std::size_t>& task) {
+  if (!_pml_node_task.valid() || !intersected(task, _pml_node_task)) {
     return nullptr;
   }
 
-  auto t = Divider::taskIntersection(task, _pml_node_task);
+  auto t = taskIntersection(task, _pml_node_task);
   if (!t.has_value()) {
     return nullptr;
   }
@@ -299,7 +298,7 @@ std::unique_ptr<Corrector> PML::generateDomainCorrector(
       std::make_tuple(t.value().xRange(), t.value().yRange(),
                       t.value().zRange()),
       mainAxis());
-  auto t_abc = Divider::makeIndexTask(a, b, c_h_n);
+  auto t_abc = makeIndexTask(a, b, c_h_n);
 
   auto a_s = t_abc.xRange().start();
   auto a_n = t_abc.xRange().size();
@@ -353,13 +352,13 @@ void PML::correctCoefficientX() {
   const auto node_h_start = nodeHNodeStartIndexMainAxis();
   const auto offset = gridSpacePtr()->globalBox().origin();
 
-  _c_ea_psi_hb = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
-  _ea_psi_hb = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
+  _c_ea_psi_hb = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
+  _ea_psi_hb = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
 
   auto& ceahb{calculationParamPtr()->fdtdCoefficient()->ceyhz()};
 
-  _c_eb_psi_ha = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
-  _eb_psi_ha = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
+  _c_eb_psi_ha = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
+  _eb_psi_ha = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
 
   auto& cebha{calculationParamPtr()->fdtdCoefficient()->cezhy()};
 
@@ -386,13 +385,13 @@ void PML::correctCoefficientX() {
     }
   }
 
-  _c_ha_psi_eb = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
-  _ha_psi_eb = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
+  _c_ha_psi_eb = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
+  _ha_psi_eb = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
 
   auto& chaeb{calculationParamPtr()->fdtdCoefficient()->chyez()};
 
-  _c_hb_psi_ea = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
-  _hb_psi_ea = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
+  _c_hb_psi_ea = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
+  _hb_psi_ea = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
 
   auto& chbea{calculationParamPtr()->fdtdCoefficient()->chzey()};
 
@@ -431,12 +430,12 @@ void PML::correctCoefficientY() {
   const auto node_h_start = nodeHNodeStartIndexMainAxis();
   const auto offset = gridSpacePtr()->globalBox().origin();
 
-  _c_ea_psi_hb = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
-  _ea_psi_hb = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
+  _c_ea_psi_hb = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
+  _ea_psi_hb = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
   auto& ceahb{calculationParamPtr()->fdtdCoefficient()->cezhx()};
 
-  _c_eb_psi_ha = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
-  _eb_psi_ha = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
+  _c_eb_psi_ha = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
+  _eb_psi_ha = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
   auto& cebha{calculationParamPtr()->fdtdCoefficient()->cexhz()};
 
   for (std::size_t i{0}; i < node_nx + 1; ++i) {
@@ -465,12 +464,12 @@ void PML::correctCoefficientY() {
     }
   }
 
-  _c_ha_psi_eb = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
-  _ha_psi_eb = xt::zeros<double>({node_nx, node_ny, node_nz + 1});
+  _c_ha_psi_eb = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
+  _ha_psi_eb = xt::zeros<Real>({node_nx, node_ny, node_nz + 1});
   auto& chaeb{calculationParamPtr()->fdtdCoefficient()->chzex()};
 
-  _c_hb_psi_ea = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
-  _hb_psi_ea = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
+  _c_hb_psi_ea = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
+  _hb_psi_ea = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
   auto& chbea{calculationParamPtr()->fdtdCoefficient()->chxez()};
 
   for (std::size_t i{0}; i < node_nx; ++i) {
@@ -511,12 +510,12 @@ void PML::correctCoefficientZ() {
   const auto node_h_start = nodeHNodeStartIndexMainAxis();
   const auto offset = gridSpacePtr()->globalBox().origin();
 
-  _c_ea_psi_hb = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
-  _ea_psi_hb = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
+  _c_ea_psi_hb = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
+  _ea_psi_hb = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
   auto& ceahb{calculationParamPtr()->fdtdCoefficient()->cexhy()};
 
-  _c_eb_psi_ha = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
-  _eb_psi_ha = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
+  _c_eb_psi_ha = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
+  _eb_psi_ha = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
   auto& cebha{calculationParamPtr()->fdtdCoefficient()->ceyhx()};
 
   for (std::size_t i{0}; i < node_nx; ++i) {
@@ -545,13 +544,13 @@ void PML::correctCoefficientZ() {
     }
   }
 
-  _c_ha_psi_eb = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
-  _ha_psi_eb = xt::zeros<double>({node_nx + 1, node_ny, node_nz});
+  _c_ha_psi_eb = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
+  _ha_psi_eb = xt::zeros<Real>({node_nx + 1, node_ny, node_nz});
 
   auto& chaeb{calculationParamPtr()->fdtdCoefficient()->chxey()};
 
-  _c_hb_psi_ea = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
-  _hb_psi_ea = xt::zeros<double>({node_nx, node_ny + 1, node_nz});
+  _c_hb_psi_ea = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
+  _hb_psi_ea = xt::zeros<Real>({node_nx, node_ny + 1, node_nz});
 
   auto& chbea{calculationParamPtr()->fdtdCoefficient()->chyex()};
 
@@ -583,8 +582,8 @@ void PML::correctCoefficientZ() {
 }
 
 void PML::calRecursiveConvolutionCoeff() {
-  double min_h_size{xt::amin(globalHSize())()};
-  double sigma_max_e = calculateSigmaMax(min_h_size);
+  Real min_h_size{xt::amin(globalHSize())()};
+  Real sigma_max_e = calculateSigmaMax(min_h_size);
   auto rho_e{calculateRhoE(n(), globalHSize())};
   auto sigma_e{calculateSigma(sigma_max_e, rho_e, _order)};
   auto alpha_e{calculateAlpha(_alpha_min, _alpha_max, rho_e)};
@@ -598,9 +597,9 @@ void PML::calRecursiveConvolutionCoeff() {
   _coeff_a_e = calculateCoefficientA(_coeff_b_e, sigma_e, _kappa_e, alpha_e,
                                      globalHSize());
 
-  double e2m{constant::MU_0 / constant::EPSILON_0};
+  Real e2m{constant::MU_0 / constant::EPSILON_0};
   auto min_e_size{xt::amin(globalESize())()};
-  double sigma_max_m{calculateSigmaMax(min_e_size) * e2m};
+  Real sigma_max_m{calculateSigmaMax(min_e_size) * e2m};
   auto rho_m{calculateRhoM(n(), globalESize())};
   auto sigma_m{calculateSigma(sigma_max_m, rho_m, _order)};
   auto alpha_m{calculateAlpha(_alpha_min, _alpha_max, rho_m) * e2m};
@@ -615,18 +614,18 @@ void PML::calRecursiveConvolutionCoeff() {
                                      globalESize());
 }
 
-double PML::calculateSigmaMax(double dl) const {
+Real PML::calculateSigmaMax(Real dl) const {
   return _sigma_ratio * (_order + 1) / (150 * constant::PI * dl);
 }
 
-xt::xarray<double> PML::calculateRhoE(std::size_t n,
-                                      const xt::xarray<double>& size) const {
+Array1D<Real> PML::calculateRhoE(std::size_t n,
+                                      const Array1D<Real>& size) const {
   assert(n == size.size());
   auto interval{size - 0.75 * size};
-  xt::xarray<double> d;
+  Array1D<Real> d;
   d.resize({n});
   d(0) = interval(0);
-  double sum{0};
+  Real sum{0};
   for (std::size_t i{1}; i < n; ++i) {
     sum += size(i - 1);
     d(i) = sum + interval(i);
@@ -640,14 +639,14 @@ xt::xarray<double> PML::calculateRhoE(std::size_t n,
   return d / sum;
 }
 
-xt::xarray<double> PML::calculateRhoM(std::size_t n,
-                                      const xt::xarray<double>& size) const {
+Array1D<Real> PML::calculateRhoM(std::size_t n,
+                                      const Array1D<Real>& size) const {
   assert(n == size.size());
   auto interval{size - 0.25 * size};
-  xt::xarray<double> d;
+  Array1D<Real> d;
   d.resize({n});
   d(0) = interval(0);
-  double sum{0};
+  Real sum{0};
   for (std::size_t i{1}; i < n; ++i) {
     sum += size(i - 1);
     d(i) = sum + interval(i);
@@ -661,41 +660,41 @@ xt::xarray<double> PML::calculateRhoM(std::size_t n,
   return d / sum;
 }
 
-xt::xarray<double> PML::calculateSigma(double sigma_max,
-                                       const xt::xarray<double>& rho,
+Array1D<Real> PML::calculateSigma(Real sigma_max,
+                                       const Array1D<Real>& rho,
                                        std::size_t order) const {
   return sigma_max * xt::pow(rho, _order);
 }
 
-xt::xarray<double> PML::calculateKappa(double kappa_max,
-                                       const xt::xarray<double>& rho,
+Array1D<Real> PML::calculateKappa(Real kappa_max,
+                                       const Array1D<Real>& rho,
                                        std::size_t order) const {
   return 1 + (kappa_max - 1) * xt::pow(rho, _order);
 }
 
-xt::xarray<double> PML::calculateAlpha(double alpha_min, double alpha_max,
-                                       const xt::xarray<double>& rho) const {
+Array1D<Real> PML::calculateAlpha(Real alpha_min, Real alpha_max,
+                                       const Array1D<Real>& rho) const {
   return alpha_min + (alpha_max - alpha_min) * (1 - rho);
 }
 
-xt::xarray<double> PML::calculateCoefficientA(
-    const xt::xarray<double>& b, const xt::xarray<double>& sigma,
-    const xt::xarray<double>& kappa, const xt::xarray<double>& alpha,
-    const xt::xarray<double>& dl) const {
+Array1D<Real> PML::calculateCoefficientA(
+    const Array1D<Real>& b, const Array1D<Real>& sigma,
+    const Array1D<Real>& kappa, const Array1D<Real>& alpha,
+    const Array1D<Real>& dl) const {
   return (b - 1) * sigma / ((sigma + kappa * alpha) * kappa * dl);
 }
 
-xt::xarray<double> PML::calculateCoefficientB(const xt::xarray<double>& sigma,
-                                              const xt::xarray<double>& kappa,
-                                              const xt::xarray<double>& alpha,
-                                              double dt,
-                                              double constant) const {
+Array1D<Real> PML::calculateCoefficientB(const Array1D<Real>& sigma,
+                                              const Array1D<Real>& kappa,
+                                              const Array1D<Real>& alpha,
+                                              Real dt,
+                                              Real constant) const {
   return xt::exp((-dt / constant) * (sigma / kappa + alpha));
 }
 
-xt::xarray<double> PML::calculateCoeffPsi(const xt::xarray<double>& coeff,
-                                          const xt::xarray<double>& kappa,
-                                          const xt::xarray<double>& dl) const {
+Array1D<Real> PML::calculateCoeffPsi(const Array1D<Real>& coeff,
+                                          const Array1D<Real>& kappa,
+                                          const Array1D<Real>& dl) const {
   return coeff * dl;
 }
 

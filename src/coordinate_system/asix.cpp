@@ -68,7 +68,7 @@ Axis Axis::fromDirectionToAxis(Axis::Direction direction) {
   }
 }
 
-Axis::XYZ Axis::formDirectionToXYZ(Axis::Direction direction) {
+auto Axis::fromDirectionToXYZ(Axis::Direction direction) -> Axis::XYZ {
   switch (direction) {
     case Axis::Direction::XN:
     case Axis::Direction::XP:
@@ -81,6 +81,66 @@ Axis::XYZ Axis::formDirectionToXYZ(Axis::Direction direction) {
       return Axis::XYZ::Z;
     default:
       throw XFDTDCoordinateSystemAxisDirectionException{};
+  }
+}
+
+auto Axis::tangentialAAxis(Axis::XYZ c) -> Axis::XYZ {
+  switch (c) {
+    case Axis::XYZ::X:
+      return Axis::XYZ::Y;
+    case Axis::XYZ::Y:
+      return Axis::XYZ::Z;
+    case Axis::XYZ::Z:
+      return Axis::XYZ::X;
+    default:
+      throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
+  }
+}
+
+auto Axis::tangentialBAxis(Axis::XYZ c) -> Axis::XYZ {
+  switch (c) {
+    case Axis::XYZ::X:
+      return Axis::XYZ::Z;
+    case Axis::XYZ::Y:
+      return Axis::XYZ::X;
+    case Axis::XYZ::Z:
+      return Axis::XYZ::Y;
+    default:
+      throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
+  }
+}
+
+auto Axis::crossProduct(Axis::XYZ a, Axis::XYZ b) -> Axis::Direction {
+  switch (a) {
+    case Axis::XYZ::X:
+      switch (b) {
+        case Axis::XYZ::Y:
+          return Axis::Direction::ZP;
+        case Axis::XYZ::Z:
+          return Axis::Direction::YN;
+        default:
+          throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
+      }
+    case Axis::XYZ::Y:
+      switch (b) {
+        case Axis::XYZ::Z:
+          return Axis::Direction::XP;
+        case Axis::XYZ::X:
+          return Axis::Direction::ZN;
+        default:
+          throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
+      }
+    case Axis::XYZ::Z:
+      switch (b) {
+        case Axis::XYZ::X:
+          return Axis::Direction::YP;
+        case Axis::XYZ::Y:
+          return Axis::Direction::XN;
+        default:
+          throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
+      }
+    default:
+      throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
   }
 }
 
@@ -111,6 +171,38 @@ bool Axis::directionPositive(Axis::Direction direction) {
       return true;
     default:
       throw XFDTDCoordinateSystemAxisDirectionException{};
+  }
+}
+
+auto Axis::toString(Axis::Direction direction) -> std::string {
+  switch (direction) {
+    case Axis::Direction::XN:
+      return "XN";
+    case Axis::Direction::XP:
+      return "XP";
+    case Axis::Direction::YN:
+      return "YN";
+    case Axis::Direction::YP:
+      return "YP";
+    case Axis::Direction::ZN:
+      return "ZN";
+    case Axis::Direction::ZP:
+      return "ZP";
+    default:
+      throw XFDTDCoordinateSystemAxisDirectionException{};
+  }
+}
+
+auto Axis::toString(Axis::XYZ xyz) -> std::string {
+  switch (xyz) {
+    case Axis::XYZ::X:
+      return "X";
+    case Axis::XYZ::Y:
+      return "Y";
+    case Axis::XYZ::Z:
+      return "Z";
+    default:
+      throw XFDTDCoordinateSystemAxisException{};
   }
 }
 

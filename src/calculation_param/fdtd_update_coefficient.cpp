@@ -2,100 +2,76 @@
 
 namespace xfdtd {
 
-const xt::xarray<double>& FDTDUpdateCoefficient::cexe() const { return _cexe; }
+const Array3D<Real>& FDTDUpdateCoefficient::cexe() const { return _cexe; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::cexhy() const {
-  return _cexhy;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::cexhy() const { return _cexhy; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::cexhz() const {
-  return _cexhz;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::cexhz() const { return _cexhz; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::ceye() const { return _ceye; }
+const Array3D<Real>& FDTDUpdateCoefficient::ceye() const { return _ceye; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::ceyhx() const {
-  return _ceyhx;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::ceyhx() const { return _ceyhx; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::ceyhz() const {
-  return _ceyhz;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::ceyhz() const { return _ceyhz; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::ceze() const { return _ceze; }
+const Array3D<Real>& FDTDUpdateCoefficient::ceze() const { return _ceze; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::cezhx() const {
-  return _cezhx;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::cezhx() const { return _cezhx; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::cezhy() const {
-  return _cezhy;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::cezhy() const { return _cezhy; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chxh() const { return _chxh; }
+const Array3D<Real>& FDTDUpdateCoefficient::chxh() const { return _chxh; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chxey() const {
-  return _chxey;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::chxey() const { return _chxey; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chxez() const {
-  return _chxez;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::chxez() const { return _chxez; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chyh() const { return _chyh; }
+const Array3D<Real>& FDTDUpdateCoefficient::chyh() const { return _chyh; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chyez() const {
-  return _chyez;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::chyez() const { return _chyez; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chyex() const {
-  return _chyex;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::chyex() const { return _chyex; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chzh() const { return _chzh; }
+const Array3D<Real>& FDTDUpdateCoefficient::chzh() const { return _chzh; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chzex() const {
-  return _chzex;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::chzex() const { return _chzex; }
 
-const xt::xarray<double>& FDTDUpdateCoefficient::chzey() const {
-  return _chzey;
-}
+const Array3D<Real>& FDTDUpdateCoefficient::chzey() const { return _chzey; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::cexe() { return _cexe; }
+Array3D<Real>& FDTDUpdateCoefficient::cexe() { return _cexe; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::cexhy() { return _cexhy; }
+Array3D<Real>& FDTDUpdateCoefficient::cexhy() { return _cexhy; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::cexhz() { return _cexhz; }
+Array3D<Real>& FDTDUpdateCoefficient::cexhz() { return _cexhz; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::ceye() { return _ceye; }
+Array3D<Real>& FDTDUpdateCoefficient::ceye() { return _ceye; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::ceyhx() { return _ceyhx; }
+Array3D<Real>& FDTDUpdateCoefficient::ceyhx() { return _ceyhx; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::ceyhz() { return _ceyhz; }
+Array3D<Real>& FDTDUpdateCoefficient::ceyhz() { return _ceyhz; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::ceze() { return _ceze; }
+Array3D<Real>& FDTDUpdateCoefficient::ceze() { return _ceze; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::cezhx() { return _cezhx; }
+Array3D<Real>& FDTDUpdateCoefficient::cezhx() { return _cezhx; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::cezhy() { return _cezhy; }
+Array3D<Real>& FDTDUpdateCoefficient::cezhy() { return _cezhy; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chxh() { return _chxh; }
+Array3D<Real>& FDTDUpdateCoefficient::chxh() { return _chxh; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chxey() { return _chxey; }
+Array3D<Real>& FDTDUpdateCoefficient::chxey() { return _chxey; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chxez() { return _chxez; }
+Array3D<Real>& FDTDUpdateCoefficient::chxez() { return _chxez; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chyh() { return _chyh; }
+Array3D<Real>& FDTDUpdateCoefficient::chyh() { return _chyh; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chyez() { return _chyez; }
+Array3D<Real>& FDTDUpdateCoefficient::chyez() { return _chyez; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chyex() { return _chyex; }
+Array3D<Real>& FDTDUpdateCoefficient::chyex() { return _chyex; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chzh() { return _chzh; }
+Array3D<Real>& FDTDUpdateCoefficient::chzh() { return _chzh; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chzex() { return _chzex; }
+Array3D<Real>& FDTDUpdateCoefficient::chzex() { return _chzex; }
 
-xt::xarray<double>& FDTDUpdateCoefficient::chzey() { return _chzey; }
+Array3D<Real>& FDTDUpdateCoefficient::chzey() { return _chzey; }
 
 }  // namespace xfdtd

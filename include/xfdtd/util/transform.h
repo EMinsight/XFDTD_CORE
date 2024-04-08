@@ -2,11 +2,19 @@
 #define _XFDTD_CORE_TRANSFORM_H_
 
 #include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 
 #include <tuple>
 
 namespace xfdtd::transform {
+
+class XFDTDTransformException : public XFDTDException {
+ public:
+  explicit XFDTDTransformException(
+      std::string message = "XFDTD Transform Exception")
+      : XFDTDException(std::move(message)) {}
+};
 
 enum class SCS {
   R,
@@ -140,6 +148,97 @@ inline auto cCSToSCS(const auto &theta, const auto &phi, const auto &data) {
     }
   } else {
     throw XFDTDException{"Invalid SCS"};
+  }
+}
+
+template <Axis::XYZ xyz>
+inline constexpr auto xYZToComponent() -> EMF::Component {
+  if constexpr (xyz == Axis::XYZ::X) {
+    return EMF::Component::X;
+  } else if constexpr (xyz == Axis::XYZ::Y) {
+    return EMF::Component::Y;
+  } else if constexpr (xyz == Axis::XYZ::Z) {
+    return EMF::Component::Z;
+  } else {
+    throw XFDTDTransformException{"fromXYZToComponent(): Invalid Axis::XYZ"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline constexpr auto attributeXYZToField() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    if constexpr (xyz == Axis::XYZ::X) {
+      return EMF::Field::EX;
+    } else if constexpr (xyz == Axis::XYZ::Y) {
+      return EMF::Field::EY;
+    } else if constexpr (xyz == Axis::XYZ::Z) {
+      return EMF::Field::EZ;
+    } else {
+      throw XFDTDTransformException{"attributeXYZToField(): Invalid Axis::XYZ"};
+    }
+  } else if constexpr (a == EMF::Attribute::H) {
+    if constexpr (xyz == Axis::XYZ::X) {
+      return EMF::Field::HX;
+    } else if constexpr (xyz == Axis::XYZ::Y) {
+      return EMF::Field::HY;
+    } else if constexpr (xyz == Axis::XYZ::Z) {
+      return EMF::Field::HZ;
+    } else {
+      throw XFDTDTransformException{"attributeXYZToField(): Invalid Axis::XYZ"};
+    }
+  } else {
+    throw XFDTDTransformException{
+        "attributeXYZToField(): Invalid EMF::Attribute"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline constexpr auto attributeXYZToTangentialAAxis() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    return attributeXYZToField<a, Axis::tangentialAAxis<xyz>>();
+  } else {
+    throw XFDTDTransformException{
+        "attributeXYZToTangentialAAxis(): Invalid EMF::Attribute"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline constexpr auto attributeXYZToTangentialBAxis() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    return attributeXYZToField<a, Axis::tangentialBAxis<xyz>>();
+  } else {
+    throw XFDTDTransformException{
+        "attributeXYZToTangentialBAxis(): Invalid EMF::Attribute"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline constexpr auto attributeXYZToDualField() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    return attributeXYZToField<EMF::dualAttribute<a>(), xyz>();
+  } else {
+    throw XFDTDTransformException{
+        "attributeXYZToDualField(): Invalid EMF::Attribute"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline constexpr auto attributeXYZToDualTangentialAAxis() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    return attributeXYZToTangentialAAxis<EMF::dualAttribute<a>(), xyz>();
+  } else {
+    throw XFDTDTransformException{
+        "attributeXYZToDualTangentialAAxis(): Invalid EMF::Attribute"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz>
+inline constexpr auto attributeXYZToDualTangentialBAxis() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    return attributeXYZToTangentialBAxis<EMF::dualAttribute<a>(), xyz>();
+  } else {
+    throw XFDTDTransformException{
+        "attributeXYZToDualTangentialBAxis(): Invalid EMF::Attribute"};
   }
 }
 

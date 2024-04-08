@@ -1,4 +1,5 @@
 #include <xfdtd/object/lumped_element/resistor.h>
+#include <xfdtd/common/index_task.h>
 
 #include <memory>
 #include <utility>
@@ -9,7 +10,7 @@
 namespace xfdtd {
 
 Resistor::Resistor(std::string name, std::unique_ptr<Cube> cube, Axis::XYZ xyz,
-                   double resistance, std::unique_ptr<Material> material)
+                   Real resistance, std::unique_ptr<Material> material)
     : LumpedElement{std::move(name), std::move(cube), xyz, std::move(material)},
       _resistance{resistance} {
   if (_resistance == 0) {
@@ -25,7 +26,7 @@ std::string Resistor::toString() const {
   return "";
 }
 
-double Resistor::resistance() const { return _resistance; }
+Real Resistor::resistance() const { return _resistance; }
 
 void Resistor::init(std::shared_ptr<const GridSpace> grid_space,
                     std::shared_ptr<CalculationParam> calculation_param,
@@ -33,12 +34,12 @@ void Resistor::init(std::shared_ptr<const GridSpace> grid_space,
   xfdtd::LumpedElement::init(std::move(grid_space),
                              std::move(calculation_param), std::move(emf));
 
-  auto rf{[](double r, std::size_t na, std::size_t nb, std::size_t nc) {
+  auto rf{[](Real r, std::size_t na, std::size_t nb, std::size_t nc) {
     return r * na * nb / nc;
   }};
 
-  auto dx_dy_dz{[](const xt::xarray<double>& x, const xt::xarray<double>& y,
-                   const xt::xarray<double>& z, auto&& x_range, auto&& y_range,
+  auto dx_dy_dz{[](const auto& x, const auto& y,
+                   const auto& z, auto&& x_range, auto&& y_range,
                    auto&& z_range) {
     return xt::meshgrid(xt::view(x, x_range), xt::view(y, y_range),
                         xt::view(z, z_range));

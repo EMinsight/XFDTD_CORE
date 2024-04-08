@@ -2,7 +2,7 @@
 #define _XFDTD_CORE_WAVEFORM_SOURCE_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/index_task.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/waveform/waveform.h>
@@ -42,7 +42,7 @@ class WaveformSource {
   const std::unique_ptr<Waveform> &waveform();
 
   virtual std::unique_ptr<Corrector> generateCorrector(
-      const Divider::IndexTask &task) = 0;
+      const IndexTask &task) = 0;
 
   auto emf() const { return _emf; }
 

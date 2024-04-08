@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <memory>
 
+#include "xfdtd/common/type_define.h"
+
 namespace xfdtd {
 
 class Port {
@@ -16,7 +18,7 @@ class Port {
   inline static constexpr int VOLTAGE_TAG = 32;
 
  public:
-  Port(std::size_t index, bool is_source, std::complex<double> impedance,
+  Port(std::size_t index, bool is_source, std::complex<Real> impedance,
        std::shared_ptr<CurrentMonitor> current_monitor,
        std::shared_ptr<VoltageMonitor> voltage_monitor);
 
@@ -34,17 +36,17 @@ class Port {
 
   bool isSource() const;
 
-  std::complex<double> impedance() const;
+  std::complex<Real> impedance() const;
 
   const std::shared_ptr<CurrentMonitor>& currentMonitor() const;
 
   const std::shared_ptr<VoltageMonitor>& voltageMonitor() const;
 
-  const xt::xarray<std::complex<double>>& a() const;
+  const Array1D<std::complex<Real>>& a() const;
 
-  const xt::xarray<std::complex<double>>& b() const;
+  const Array1D<std::complex<Real>>& b() const;
 
-  void calculateSParameters(const xt::xarray<double>& frequencies);
+  void calculateSParameters(const Array1D<Real>& frequencies);
 
   void init(const std::shared_ptr<const GridSpace>& grid_space,
             const std::shared_ptr<const CalculationParam>& calculation_param,
@@ -53,13 +55,13 @@ class Port {
  private:
   std::size_t _index;
   bool _is_source;
-  std::complex<double> _impedance;
+  std::complex<Real> _impedance;
   std::shared_ptr<CurrentMonitor> _current_monitor;
   std::shared_ptr<VoltageMonitor> _voltage_monitor;
 
-  double _dt;
+  Real _dt;
 
-  xt::xarray<std::complex<double>> _a, _b;
+  Array1D<std::complex<Real>> _a, _b;
 };
 
 }  // namespace xfdtd

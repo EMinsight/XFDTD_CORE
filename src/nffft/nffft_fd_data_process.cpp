@@ -1,6 +1,6 @@
+#include <xfdtd/common/constant.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/nffft/nffft.h>
-#include <xfdtd/util/constant.h>
 #include <xfdtd/util/transform.h>
 
 #include <complex>
@@ -11,36 +11,32 @@
 
 namespace xfdtd {
 
-auto FDPlaneData::aTheta(const xt::xtensor<double, 1>& theta,
-                         const xt::xtensor<double, 1>& phi,
+auto FDPlaneData::aTheta(const Array1D<Real>& theta, const Array1D<Real>& phi,
                          const Vector& origin) const
-    -> xt::xtensor<std::complex<double>, 1> {
+    -> Array1D<std::complex<Real>> {
   return getPotential<Potential::A, transform::SCS::Theta>(theta, phi, origin);
 }
 
-auto FDPlaneData::fPhi(const xt::xtensor<double, 1>& theta,
-                       const xt::xtensor<double, 1>& phi,
+auto FDPlaneData::fPhi(const Array1D<Real>& theta, const Array1D<Real>& phi,
                        const Vector& origin) const
-    -> xt::xtensor<std::complex<double>, 1> {
+    -> Array1D<std::complex<Real>> {
   return getPotential<Potential::F, transform::SCS::Phi>(theta, phi, origin);
 }
 
-auto FDPlaneData::aPhi(const xt::xtensor<double, 1>& theta,
-                       const xt::xtensor<double, 1>& phi,
+auto FDPlaneData::aPhi(const Array1D<Real>& theta, const Array1D<Real>& phi,
                        const Vector& origin) const
-    -> xt::xtensor<std::complex<double>, 1> {
+    -> Array1D<std::complex<Real>> {
   return getPotential<Potential::A, transform::SCS::Phi>(theta, phi, origin);
 }
 
-auto FDPlaneData::fTheta(const xt::xtensor<double, 1>& theta,
-                         const xt::xtensor<double, 1>& phi,
+auto FDPlaneData::fTheta(const Array1D<Real>& theta, const Array1D<Real>& phi,
                          const Vector& origin) const
-    -> xt::xtensor<std::complex<double>, 1> {
+    -> Array1D<std::complex<Real>> {
   return getPotential<Potential::F, transform::SCS::Theta>(theta, phi, origin);
 }
 
-auto FDPlaneData::power() const -> double {
-  std::vector<std::future<std::complex<double>>> res;
+auto FDPlaneData::power() const -> Real {
+  std::vector<std::future<std::complex<Real>>> res;
   res.emplace_back(
       std::async(&FDPlaneData::calculatePower<Axis::Direction::XN>, this));
   res.emplace_back(
@@ -55,22 +51,15 @@ auto FDPlaneData::power() const -> double {
       std::async(&FDPlaneData::calculatePower<Axis::Direction::ZP>, this));
 
   return 0.5 * std::real(std::accumulate(
-                   res.begin(), res.end(), std::complex<double>{0.0},
+                   res.begin(), res.end(), std::complex<Real>{0.0},
                    [](const auto& a, auto&& b) { return a + b.get(); }));
-
-  return 0.5 * std::real(calculatePower<Axis::Direction::XN>() +
-                         calculatePower<Axis::Direction::XP>() +
-                         calculatePower<Axis::Direction::YN>() +
-                         calculatePower<Axis::Direction::YP>() +
-                         calculatePower<Axis::Direction::ZN>() +
-                         calculatePower<Axis::Direction::ZP>());
 }
 
 template <FDPlaneData::Potential p, transform::SCS scs>
-auto FDPlaneData::getPotential(const xt::xtensor<double, 1>& theta,
-                               const xt::xtensor<double, 1>& phi,
+auto FDPlaneData::getPotential(const Array1D<Real>& theta,
+                               const Array1D<Real>& phi,
                                const Vector& origin) const
-    -> xt::xtensor<std::complex<double>, 1> {
+    -> Array1D<std::complex<Real>> {
   auto xn = std::async(
       &FDPlaneData::calculatePotential<p, Axis::Direction::XN>, this, theta,
       phi, origin,
@@ -107,11 +96,10 @@ auto FDPlaneData::getPotential(const xt::xtensor<double, 1>& theta,
 
 template <FDPlaneData::Potential potential, Axis::Direction direction>
 auto FDPlaneData::calculatePotential(
-    const xt::xtensor<double, 1>& theta, const xt::xtensor<double, 1>& phi,
-    const Vector& origin,
-    const xt::xtensor<std::complex<double>, 1>& transform_a,
-    const xt::xtensor<std::complex<double>, 1>& transform_b) const
-    -> xt::xtensor<std::complex<double>, 1> {
+    const Array1D<Real>& theta, const Array1D<Real>& phi, const Vector& origin,
+    const Array1D<std::complex<Real>>& transform_a,
+    const Array1D<std::complex<Real>>& transform_b) const
+    -> Array1D<std::complex<Real>> {
   if (theta.size() == 0 || phi.size() == 0) {
     throw XFDTDNFFFTException("Invalid theta or phi size");
   }
@@ -121,8 +109,7 @@ auto FDPlaneData::calculatePotential(
   }
 
   const auto num_angle = theta.size() * phi.size();
-  xt::xtensor<std::complex<double>, 1> data =
-      xt::zeros<std::complex<double>>({num_angle});
+  Array1D<std::complex<Real>> data = xt::zeros<std::complex<Real>>({num_angle});
 
   const auto& task = this->task<direction>();
   if (!task.valid()) {
@@ -169,7 +156,7 @@ auto FDPlaneData::calculatePotential(
 }
 
 template <Axis::Direction direction>
-auto FDPlaneData::calculatePower() const -> std::complex<double> {
+auto FDPlaneData::calculatePower() const -> std::complex<Real> {
   const auto& task = this->task<direction>();
   if (!task.valid()) {
     return 0.0;
@@ -182,7 +169,7 @@ auto FDPlaneData::calculatePower() const -> std::complex<double> {
   const auto je = task.yRange().end();
   const auto ke = task.zRange().end();
 
-  auto power = std::complex<double>{0.0};
+  auto power = std::complex<Real>{0.0};
 
   auto [ja, jb] = surfaceJ<direction>();
   auto [ma, mb] = surfaceM<direction>();
@@ -201,7 +188,7 @@ auto FDPlaneData::calculatePower() const -> std::complex<double> {
     }
   }
 
-  constexpr double negative = Axis::directionNegative<direction>() ? -1.0 : 1.0;
+  constexpr Real negative = Axis::directionNegative<direction>() ? -1.0 : 1.0;
   return negative * power;
 }
 
@@ -225,7 +212,7 @@ auto FDPlaneData::rVector(size_t i, std::size_t j, std::size_t k) const
 
 template <Axis::XYZ xyz>
 auto FDPlaneData::ds(std::size_t i, std::size_t j, std::size_t k) const
-    -> double {
+    -> Real {
   if constexpr (xyz == Axis::XYZ::X) {
     return _grid_space->eSizeY()(j) * _grid_space->eSizeZ()(k);
   } else if constexpr (xyz == Axis::XYZ::Y) {

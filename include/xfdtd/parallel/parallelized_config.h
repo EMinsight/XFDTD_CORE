@@ -1,8 +1,6 @@
 #ifndef __XFDTD_CORE_PARALLELIZED_CONFIG_H__
 #define __XFDTD_CORE_PARALLELIZED_CONFIG_H__
 
-#include <xfdtd/divider/divider.h>
-
 #include <string>
 
 namespace xfdtd {
@@ -48,8 +46,6 @@ class ParallelizedConfig {
 
   auto isRoot() const -> bool;
 
-  auto dividerType() const -> Divider::Type;
-
   auto numX() const -> int;
 
   auto numY() const -> int;
@@ -81,14 +77,11 @@ class ParallelizedConfig {
 
   auto setRoot(int root) -> void;
 
-  auto setDividerType(Divider::Type divider_type) -> void;
-
  private:
   int _dims[NUM_DIMS]{1, 1, 1};
   int _id{0};
   int _size{1};
   int _root{0};
-  Divider::Type _divider_type{Divider::Type::X};
 };
 
 class ThreadConfig : private ParallelizedConfig {
@@ -104,8 +97,6 @@ class ThreadConfig : private ParallelizedConfig {
   auto size() const -> int;
 
   auto root() const -> int;
-
-  auto dividerType() const -> Divider::Type;
 
   auto numX() const -> int;
 

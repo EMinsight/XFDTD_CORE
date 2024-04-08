@@ -1,4 +1,4 @@
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/parallel/mpi_support.h>
@@ -23,15 +23,15 @@ const std::string& Monitor::name() const { return _name; }
 
 const std::string& Monitor::outputDir() const { return _output_dir; }
 
-const xt::xarray<double>& Monitor::data() const { return _data; }
+const Array<Real>& Monitor::data() const { return _data; }
 
-xt::xarray<double>& Monitor::data() { return _data; }
+Array<Real>& Monitor::data() { return _data; }
 
 std::unique_ptr<Shape>& Monitor::shape() { return _shape; }
 
-auto Monitor::globalTask() const -> Divider::IndexTask { return _global_task; }
+auto Monitor::globalTask() const -> IndexTask { return _global_task; }
 
-auto Monitor::nodeTask() const -> Divider::IndexTask { return _node_task; }
+auto Monitor::nodeTask() const -> IndexTask { return _node_task; }
 
 void Monitor::setName(std::string name) { _name = std::move(name); }
 
@@ -114,30 +114,21 @@ void Monitor::defaultInit(
   _global_grid_box = _grid_space->globalGridSpace()->getGridBox(shape().get());
   _node_grid_box = _grid_space->getGridBoxWithoutCheck(shape().get());
 
-  _global_task = Divider::makeIndexTask(
-      Divider::makeIndexRange(_global_grid_box.origin().i(),
-                              _global_grid_box.end().i()),
-      Divider::makeIndexRange(_global_grid_box.origin().j(),
-                              _global_grid_box.end().j()),
-      Divider::makeIndexRange(_global_grid_box.origin().k(),
-                              _global_grid_box.end().k()));
+  _global_task = makeIndexTask(
+      makeIndexRange(_global_grid_box.origin().i(), _global_grid_box.end().i()),
+      makeIndexRange(_global_grid_box.origin().j(), _global_grid_box.end().j()),
+      makeIndexRange(_global_grid_box.origin().k(),
+                     _global_grid_box.end().k()));
 
-  _node_task = Divider::makeIndexTask(
-      Divider::makeIndexRange(_node_grid_box.origin().i(),
-                              _node_grid_box.end().i()),
-      Divider::makeIndexRange(_node_grid_box.origin().j(),
-                              _node_grid_box.end().j()),
-      Divider::makeIndexRange(_node_grid_box.origin().k(),
-                              _node_grid_box.end().k()));
+  _node_task = makeIndexTask(
+      makeIndexRange(_node_grid_box.origin().i(), _node_grid_box.end().i()),
+      makeIndexRange(_node_grid_box.origin().j(), _node_grid_box.end().j()),
+      makeIndexRange(_node_grid_box.origin().k(), _node_grid_box.end().k()));
 }
 
-auto Monitor::setGlobalTask(Divider::IndexTask task) -> void {
-  _global_task = task;
-}
+auto Monitor::setGlobalTask(IndexTask task) -> void { _global_task = task; }
 
-auto Monitor::setNodeTask(Divider::IndexTask task) -> void {
-  _node_task = task;
-}
+auto Monitor::setNodeTask(IndexTask task) -> void { _node_task = task; }
 
 const GridSpace* Monitor::gridSpacePtr() const { return _grid_space.get(); }
 
@@ -159,7 +150,7 @@ auto Monitor::setNodeGridBox(GridBox grid_box) -> void {
 
 auto Monitor::nodeGridBox() -> GridBox& { return _node_grid_box; }
 
-auto Monitor::nodeTask() -> Divider::IndexTask& { return _node_task; }
+auto Monitor::nodeTask() -> IndexTask& { return _node_task; }
 
 auto Monitor::valid() const -> bool { return nodeTask().valid(); }
 

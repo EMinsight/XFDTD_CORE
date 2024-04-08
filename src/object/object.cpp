@@ -10,7 +10,7 @@
 #include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/material/dispersive_material.h"
 #include "xfdtd/shape/shape.h"
-#include "xfdtd/util/constant.h"
+#include "xfdtd/common/constant.h"
 
 namespace xfdtd {
 
@@ -56,7 +56,7 @@ void Object::correctE() {}
 void Object::correctH() {}
 
 std::unique_ptr<Corrector> Object::generateCorrector(
-    const Divider::Task<std::size_t>& task) {
+    const Task<std::size_t>& task) {
   return nullptr;
 }
 

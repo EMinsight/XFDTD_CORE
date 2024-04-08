@@ -1,7 +1,7 @@
 #ifndef _XFDTD_CORE_UPDATOR_H_
 #define _XFDTD_CORE_UPDATOR_H_
 
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/index_task.h>
 
 #include <memory>
 
@@ -15,7 +15,7 @@ class Updator {
  public:
   Updator(std::shared_ptr<const GridSpace> grid_space,
           std::shared_ptr<const CalculationParam> calculation_param,
-          std::shared_ptr<EMF> emf, Divider::IndexTask task);
+          std::shared_ptr<EMF> emf, IndexTask task);
 
   Updator(const Updator&) = default;
 
@@ -54,7 +54,7 @@ class Updator {
   virtual void updateHEdge() = 0;
 
  private:
-  Divider::IndexTask _task;
+  IndexTask _task;
 };
 
 }  // namespace xfdtd

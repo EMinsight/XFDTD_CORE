@@ -2,10 +2,10 @@
 #define _XFDTD_CORE_BOUNDARY_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
-#include <xfdtd/divider/divider.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/common/index_task.h>
 
 namespace xfdtd {
 
@@ -41,7 +41,7 @@ class Boundary {
   virtual void correctUpdateCoefficient() = 0;
 
   virtual std::unique_ptr<Corrector> generateDomainCorrector(
-      const Divider::Task<std::size_t>& task) = 0;
+      const Task<std::size_t>& task) = 0;
 
  protected:
   void defaultInit(std::shared_ptr<const GridSpace> grid_space,

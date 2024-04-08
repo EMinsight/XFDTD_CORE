@@ -1,4 +1,4 @@
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/parallel/parallelized_config.h>
 
@@ -26,10 +26,6 @@ auto ParallelizedConfig::size() const -> int { return _size; }
 
 auto ParallelizedConfig::root() const -> int { return _root; }
 
-auto ParallelizedConfig::dividerType() const -> Divider::Type {
-  return _divider_type;
-}
-
 auto ParallelizedConfig::isRoot() const -> bool { return _id == _root; }
 
 auto ParallelizedConfig::numX() const -> int { return _dims[DIM_X_INDEX]; }
@@ -50,7 +46,6 @@ auto ParallelizedConfig::toString() const -> std::string {
   ss << " X: " << xPrev() << "<-" << id() << "->" << xNext() << "\n";
   ss << " Y: " << yPrev() << "<-" << id() << "->" << yNext() << "\n";
   ss << " Z: " << zPrev() << "<-" << id() << "->" << zNext() << "\n";
-  ss << " Type: " << Divider::toString(_divider_type);
   return ss.str();
 }
 
@@ -83,27 +78,6 @@ auto ParallelizedConfig::doInit() -> void {
     ss << "Invalid root id: root=" << root();
     throw ParallelizedConfigException(ss.str());
   }
-
-  if (numX() == 1 && numY() == 1 && numZ() == 1) {
-    _divider_type = Divider::Type::X;
-    return;
-  }
-
-  if (numX() == 1 && numY() == 1) {
-    _divider_type = Divider::Type::Z;
-  } else if (numX() == 1 && numZ() == 1) {
-    _divider_type = Divider::Type::Y;
-  } else if (numY() == 1 && numZ() == 1) {
-    _divider_type = Divider::Type::X;
-  } else if (numX() == 1) {
-    _divider_type = Divider::Type::YZ;
-  } else if (numY() == 1) {
-    _divider_type = Divider::Type::XZ;
-  } else if (numZ() == 1) {
-    _divider_type = Divider::Type::XY;
-  } else {
-    _divider_type = Divider::Type::XYZ;
-  }
 }
 
 auto ParallelizedConfig::setDims(int num_x, int num_y, int num_z) -> void {
@@ -118,10 +92,6 @@ auto ParallelizedConfig::setSize(int size) -> void { _size = size; }
 
 auto ParallelizedConfig::setRoot(int root) -> void { _root = root; }
 
-auto ParallelizedConfig::setDividerType(Divider::Type divider_type) -> void {
-  _divider_type = divider_type;
-}
-
 ThreadConfig::ThreadConfig(int num_x, int num_y, int num_z, int root)
     : ParallelizedConfig(num_x, num_y, num_z, 0, num_x * num_y * num_z, root) {}
 
@@ -132,10 +102,6 @@ auto ThreadConfig::dims() const -> const int* {
 auto ThreadConfig::size() const -> int { return ParallelizedConfig::size(); }
 
 auto ThreadConfig::root() const -> int { return ParallelizedConfig::root(); }
-
-auto ThreadConfig::dividerType() const -> Divider::Type {
-  return ParallelizedConfig::dividerType();
-}
 
 auto ThreadConfig::numX() const -> int { return ParallelizedConfig::numX(); }
 
@@ -150,7 +116,6 @@ auto ThreadConfig::toString() const -> std::string {
   ss << "ThreadConfig Config:\n";
   ss << " Size: " << size() << "\n";
   ss << " Root: " << root() << "\n";
-  ss << " Type: " << Divider::toString(dividerType());
   return ss.str();
 }
 

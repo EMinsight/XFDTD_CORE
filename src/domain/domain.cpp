@@ -1,6 +1,6 @@
 #include "domain/domain.h"
 
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/util/fdtd_basic.h>
 
@@ -19,7 +19,7 @@ namespace xfdtd {
 
 static std::mutex cout_mutex;
 
-Domain::Domain(std::size_t id, Divider::IndexTask task,
+Domain::Domain(std::size_t id, IndexTask task,
                std::shared_ptr<GridSpace> grid_space,
                std::shared_ptr<CalculationParam> calculation_param,
                std::shared_ptr<EMF> emf, std::unique_ptr<Updator> updator,

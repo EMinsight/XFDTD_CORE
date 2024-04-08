@@ -7,7 +7,7 @@ namespace xfdtd {
 class Capacitor : public LumpedElement {
  public:
   Capacitor(std::string name, std::unique_ptr<Cube> cube, Axis::XYZ xyz,
-            double capacitance,
+            Real capacitance,
             std::unique_ptr<Material> material = Material::createAir());
 
   Capacitor(const Capacitor&) = delete;
@@ -33,11 +33,11 @@ class Capacitor : public LumpedElement {
   void correctH() override;
 
  private:
-  double _capacitance;
-  double _capacitance_factor;
+  Real _capacitance;
+  Real _capacitance_factor;
 
-  xt::xarray<double> _da, _db, _dc;
-  xt::xarray<double> _beta;
+  Array3D<Real> _da, _db, _dc;
+  Array3D<Real> _beta;
 };
 
 }  // namespace xfdtd

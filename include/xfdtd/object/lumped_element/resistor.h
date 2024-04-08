@@ -7,7 +7,7 @@ namespace xfdtd {
 class Resistor : public LumpedElement {
  public:
   Resistor(std::string name, std::unique_ptr<Cube> cube, Axis::XYZ xyz,
-           double resistance,
+           Real resistance,
            std::unique_ptr<Material> material = Material::createAir());
 
   Resistor(const Resistor &) = delete;
@@ -32,14 +32,14 @@ class Resistor : public LumpedElement {
 
   void correctH() override;
 
-  double resistance() const;
+  Real resistance() const;
 
  private:
-  double _resistance;
+  Real _resistance;
 
-  double _resistance_factor;
-  xt::xarray<double> _da, _db, _dc;
-  xt::xarray<double> _beta;
+  Real _resistance_factor;
+  Array3D<Real> _da, _db, _dc;
+  Array3D<Real> _beta;
 };
 
 }  // namespace xfdtd

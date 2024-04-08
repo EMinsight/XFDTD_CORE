@@ -8,15 +8,15 @@
 
 namespace xfdtd {
 
-GridSpace1D::GridSpace1D(double based_dz, xt::xarray<double> e_node_z)
+GridSpace1D::GridSpace1D(Real based_dz, Array1D<Real>e_node_z)
     : GridSpace{1,
                 1,
                 based_dz,
                 GridSpace::Dimension::ONE,
-                xt::xarray<double>{-1 * std::numeric_limits<double>::infinity(),
-                                   std::numeric_limits<double>::infinity()},
-                xt::xarray<double>{-1 * std::numeric_limits<double>::infinity(),
-                                   std::numeric_limits<double>::infinity()},
+                xt::xarray<Real>{-1 * std::numeric_limits<Real>::infinity(),
+                                   std::numeric_limits<Real>::infinity()},
+                xt::xarray<Real>{-1 * std::numeric_limits<Real>::infinity(),
+                                   std::numeric_limits<Real>::infinity()},
                 std::move(e_node_z)} {}
 
 void GridSpace1D::correctGridSpace() {
@@ -24,19 +24,19 @@ void GridSpace1D::correctGridSpace() {
   // setMinDx(1);
   // setMinDy(1);
   // auto dz_unique{xt::unique(eSizeZ())};
-  // auto min_dz{std::numeric_limits<double>::max()};
+  // auto min_dz{std::numeric_limits<Real>::max()};
   // std::for_each(dz_unique.begin(), dz_unique.end(),
-  //               [&min_dz](double dz) { min_dz = std::min(min_dz, dz); });
+  //               [&min_dz](Real dz) { min_dz = std::min(min_dz, dz); });
   // setMinDz(min_dz);
   throw std::runtime_error("Not implemented");
 }
 
-std::size_t GridSpace1D::handleTransformX(double x) const {
-  return (x < std::numeric_limits<double>::infinity()) ? 0 : 1;
+std::size_t GridSpace1D::handleTransformX(Real x) const {
+  return (x < std::numeric_limits<Real>::infinity()) ? 0 : 1;
 }
 
-std::size_t GridSpace1D::handleTransformY(double y) const {
-  return (y < std::numeric_limits<double>::infinity()) ? 0 : 1;
+std::size_t GridSpace1D::handleTransformY(Real y) const {
+  return (y < std::numeric_limits<Real>::infinity()) ? 0 : 1;
 }
 
 }  // namespace xfdtd

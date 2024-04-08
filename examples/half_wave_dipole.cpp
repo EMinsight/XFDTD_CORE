@@ -15,7 +15,7 @@
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/cylinder.h"
 #include "xfdtd/simulation/simulation.h"
-#include "xfdtd/util/constant.h"
+#include "xfdtd/common/constant.h"
 
 void halfWaveDipole() {
   constexpr double dl{2.5e-4};

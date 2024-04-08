@@ -1,16 +1,17 @@
 #ifndef _XFDTD_CORE_BASIC_UPDATOR_H_
 #define _XFDTD_CORE_BASIC_UPDATOR_H_
 
-#include <xfdtd/divider/divider.h>
+
 
 #include "updator/updator.h"
+#include <xfdtd/common/index_task.h>
 
 namespace xfdtd {
 class BasicUpdator : public Updator {
  public:
   BasicUpdator(std::shared_ptr<const GridSpace> grid_space,
                std::shared_ptr<const CalculationParam> calculation_param,
-               std::shared_ptr<EMF> emf, Divider::IndexTask task);
+               std::shared_ptr<EMF> emf, IndexTask task);
 
   ~BasicUpdator() override = default;
 
@@ -21,7 +22,7 @@ class BasicUpdatorTEM : public BasicUpdator {
  public:
   BasicUpdatorTEM(std::shared_ptr<const GridSpace> grid_space,
                   std::shared_ptr<const CalculationParam> calculation_param,
-                  std::shared_ptr<EMF> emf, Divider::IndexTask task);
+                  std::shared_ptr<EMF> emf, IndexTask task);
 
   ~BasicUpdatorTEM() override = default;
 
@@ -37,7 +38,7 @@ class BasicUpdatorTE : public BasicUpdator {
  public:
   BasicUpdatorTE(std::shared_ptr<const GridSpace> grid_space,
                  std::shared_ptr<const CalculationParam> calculation_param,
-                 std::shared_ptr<EMF> emf, Divider::IndexTask task);
+                 std::shared_ptr<EMF> emf, IndexTask task);
 
   ~BasicUpdatorTE() override = default;
 
@@ -55,7 +56,7 @@ class BasicUpdator3D : public BasicUpdator {
  public:
   BasicUpdator3D(std::shared_ptr<const GridSpace> grid_space,
                  std::shared_ptr<const CalculationParam> calculation_param,
-                 std::shared_ptr<EMF> emf, Divider::IndexTask task);
+                 std::shared_ptr<EMF> emf, IndexTask task);
 
   ~BasicUpdator3D() override = default;
 

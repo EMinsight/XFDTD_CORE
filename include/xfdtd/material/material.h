@@ -2,9 +2,10 @@
 #define _XFDTD_CORE_MATERIAL_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/constant.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
-#include <xfdtd/util/constant.h>
 
 #include <complex>
 #include <memory>
@@ -14,8 +15,8 @@ namespace xfdtd {
 
 class ElectroMagneticProperty {
  public:
-  ElectroMagneticProperty(double epsilon_r, double mu_r, double sigma_e,
-                          double sigma_m);
+  ElectroMagneticProperty(Real epsilon_r, Real mu_r, Real sigma_e,
+                          Real sigma_m);
 
   ElectroMagneticProperty(const ElectroMagneticProperty &) = default;
 
@@ -34,36 +35,36 @@ class ElectroMagneticProperty {
 
   static ElectroMagneticProperty pmc();
 
-  inline static constexpr double EPSILON_0 = constant::EPSILON_0;
-  inline static constexpr double MU_0 = constant::MU_0;
-  inline static constexpr double SIGMA_E_0 = 1e-20;
-  inline static constexpr double SIGMA_M_0 = 1e-20;
+  inline static constexpr Real EPSILON_0 = constant::EPSILON_0;
+  inline static constexpr Real MU_0 = constant::MU_0;
+  inline static constexpr Real SIGMA_E_0 = 1e-20;
+  inline static constexpr Real SIGMA_M_0 = 1e-20;
 
   std::string toString() const;
 
-  double epsilonR() const;
+  Real epsilonR() const;
 
-  double muR() const;
+  Real muR() const;
 
-  double sigmaE() const;
+  Real sigmaE() const;
 
-  double sigmaM() const;
+  Real sigmaM() const;
 
-  double epsilon() const;
+  Real epsilon() const;
 
-  double mu() const;
+  Real mu() const;
 
-  std::complex<double> refractIndex() const;
+  std::complex<Real> refractIndex() const;
 
  private:
-  double _epsilon_r;
-  double _mu_r;
-  double _sigma_e;
-  double _sigma_m;
+  Real _epsilon_r;
+  Real _mu_r;
+  Real _sigma_e;
+  Real _sigma_m;
 
-  double _epsilon;
-  double _mu;
-  std::complex<double> _refract_index;
+  Real _epsilon;
+  Real _mu;
+  std::complex<Real> _refract_index;
 };
 
 class Material {

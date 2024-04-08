@@ -1,5 +1,4 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
-#include <xfdtd/divider/divider.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/monitor/voltage_monitor.h>
@@ -27,7 +26,7 @@ void VoltageMonitor::init(
               std::move(emf));
 
   auto new_range = [](const auto& node_lower, const auto& node_upper,
-                      const Divider::IndexRange& range) {
+                      const IndexRange& range) {
     auto s = range.start();
     auto e = range.end();
     if (s <= node_lower) {
@@ -36,34 +35,34 @@ void VoltageMonitor::init(
     if (node_upper <= e) {
       e = node_upper - 1;
     }
-    return Divider::makeIndexRange(s, e);
+    return makeIndexRange(s, e);
   };
 
   auto correct_global_abc_range =
       [&new_range](const auto& a_lower, const auto& a_upper,
-                   Divider::IndexRange& a_range, const auto& b_lower,
-                   const auto& b_upper, Divider::IndexRange& b_range) {
+                   IndexRange& a_range, const auto& b_lower,
+                   const auto& b_upper, IndexRange& b_range) {
         a_range = new_range(a_lower, a_upper, a_range);
         b_range = new_range(b_lower, b_upper, b_range);
       };
 
   auto correct_node_abc_range =
       [&new_range](const auto& a_lower, const auto& a_upper,
-                   Divider::IndexRange& a_range, const auto& b_lower,
-                   const auto& b_upper, Divider::IndexRange& b_range,
+                   IndexRange& a_range, const auto& b_lower,
+                   const auto& b_upper, IndexRange& b_range,
                    const auto& global_c_lower, const auto global_c_upper,
                    const auto& offset_c, const auto& c_lower,
-                   const auto& c_upper, Divider::IndexRange& c_range) {
+                   const auto& c_upper, IndexRange& c_range) {
         a_range = new_range(a_lower, a_upper, a_range);
         b_range = new_range(b_lower, b_upper, b_range);
         auto c_s = c_range.start();
         auto c_e = c_range.end();
         c_range = new_range(c_lower, c_upper, c_range);
         if (c_s + offset_c == global_c_lower) {
-          c_range = Divider::makeIndexRange(c_s, c_range.end());
+          c_range = makeIndexRange(c_s, c_range.end());
         }
         if (c_e + offset_c == global_c_upper) {
-          c_range = Divider::makeIndexRange(c_range.start(), c_e);
+          c_range = makeIndexRange(c_range.start(), c_e);
         }
       };
 
@@ -71,39 +70,39 @@ void VoltageMonitor::init(
   const auto [global_offset_a, global_offset_b, global_offset_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(global_offset.i(), global_offset.j(), global_offset.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   const auto global_lower = gridSpacePtr()->globalGridSpace()->box().origin();
   const auto [global_lower_a, global_lower_b, global_lower_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(global_lower.i(), global_lower.j(), global_lower.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   const auto global_upper = gridSpacePtr()->globalGridSpace()->box().end();
   const auto [global_upper_a, global_upper_b, global_upper_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(global_upper.i(), global_upper.j(), global_upper.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   // correct global task
   auto g_abc = xfdtd::transform::xYZToABC(
       std::tuple(globalTask().xRange(), globalTask().yRange(),
                  globalTask().zRange()),
-      Axis::formDirectionToXYZ(_direction));
-  auto global_range_a = Divider::makeIndexRange(std::get<0>(g_abc).start(),
+      Axis::fromDirectionToXYZ(_direction));
+  auto global_range_a = makeIndexRange(std::get<0>(g_abc).start(),
                                                 std::get<0>(g_abc).end() + 1);
-  auto global_range_b = Divider::makeIndexRange(std::get<1>(g_abc).start(),
+  auto global_range_b = makeIndexRange(std::get<1>(g_abc).start(),
                                                 std::get<1>(g_abc).end() + 1);
-  auto global_range_c = Divider::makeIndexRange(std::get<2>(g_abc).start(),
+  auto global_range_c = makeIndexRange(std::get<2>(g_abc).start(),
                                                 std::get<2>(g_abc).end());
   correct_global_abc_range(global_lower_a, global_upper_a, global_range_a,
                            global_lower_b, global_upper_b, global_range_b);
   auto [global_range_x, global_range_y, global_range_z] =
       xfdtd::transform::aBCToXYZ(
           std::tuple(global_range_a, global_range_b, global_range_c),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
   setGlobalTask(
-      Divider::makeIndexTask(global_range_x, global_range_y, global_range_z));
+      makeIndexTask(global_range_x, global_range_y, global_range_z));
   if (!globalTask().valid()) {
     throw XFDTDMonitorException(name() + " globalTask is not valid\n" +
                                 globalTask().toString());
@@ -114,21 +113,21 @@ void VoltageMonitor::init(
   const auto [node_lower_a, node_lower_b, node_lower_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(node_lower.i(), node_lower.j(), node_lower.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
   const auto node_upper = gridSpacePtr()->box().end();
   const auto [node_upper_a, node_upper_b, node_upper_c] =
       xfdtd::transform::xYZToABC(
           std::tuple(node_upper.i(), node_upper.j(), node_upper.k()),
-          Axis::formDirectionToXYZ(_direction));
+          Axis::fromDirectionToXYZ(_direction));
 
   auto node_abc = xfdtd::transform::xYZToABC(
       std::tuple(nodeTask().xRange(), nodeTask().yRange(), nodeTask().zRange()),
-      Axis::formDirectionToXYZ(_direction));
-  auto node_range_a = Divider::makeIndexRange(std::get<0>(node_abc).start(),
+      Axis::fromDirectionToXYZ(_direction));
+  auto node_range_a = makeIndexRange(std::get<0>(node_abc).start(),
                                               std::get<0>(node_abc).end() + 1);
-  auto node_range_b = Divider::makeIndexRange(std::get<1>(node_abc).start(),
+  auto node_range_b = makeIndexRange(std::get<1>(node_abc).start(),
                                               std::get<1>(node_abc).end() + 1);
-  auto node_range_c = Divider::makeIndexRange(std::get<2>(node_abc).start(),
+  auto node_range_c = makeIndexRange(std::get<2>(node_abc).start(),
                                               std::get<2>(node_abc).end());
 
   correct_node_abc_range(node_lower_a, node_upper_a, node_range_a, node_lower_b,
@@ -138,9 +137,9 @@ void VoltageMonitor::init(
 
   auto [node_x, node_y, node_z] = xfdtd::transform::aBCToXYZ(
       std::tuple(node_range_a, node_range_b, node_range_c),
-      Axis::formDirectionToXYZ(_direction));
+      Axis::fromDirectionToXYZ(_direction));
 
-  setNodeTask(Divider::makeIndexTask(node_x, node_y, node_z));
+  setNodeTask(makeIndexTask(node_x, node_y, node_z));
 
   if (!nodeTask().valid()) {
     return;
@@ -154,7 +153,7 @@ void VoltageMonitor::init(
   _ks = nodeTask().zRange().start();
   _ke = nodeTask().zRange().end();
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::X) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::X) {
     _dc = xt::view(gridSpacePtr()->hSizeX(), xt::range(_is, _ie));
 
     auto global_js = globalTask().yRange().start();
@@ -168,7 +167,7 @@ void VoltageMonitor::init(
     }
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Y) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Y) {
     _dc = xt::view(gridSpacePtr()->hSizeY(), xt::range(_js, _je));
 
     auto global_ks = globalTask().zRange().start();
@@ -182,7 +181,7 @@ void VoltageMonitor::init(
     }
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Z) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Z) {
     _dc = xt::view(gridSpacePtr()->hSizeZ(), xt::range(_ks, _ke));
 
     auto global_is = globalTask().xRange().start();
@@ -205,7 +204,7 @@ void VoltageMonitor::update() {
   auto emf{emfPtr()};
   auto t{calculationParamPtr()->timeParam()->currentTimeStep()};
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::X) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::X) {
     for (auto i{_is}; i < _ie; ++i) {
       for (auto j{_js}; j < _je; ++j) {
         for (auto k{_ks}; k < _ke; ++k) {
@@ -215,7 +214,7 @@ void VoltageMonitor::update() {
     }
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Y) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Y) {
     for (auto i{_is}; i < _ie; ++i) {
       for (auto j{_js}; j < _je; ++j) {
         for (auto k{_ks}; k < _ke; ++k) {
@@ -225,7 +224,7 @@ void VoltageMonitor::update() {
     }
   }
 
-  if (Axis::formDirectionToXYZ(_direction) == Axis::XYZ::Z) {
+  if (Axis::fromDirectionToXYZ(_direction) == Axis::XYZ::Z) {
     for (auto i{_is}; i < _ie; ++i) {
       for (auto j{_js}; j < _je; ++j) {
         for (auto k{_ks}; k < _ke; ++k) {

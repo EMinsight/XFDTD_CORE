@@ -10,7 +10,12 @@
 
 namespace xfdtd {
 
-MpiSupport::MpiSupport(int argc, char** argv) { mpiInit(argc, argv); }
+MpiSupport::MpiSupport(int argc, char** argv) {
+#if defined(XFDTD_CORE_SINGLE_PRECISION)
+  throw XFDTDException("MpiSupport is not supported with single precision.");
+#endif
+  mpiInit(argc, argv);
+}
 
 auto MpiSupport::abort(int error_code) const -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
@@ -25,11 +30,6 @@ auto MpiSupport::barrier() const -> void {
   MPI_Barrier(_config.comm());
 #endif
 }
-
-#if defined(XFDTD_CORE_WITH_MPI)
-
-// auto MpiSupport::barrier(MPI_Comm comm) const -> void { MPI_Barrier(comm); }
-#endif
 
 auto MpiSupport::generateSlice(std::size_t nx, std::size_t ny, std::size_t nz)
     -> void {
@@ -55,7 +55,7 @@ auto MpiSupport::zNext() const -> int { return _config.zNext(); }
 
 auto MpiSupport::zPrev() const -> int { return _config.zPrev(); }
 
-auto MpiSupport::sendRecvHyXHead(xt::xarray<double>& hy) -> void {
+auto MpiSupport::sendRecvHyXHead(Array3D<Real>& hy) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request s_request;
   MPI_Request r_request;
@@ -70,7 +70,7 @@ auto MpiSupport::sendRecvHyXHead(xt::xarray<double>& hy) -> void {
 #endif
 }
 
-auto MpiSupport::recvSendHyXTail(xt::xarray<double>& hy) -> void {
+auto MpiSupport::recvSendHyXTail(Array3D<Real>& hy) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   const auto nx = hy.shape()[0];
 
@@ -87,7 +87,7 @@ auto MpiSupport::recvSendHyXTail(xt::xarray<double>& hy) -> void {
 #endif
 }
 
-auto MpiSupport::sendRecvHzXHead(xt::xarray<double>& hz) -> void {
+auto MpiSupport::sendRecvHzXHead(Array3D<Real>& hz) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request s_request;
   MPI_Request r_request;
@@ -102,7 +102,7 @@ auto MpiSupport::sendRecvHzXHead(xt::xarray<double>& hz) -> void {
 #endif
 }
 
-auto MpiSupport::recvSendHzXTail(xt::xarray<double>& hz) -> void {
+auto MpiSupport::recvSendHzXTail(Array3D<Real>& hz) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   const auto nx = hz.shape()[0];
 
@@ -119,7 +119,7 @@ auto MpiSupport::recvSendHzXTail(xt::xarray<double>& hz) -> void {
 #endif
 }
 
-auto MpiSupport::sendRecvHzYHead(xt::xarray<double>& hz) -> void {
+auto MpiSupport::sendRecvHzYHead(Array3D<Real>& hz) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request s_request;
   MPI_Request r_request;
@@ -134,7 +134,7 @@ auto MpiSupport::sendRecvHzYHead(xt::xarray<double>& hz) -> void {
 #endif
 }
 
-auto MpiSupport::recvSendHzYTail(xt::xarray<double>& hz) -> void {
+auto MpiSupport::recvSendHzYTail(Array3D<Real>& hz) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   const auto ny = hz.shape()[1];
 
@@ -151,7 +151,7 @@ auto MpiSupport::recvSendHzYTail(xt::xarray<double>& hz) -> void {
 #endif
 }
 
-auto MpiSupport::sendRecvHxYHead(xt::xarray<double>& hx) -> void {
+auto MpiSupport::sendRecvHxYHead(Array3D<Real>& hx) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request s_request;
   MPI_Request r_request;
@@ -166,7 +166,7 @@ auto MpiSupport::sendRecvHxYHead(xt::xarray<double>& hx) -> void {
 #endif
 }
 
-auto MpiSupport::recvSendHxYTail(xt::xarray<double>& hx) -> void {
+auto MpiSupport::recvSendHxYTail(Array3D<Real>& hx) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   const auto ny = hx.shape()[1];
 
@@ -183,7 +183,7 @@ auto MpiSupport::recvSendHxYTail(xt::xarray<double>& hx) -> void {
 #endif
 }
 
-auto MpiSupport::sendRecvHxZHead(xt::xarray<double>& hx) -> void {
+auto MpiSupport::sendRecvHxZHead(Array3D<Real>& hx) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request s_request;
   MPI_Request r_request;
@@ -198,7 +198,7 @@ auto MpiSupport::sendRecvHxZHead(xt::xarray<double>& hx) -> void {
 #endif
 }
 
-auto MpiSupport::recvSendHxZTail(xt::xarray<double>& hx) -> void {
+auto MpiSupport::recvSendHxZTail(Array3D<Real>& hx) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   const auto nz = hx.shape()[2];
 
@@ -215,7 +215,7 @@ auto MpiSupport::recvSendHxZTail(xt::xarray<double>& hx) -> void {
 #endif
 }
 
-auto MpiSupport::sendRecvHyZHead(xt::xarray<double>& hy) -> void {
+auto MpiSupport::sendRecvHyZHead(Array3D<Real>& hy) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request s_request;
   MPI_Request r_request;
@@ -230,7 +230,7 @@ auto MpiSupport::sendRecvHyZHead(xt::xarray<double>& hy) -> void {
 #endif
 }
 
-auto MpiSupport::recvSendHyZTail(xt::xarray<double>& hy) -> void {
+auto MpiSupport::recvSendHyZTail(Array3D<Real>& hy) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   const auto nz = hy.shape()[2];
 

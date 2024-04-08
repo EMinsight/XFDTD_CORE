@@ -19,15 +19,15 @@ class TimeMonitor : public Monitor {
 
   auto toString() const -> std::string override;
 
-  auto time() const -> const xt::xarray<double>&;
+  auto time() const -> const Array1D<Real>&;
 
  protected:
-  auto time() -> xt::xarray<double>&;
+  auto time() -> Array1D<Real>&;
 
-  auto setTime(xt::xarray<double> time) -> void;
+  auto setTime(Array1D<Real> time) -> void;
 
  private:
-  xt::xarray<double> _time;
+  Array1D<Real> _time;
 };
 
 }  // namespace xfdtd

@@ -3,9 +3,9 @@
 
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/exception/exception.h>
+#include <xfdtd/common/type_define.h>
 
 #include <utility>
-#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 
@@ -23,95 +23,48 @@ class EMF {
 
   enum class Field { EX, EY, EZ, EM, HX, HY, HZ, HM };
 
+ public:
+  template <EMF::Attribute a>
+  static constexpr auto dualAttribute() -> Attribute;
+
+ public:
   static Field fieldFromAttributeAndComponent(Attribute a, Component c);
 
   static Component componentFromField(Field f);
 
   static Attribute attributeFromField(Field f);
 
-  EMF() = default;
+  const Array3D<Real>& ex() const;
 
-  EMF(const EMF&) = default;
+  const Array3D<Real>& ey() const;
 
-  EMF(EMF&&) noexcept = default;
+  const Array3D<Real>& ez() const;
 
-  EMF& operator=(const EMF&) = default;
+  const Array3D<Real>& hx() const;
 
-  EMF& operator=(EMF&&) noexcept = default;
+  const Array3D<Real>& hy() const;
 
-  ~EMF() = default;
+  const Array3D<Real>& hz() const;
 
-  const xt::xarray<double>& ex() const;
+  const Array3D<Real>& field(Field f) const;
 
-  const xt::xarray<double>& ey() const;
+  const Array3D<Real>& field(Attribute a, Component c) const;
 
-  const xt::xarray<double>& ez() const;
+  Array3D<Real>& ex();
 
-  const xt::xarray<double>& hx() const;
+  Array3D<Real>& ey();
 
-  const xt::xarray<double>& hy() const;
+  Array3D<Real>& ez();
 
-  const xt::xarray<double>& hz() const;
+  Array3D<Real>& hx();
 
-  const xt::xarray<double>& field(Field f) const;
+  Array3D<Real>& hy();
 
-  const xt::xarray<double>& field(Attribute a, Component c) const;
+  Array3D<Real>& hz();
 
-  xt::xarray<double>& ex();
+  Array3D<Real>& field(Field f);
 
-  xt::xarray<double>& ey();
-
-  xt::xarray<double>& ez();
-
-  xt::xarray<double>& hx();
-
-  xt::xarray<double>& hy();
-
-  xt::xarray<double>& hz();
-
-  xt::xarray<double>& field(Field f);
-
-  xt::xarray<double>& field(Attribute a, Component c);
-
-  double fieldFaceCenter(std::size_t i, std::size_t j, std::size_t k, Field f,
-                         Axis::XYZ xyz) const;
-
-  double fieldFaceCenterX(std::size_t i, std::size_t j, std::size_t k,
-                          Field f) const;
-
-  double fieldFaceCenterY(std::size_t i, std::size_t j, std::size_t k,
-                          Field f) const;
-
-  double fieldFaceCenterZ(std::size_t i, std::size_t j, std::size_t k,
-                          Field f) const;
-
-  // double exFaceCenterX(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double eyFaceCenterX(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double ezFaceCenterX(std::size_t i, std::size_t j, std::size_t k) const;
-
-  // double hxFaceCenterX(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double hyFaceCenterX(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double hzFaceCenterX(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double ezFaceCenterY(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double exFaceCenterY(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double hzFaceCenterY(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double hxFaceCenterY(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double exFaceCenterZ(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double eyFaceCenterZ(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double hxFaceCenterZ(std::size_t i, std::size_t j, std::size_t k) const;
-
-  double hyFaceCenterZ(std::size_t i, std::size_t j, std::size_t k) const;
+  Array3D<Real>& field(Attribute a, Component c);
 
   void allocateEx(std::size_t nx, std::size_t ny, std::size_t nz);
 
@@ -126,9 +79,82 @@ class EMF {
   void allocateHz(std::size_t nx, std::size_t ny, std::size_t nz);
 
  private:
-  xt::xarray<double> _ex, _ey, _ez;
-  xt::xarray<double> _hx, _hy, _hz;
+  Array3D<Real> _ex, _ey, _ez;
+  Array3D<Real> _hx, _hy, _hz;
 };
+
+template <EMF::Attribute a>
+inline constexpr auto EMF::dualAttribute() -> EMF::Attribute {
+  if constexpr (a == EMF::Attribute::E) {
+    return EMF::Attribute::H;
+  } else if constexpr (a == EMF::Attribute::H) {
+    return EMF::Attribute::E;
+  } else {
+    throw XFDTDEMFException{"dualAttribute(): Invalid EMF::Attribute"};
+  }
+}
+
+template <EMF::Field f>
+inline constexpr auto fieldToAttribute() -> EMF::Attribute {
+  if constexpr (f == EMF::Field::EX || f == EMF::Field::EY ||
+                f == EMF::Field::EZ) {
+    return EMF::Attribute::E;
+  } else if constexpr (f == EMF::Field::HX || f == EMF::Field::HY ||
+                       f == EMF::Field::HZ) {
+    return EMF::Attribute::H;
+  } else {
+    throw XFDTDEMFException{"fieldToAttribute(): Invalid EMF::Field"};
+  }
+}
+
+template <EMF::Field f>
+inline constexpr auto fieldToComponent() -> EMF::Component {
+  if constexpr (f == EMF::Field::EX || f == EMF::Field::HX) {
+    return EMF::Component::X;
+  } else if constexpr (f == EMF::Field::EY || f == EMF::Field::HY) {
+    return EMF::Component::Y;
+  } else if constexpr (f == EMF::Field::EZ || f == EMF::Field::HZ) {
+    return EMF::Component::Z;
+  } else if constexpr (f == EMF::Field::EM || f == EMF::Field::HM) {
+    return EMF::Component::Magnitude;
+  } else {
+    throw XFDTDEMFException{"fieldToComponent(): Invalid EMF::Field"};
+  }
+}
+
+template <EMF::Attribute a, EMF::Component c>
+inline constexpr auto attributeComponentToField() -> EMF::Field {
+  if constexpr (a == EMF::Attribute::E) {
+    if constexpr (c == EMF::Component::X) {
+      return EMF::Field::EX;
+    } else if constexpr (c == EMF::Component::Y) {
+      return EMF::Field::EY;
+    } else if constexpr (c == EMF::Component::Z) {
+      return EMF::Field::EZ;
+    } else if constexpr (c == EMF::Component::Magnitude) {
+      return EMF::Field::EM;
+    } else {
+      throw XFDTDEMFException{
+          "attributeComponentToField(): Invalid EMF::Component"};
+    }
+  } else if constexpr (a == EMF::Attribute::H) {
+    if constexpr (c == EMF::Component::X) {
+      return EMF::Field::HX;
+    } else if constexpr (c == EMF::Component::Y) {
+      return EMF::Field::HY;
+    } else if constexpr (c == EMF::Component::Z) {
+      return EMF::Field::HZ;
+    } else if constexpr (c == EMF::Component::Magnitude) {
+      return EMF::Field::HM;
+    } else {
+      throw XFDTDEMFException{
+          "attributeComponentToField(): Invalid EMF::Component"};
+    }
+  } else {
+    throw XFDTDEMFException{
+        "attributeComponentToField(): Invalid EMF::Attribute"};
+  }
+}
 
 }  // namespace xfdtd
 

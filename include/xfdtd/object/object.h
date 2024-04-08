@@ -6,7 +6,8 @@
 #include <cstddef>
 #include <memory>
 
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/common/index_task.h>
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/material/material.h"
@@ -54,7 +55,7 @@ class Object {
   virtual void correctH();
 
   virtual std::unique_ptr<Corrector> generateCorrector(
-      const Divider::Task<std::size_t>& task);
+      const Task<std::size_t>& task);
 
   std::string name() const;
 

@@ -4,13 +4,12 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <xtensor.hpp>
 
 namespace xfdtd {
 
-ElectroMagneticProperty::ElectroMagneticProperty(double epsilon_r, double mu_r,
-                                                 double sigma_e, double sigma_m)
+ElectroMagneticProperty::ElectroMagneticProperty(Real epsilon_r, Real mu_r,
+                                                 Real sigma_e, Real sigma_m)
     : _epsilon_r{epsilon_r},
       _mu_r{mu_r},
       _sigma_e{sigma_e},
@@ -45,19 +44,19 @@ std::string ElectroMagneticProperty::toString() const {
          ", sigma_m: " + std::to_string(_sigma_m) + "}";
 }
 
-double ElectroMagneticProperty::epsilonR() const { return _epsilon_r; }
+Real ElectroMagneticProperty::epsilonR() const { return _epsilon_r; }
 
-double ElectroMagneticProperty::muR() const { return _mu_r; }
+Real ElectroMagneticProperty::muR() const { return _mu_r; }
 
-double ElectroMagneticProperty::sigmaE() const { return _sigma_e; }
+Real ElectroMagneticProperty::sigmaE() const { return _sigma_e; }
 
-double ElectroMagneticProperty::sigmaM() const { return _sigma_m; }
+Real ElectroMagneticProperty::sigmaM() const { return _sigma_m; }
 
-double ElectroMagneticProperty::epsilon() const { return _epsilon; }
+Real ElectroMagneticProperty::epsilon() const { return _epsilon; }
 
-double ElectroMagneticProperty::mu() const { return _mu; }
+Real ElectroMagneticProperty::mu() const { return _mu; }
 
-std::complex<double> ElectroMagneticProperty::refractIndex() const {
+std::complex<Real> ElectroMagneticProperty::refractIndex() const {
   return _refract_index;
 }
 

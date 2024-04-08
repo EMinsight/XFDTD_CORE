@@ -4,6 +4,7 @@
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/object/object.h"
 #include "xfdtd/shape/cylinder.h"
+#include <xfdtd/common/type_define.h>
 
 namespace xfdtd {
 
@@ -29,7 +30,7 @@ class ThinWire : public Object {
 
  private:
   Axis::XYZ _axis;
-  double _radius;
+  Real _radius;
 
   bool isEnoughThin() const;
 };

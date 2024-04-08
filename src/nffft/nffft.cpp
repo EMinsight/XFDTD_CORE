@@ -1,8 +1,9 @@
+#include <xfdtd/common/constant.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/nffft/nffft.h>
+#include <xfdtd/parallel/mpi_config.h>
 #include <xfdtd/parallel/mpi_support.h>
-#include <xfdtd/util/constant.h>
 #include <xfdtd/util/transform.h>
 
 #include <complex>
@@ -18,12 +19,11 @@
 #include <xtensor/xnpy.hpp>
 
 #include "nffft/nffft_fd_data.h"
-#include "xfdtd/parallel/mpi_config.h"
 
 namespace xfdtd {
 
 NFFFT::NFFFT(std::size_t distance_x, std::size_t distance_y,
-             std::size_t distance_z, xt::xarray<double> frequencies,
+             std::size_t distance_z, Array1D<Real> frequencies,
              std::string output_dir)
     : _distance_x{distance_x},
       _distance_y{distance_y},
@@ -116,16 +116,16 @@ auto NFFFT::update() -> void {
   }
 }
 
-auto NFFFT::processFarField(const xt::xtensor<double, 1>& theta, double phi,
+auto NFFFT::processFarField(const xt::xtensor<Real, 1>& theta, Real phi,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
-  processFarField(theta, xt::xtensor<double, 1>{phi}, sub_dir, origin);
+  processFarField(theta, xt::xtensor<Real, 1>{phi}, sub_dir, origin);
 }
 
-auto NFFFT::processFarField(double theta, const xt::xtensor<double, 1>& phi,
+auto NFFFT::processFarField(Real theta, const xt::xtensor<Real, 1>& phi,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
-  processFarField(xt::xtensor<double, 1>{theta}, phi, sub_dir, origin);
+  processFarField(xt::xtensor<Real, 1>{theta}, phi, sub_dir, origin);
 }
 
 void NFFFT::outputRadiationPower() {
@@ -134,17 +134,21 @@ void NFFFT::outputRadiationPower() {
   }
 
   auto num_freq = _fd_plane_data.size();
-  xt::xtensor<double, 1> freq_arr = xt::zeros<double>({num_freq});
-  xt::xtensor<double, 1> node_power_arr = xt::zeros<double>({num_freq});
-  xt::xtensor<double, 1> power_arr = xt::zeros<double>({num_freq});
+  xt::xtensor<Real, 1> freq_arr = xt::zeros<Real>({num_freq});
+  xt::xtensor<Real, 1> node_power_arr = xt::zeros<Real>({num_freq});
+  xt::xtensor<Real, 1> power_arr = xt::zeros<Real>({num_freq});
 
   for (auto i = 0; i < num_freq; ++i) {
     freq_arr(i) = _fd_plane_data[i].frequency();
     node_power_arr(i) = _fd_plane_data[i].power();
   }
 
-  MpiSupport::instance().reduceSum(nffftMPIConfig(), node_power_arr.data(),
-                                   power_arr.data(), node_power_arr.size());
+  if (nffftMPIConfig().size() <= 1) {
+    power_arr = node_power_arr;
+  } else {
+    MpiSupport::instance().reduceSum(nffftMPIConfig(), node_power_arr.data(),
+                                     power_arr.data(), node_power_arr.size());
+  }
 
   if (!nffftMPIConfig().isRoot()) {
     return;
@@ -153,14 +157,10 @@ void NFFFT::outputRadiationPower() {
   if (!std::filesystem::exists(_output_dir)) {
     std::filesystem::create_directories(_output_dir);
   }
-  std::cout << "Rank: " << nffftMPIConfig().rank() << " do check power"
-            << "\n";
 
   auto data = xt::stack(xt::xtuple(freq_arr, power_arr));
   xt::dump_npy((std::filesystem::path{_output_dir} / "power.npy").string(),
                data);
-  std::cout << "Rank: " << nffftMPIConfig().rank() << " do write power done"
-            << "\n";
 }
 
 auto NFFFT::initGlobal() -> void {
@@ -191,35 +191,31 @@ auto NFFFT::initGlobal() -> void {
                        Grid{global_ie - global_is, global_je - global_js,
                             global_ke - global_ks}});
 
-  setGlobalTaskSurfaceXN(
-      Divider::makeIndexTask(Divider::makeIndexRange(global_is, global_is + 1),
-                             Divider::makeIndexRange(global_js, global_je),
-                             Divider::makeIndexRange(global_ks, global_ke)));
+  setGlobalTaskSurfaceXN(makeIndexTask(makeIndexRange(global_is, global_is + 1),
+                                       makeIndexRange(global_js, global_je),
+                                       makeIndexRange(global_ks, global_ke)));
 
-  setGlobalTaskSurfaceXP(
-      Divider::makeIndexTask(Divider::makeIndexRange(global_ie, global_ie + 1),
-                             Divider::makeIndexRange(global_js, global_je),
-                             Divider::makeIndexRange(global_ks, global_ke)));
+  setGlobalTaskSurfaceXP(makeIndexTask(makeIndexRange(global_ie, global_ie + 1),
+                                       makeIndexRange(global_js, global_je),
+                                       makeIndexRange(global_ks, global_ke)));
 
-  setGlobalTaskSurfaceYN(
-      Divider::makeIndexTask(Divider::makeIndexRange(global_is, global_ie),
-                             Divider::makeIndexRange(global_js, global_js + 1),
-                             Divider::makeIndexRange(global_ks, global_ke)));
+  setGlobalTaskSurfaceYN(makeIndexTask(makeIndexRange(global_is, global_ie),
+                                       makeIndexRange(global_js, global_js + 1),
+                                       makeIndexRange(global_ks, global_ke)));
 
-  setGlobalTaskSurfaceYP(
-      Divider::makeIndexTask(Divider::makeIndexRange(global_is, global_ie),
-                             Divider::makeIndexRange(global_je, global_je + 1),
-                             Divider::makeIndexRange(global_ks, global_ke)));
+  setGlobalTaskSurfaceYP(makeIndexTask(makeIndexRange(global_is, global_ie),
+                                       makeIndexRange(global_je, global_je + 1),
+                                       makeIndexRange(global_ks, global_ke)));
 
-  setGlobalTaskSurfaceZN(Divider::makeIndexTask(
-      Divider::makeIndexRange(global_is, global_ie),
-      Divider::makeIndexRange(global_js, global_je),
-      Divider::makeIndexRange(global_ks, global_ks + 1)));
+  setGlobalTaskSurfaceZN(
+      makeIndexTask(makeIndexRange(global_is, global_ie),
+                    makeIndexRange(global_js, global_je),
+                    makeIndexRange(global_ks, global_ks + 1)));
 
-  setGlobalTaskSurfaceZP(Divider::makeIndexTask(
-      Divider::makeIndexRange(global_is, global_ie),
-      Divider::makeIndexRange(global_js, global_je),
-      Divider::makeIndexRange(global_ke, global_ke + 1)));
+  setGlobalTaskSurfaceZP(
+      makeIndexTask(makeIndexRange(global_is, global_ie),
+                    makeIndexRange(global_js, global_je),
+                    makeIndexRange(global_ke, global_ke + 1)));
 
   const auto& global_grid_space = grid_space->globalGridSpace();
   _cube =
@@ -243,15 +239,14 @@ auto NFFFT::initNode() -> void {
   setNodeTaskSurfaceZP(makeNodeAxisTask(Axis::Direction::ZP));
 }
 
-auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
-    -> Divider::IndexTask {
+auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction) -> IndexTask {
   const auto global_box = globalBox();
   const auto node_box = nodeBox();
   const auto node_global_offset = gridSpacePtr()->globalBox().origin();
   const auto node_lower = gridSpacePtr()->box().origin();
   const auto node_upper = gridSpacePtr()->box().end();
 
-  const auto xyz = Axis::formDirectionToXYZ(direction);
+  const auto xyz = Axis::fromDirectionToXYZ(direction);
 
   const auto [global_offset_a, global_offset_b, global_offset_c] =
       transform::xYZToABC(
@@ -261,12 +256,10 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
 
   const auto [global_range_a, global_range_b, global_range_c] =
       transform::xYZToABC(
-          std::tuple{Divider::makeIndexRange(global_box.origin().i(),
-                                             global_box.end().i()),
-                     Divider::makeIndexRange(global_box.origin().j(),
-                                             global_box.end().j()),
-                     Divider::makeIndexRange(global_box.origin().k(),
-                                             global_box.end().k())},
+          std::tuple{
+              makeIndexRange(global_box.origin().i(), global_box.end().i()),
+              makeIndexRange(global_box.origin().j(), global_box.end().j()),
+              makeIndexRange(global_box.origin().k(), global_box.end().k())},
           xyz);
 
   const auto [node_lower_a, node_lower_b, node_lower_c] = transform::xYZToABC(
@@ -276,14 +269,13 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
       std::tuple{node_upper.i(), node_upper.j(), node_upper.k()}, xyz);
 
   auto [node_range_a, node_range_b, node_range_c] = transform::xYZToABC(
-      std::tuple{
-          Divider::makeIndexRange(node_box.origin().i(), node_box.end().i()),
-          Divider::makeIndexRange(node_box.origin().j(), node_box.end().j()),
-          Divider::makeIndexRange(node_box.origin().k(), node_box.end().k())},
+      std::tuple{makeIndexRange(node_box.origin().i(), node_box.end().i()),
+                 makeIndexRange(node_box.origin().j(), node_box.end().j()),
+                 makeIndexRange(node_box.origin().k(), node_box.end().k())},
       xyz);
 
-  auto invalid_task = Divider::IndexTask{};
-  auto range_c = Divider::IndexRange{};
+  auto invalid_task = IndexTask{};
+  auto range_c = IndexRange{};
 
   const auto global_dest_c =
       (Axis::directionNegative(direction) ? (global_range_c.start())
@@ -299,8 +291,7 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
       return invalid_task;
     }
 
-    range_c =
-        Divider::makeIndexRange(node_range_c.start(), node_range_c.start() + 1);
+    range_c = makeIndexRange(node_range_c.start(), node_range_c.start() + 1);
   }
 
   if (node_range_c.end() + global_offset_c == global_dest_c) {
@@ -309,8 +300,7 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
       return invalid_task;
     }
 
-    range_c =
-        Divider::makeIndexRange(node_range_c.end(), node_range_c.end() + 1);
+    range_c = makeIndexRange(node_range_c.end(), node_range_c.end() + 1);
   }
 
   if (!range_c.valid()) {
@@ -327,7 +317,7 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
       end = upper - 1;
     }
 
-    return Divider::makeIndexRange(start, end);
+    return makeIndexRange(start, end);
   };
 
   auto range_a = make_secondary_axis_range(
@@ -338,7 +328,7 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction)
   auto [range_x, range_y, range_z] =
       transform::aBCToXYZ(std::tuple{range_a, range_b, range_c}, xyz);
 
-  return Divider::makeIndexTask(range_x, range_y, range_z);
+  return makeIndexTask(range_x, range_y, range_z);
 }
 
 auto NFFFT::generateSurface() -> void {
@@ -350,15 +340,15 @@ auto NFFFT::generateSurface() -> void {
   }
 }
 
-auto NFFFT::processFarField(const xt::xtensor<double, 1>& theta,
-                            const xt::xtensor<double, 1>& phi,
+auto NFFFT::processFarField(const xt::xtensor<Real, 1>& theta,
+                            const xt::xtensor<Real, 1>& phi,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
   if (!valid()) {
     return;
   }
 
-  xt::xtensor<std::complex<double>, 1> node_data;
+  xt::xtensor<std::complex<Real>, 1> node_data;
   for (const auto& f : _fd_plane_data) {
     const auto freq = f.frequency();
     auto node_a_theta = f.aTheta(theta, phi, origin);
@@ -366,10 +356,10 @@ auto NFFFT::processFarField(const xt::xtensor<double, 1>& theta,
     auto node_a_phi = f.aPhi(theta, phi, origin);
     auto node_f_theta = f.fTheta(theta, phi, origin);
 
-    xt::xtensor<std::complex<double>, 1> a_theta = xt::zeros_like(node_a_theta);
-    xt::xtensor<std::complex<double>, 1> f_phi = xt::zeros_like(node_f_phi);
-    xt::xtensor<std::complex<double>, 1> a_phi = xt::zeros_like(node_a_phi);
-    xt::xtensor<std::complex<double>, 1> f_theta = xt::zeros_like(node_f_theta);
+    xt::xtensor<std::complex<Real>, 1> a_theta = xt::zeros_like(node_a_theta);
+    xt::xtensor<std::complex<Real>, 1> f_phi = xt::zeros_like(node_f_phi);
+    xt::xtensor<std::complex<Real>, 1> a_phi = xt::zeros_like(node_a_phi);
+    xt::xtensor<std::complex<Real>, 1> f_theta = xt::zeros_like(node_f_theta);
 
     node_data = xt::concatenate(xt::xtuple(node_data, node_a_theta));
     node_data = xt::concatenate(xt::xtuple(node_data, node_f_phi));
@@ -379,8 +369,8 @@ auto NFFFT::processFarField(const xt::xtensor<double, 1>& theta,
 
   // rename later
   auto nffft_gather_func =
-      [this](const xt::xtensor<std::complex<double>, 1>& send_data,
-             xt::xtensor<std::complex<double>, 1>& recv_data) {
+      [this](const xt::xtensor<std::complex<Real>, 1>& send_data,
+             xt::xtensor<std::complex<Real>, 1>& recv_data) {
         if (this->nffftMPIConfig().size() <= 1) {
           recv_data = send_data;
           return;
@@ -449,51 +439,51 @@ auto NFFFT::globalBox() const -> const GridBox& { return _global_box; }
 
 auto NFFFT::nodeBox() const -> const GridBox& { return _node_box; }
 
-auto NFFFT::globalTaskSurfaceXN() const -> const Divider::IndexTask& {
+auto NFFFT::globalTaskSurfaceXN() const -> const IndexTask& {
   return _global_task_surface_xn;
 }
 
-auto NFFFT::globalTaskSurfaceXP() const -> const Divider::IndexTask& {
+auto NFFFT::globalTaskSurfaceXP() const -> const IndexTask& {
   return _global_task_surface_xp;
 }
 
-auto NFFFT::globalTaskSurfaceYN() const -> const Divider::IndexTask& {
+auto NFFFT::globalTaskSurfaceYN() const -> const IndexTask& {
   return _global_task_surface_yn;
 }
 
-auto NFFFT::globalTaskSurfaceYP() const -> const Divider::IndexTask& {
+auto NFFFT::globalTaskSurfaceYP() const -> const IndexTask& {
   return _global_task_surface_yp;
 }
 
-auto NFFFT::globalTaskSurfaceZN() const -> const Divider::IndexTask& {
+auto NFFFT::globalTaskSurfaceZN() const -> const IndexTask& {
   return _global_task_surface_zn;
 }
 
-auto NFFFT::globalTaskSurfaceZP() const -> const Divider::IndexTask& {
+auto NFFFT::globalTaskSurfaceZP() const -> const IndexTask& {
   return _global_task_surface_zp;
 }
 
-auto NFFFT::nodeTaskSurfaceXN() const -> const Divider::IndexTask& {
+auto NFFFT::nodeTaskSurfaceXN() const -> const IndexTask& {
   return _node_task_surface_xn;
 }
 
-auto NFFFT::nodeTaskSurfaceXP() const -> const Divider::IndexTask& {
+auto NFFFT::nodeTaskSurfaceXP() const -> const IndexTask& {
   return _node_task_surface_xp;
 }
 
-auto NFFFT::nodeTaskSurfaceYN() const -> const Divider::IndexTask& {
+auto NFFFT::nodeTaskSurfaceYN() const -> const IndexTask& {
   return _node_task_surface_yn;
 }
 
-auto NFFFT::nodeTaskSurfaceYP() const -> const Divider::IndexTask& {
+auto NFFFT::nodeTaskSurfaceYP() const -> const IndexTask& {
   return _node_task_surface_yp;
 }
 
-auto NFFFT::nodeTaskSurfaceZN() const -> const Divider::IndexTask& {
+auto NFFFT::nodeTaskSurfaceZN() const -> const IndexTask& {
   return _node_task_surface_zn;
 }
 
-auto NFFFT::nodeTaskSurfaceZP() const -> const Divider::IndexTask& {
+auto NFFFT::nodeTaskSurfaceZP() const -> const IndexTask& {
   return _node_task_surface_zp;
 }
 
@@ -519,51 +509,51 @@ auto NFFFT::setGlobalBox(GridBox box) -> void { _global_box = box; }
 
 auto NFFFT::setNodeBox(GridBox box) -> void { _node_box = box; }
 
-auto NFFFT::setGlobalTaskSurfaceXN(Divider::IndexTask task) -> void {
+auto NFFFT::setGlobalTaskSurfaceXN(IndexTask task) -> void {
   _global_task_surface_xn = task;
 }
 
-auto NFFFT::setGlobalTaskSurfaceXP(Divider::IndexTask task) -> void {
+auto NFFFT::setGlobalTaskSurfaceXP(IndexTask task) -> void {
   _global_task_surface_xp = task;
 }
 
-auto NFFFT::setGlobalTaskSurfaceYN(Divider::IndexTask task) -> void {
+auto NFFFT::setGlobalTaskSurfaceYN(IndexTask task) -> void {
   _global_task_surface_yn = task;
 }
 
-auto NFFFT::setGlobalTaskSurfaceYP(Divider::IndexTask task) -> void {
+auto NFFFT::setGlobalTaskSurfaceYP(IndexTask task) -> void {
   _global_task_surface_yp = task;
 }
 
-auto NFFFT::setGlobalTaskSurfaceZN(Divider::IndexTask task) -> void {
+auto NFFFT::setGlobalTaskSurfaceZN(IndexTask task) -> void {
   _global_task_surface_zn = task;
 }
 
-auto NFFFT::setGlobalTaskSurfaceZP(Divider::IndexTask task) -> void {
+auto NFFFT::setGlobalTaskSurfaceZP(IndexTask task) -> void {
   _global_task_surface_zp = task;
 }
 
-auto NFFFT::setNodeTaskSurfaceXN(Divider::IndexTask task) -> void {
+auto NFFFT::setNodeTaskSurfaceXN(IndexTask task) -> void {
   _node_task_surface_xn = task;
 }
 
-auto NFFFT::setNodeTaskSurfaceXP(Divider::IndexTask task) -> void {
+auto NFFFT::setNodeTaskSurfaceXP(IndexTask task) -> void {
   _node_task_surface_xp = task;
 }
 
-auto NFFFT::setNodeTaskSurfaceYN(Divider::IndexTask task) -> void {
+auto NFFFT::setNodeTaskSurfaceYN(IndexTask task) -> void {
   _node_task_surface_yn = task;
 }
 
-auto NFFFT::setNodeTaskSurfaceYP(Divider::IndexTask task) -> void {
+auto NFFFT::setNodeTaskSurfaceYP(IndexTask task) -> void {
   _node_task_surface_yp = task;
 }
 
-auto NFFFT::setNodeTaskSurfaceZN(Divider::IndexTask task) -> void {
+auto NFFFT::setNodeTaskSurfaceZN(IndexTask task) -> void {
   _node_task_surface_zn = task;
 }
 
-auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
+auto NFFFT::setNodeTaskSurfaceZP(IndexTask task) -> void {
   _node_task_surface_zp = task;
 }
 
@@ -574,10 +564,10 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
       calculationParamPtr()->timeParam()->startTimeStep()};
   const auto dt{calculationParamPtr()->timeParam()->dt()};
   _transform_e =
-      xt::zeros<std::complex<double>>({_frequencies.size(),
+      xt::zeros<std::complex<Real>>({_frequencies.size(),
       total_time_step});
   _transform_h =
-      xt::zeros<std::complex<double>>({_frequencies.size(),
+      xt::zeros<std::complex<Real>>({_frequencies.size(),
       total_time_step});
   for (auto f{0}; f < _frequencies.size(); ++f) {
     for (std::size_t t{0}; t < total_time_step; ++t) {
@@ -724,8 +714,8 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
   }
 } */
 
-/* void NFFFT::processFarField(const xt::xtensor<double, 1>& theta,
-                            const xt::xtensor<double, 1>& phi,
+/* void NFFFT::processFarField(const xt::xtensor<Real, 1>& theta,
+                            const xt::xtensor<Real, 1>& phi,
                             const std::string& sub_dir, const Vector& origin) {
   using namespace std::complex_literals;
   auto box{nodeBox()};
@@ -754,10 +744,10 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
 
   auto num_angle{theta.size() * phi.size()};
 
-  _a_theta = xt::zeros<std::complex<double>>({_frequencies.size(), num_angle});
-  _a_phi = xt::zeros<std::complex<double>>({_frequencies.size(), num_angle});
-  _f_theta = xt::zeros<std::complex<double>>({_frequencies.size(), num_angle});
-  _f_phi = xt::zeros<std::complex<double>>({_frequencies.size(), num_angle});
+  _a_theta = xt::zeros<std::complex<Real>>({_frequencies.size(), num_angle});
+  _a_phi = xt::zeros<std::complex<Real>>({_frequencies.size(), num_angle});
+  _f_theta = xt::zeros<std::complex<Real>>({_frequencies.size(), num_angle});
+  _f_phi = xt::zeros<std::complex<Real>>({_frequencies.size(), num_angle});
 
   auto cos_t{xt::cos(theta)};
   auto sin_t{xt::sin(theta)};
@@ -933,8 +923,8 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
       [](const auto& num_freq, const auto& direction, const auto& task,
          const auto& size_x, const auto& size_y, const auto& size_z,
          const auto& ja, const auto& jb, const auto& ma, const auto& mb) {
-        xt::xarray<std::complex<double>> power =
-            xt::zeros<std::complex<double>>({num_freq});
+        xt::xarray<std::complex<Real>> power =
+            xt::zeros<std::complex<Real>>({num_freq});
 
         if (!task.valid()) {
           return power;
@@ -970,7 +960,7 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
   } always_one;
 
   auto future_arr =
-      std::vector<std::future<xt::xarray<std::complex<double>>>>();
+      std::vector<std::future<xt::xarray<std::complex<Real>>>>();
 
   future_arr.emplace_back(std::async(calculate_power, _frequencies.size(),
                                      Axis::Direction::XN,
@@ -1001,8 +991,8 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
                  Axis::Direction::ZP, nodeTaskSurfaceZP(), size_x, size_y,
                  always_one, _jx_zp, _jy_zp, _mx_zp, _my_zp));
 
-  xt::xarray<std::complex<double>> power =
-      xt::zeros<std::complex<double>>({_frequencies.size()});
+  xt::xarray<std::complex<Real>> power =
+      xt::zeros<std::complex<Real>>({_frequencies.size()});
 
   std::for_each(future_arr.begin(), future_arr.end(), [&power](auto& future)
   {
@@ -1011,7 +1001,7 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
     power += res;
   });
 
-  xt::xarray<double> node_res = 0.5 * xt::real(power);
+  Array1D<Real> node_res = 0.5 * xt::real(power);
   auto global_res = xt::empty_like(node_res);
 
   auto gather_power = [this](const auto& node_data, auto&& data) {
@@ -1036,7 +1026,7 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
                              const auto& node_data, auto&& data) {
     auto& mpi_support = MpiSupport::instance();
     const auto& mpi_config = this->nffftMPIConfig();
-    const auto& node_res = xt::xarray<double>{};
+    const auto& node_res = Array1D<Real>{};
 
     if (!this->valid()) {
       if (!mpi_support.isRoot()) {
@@ -1050,7 +1040,7 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
       }
 
       mpi_support.recv(mpi_support.config(), data.data(),
-                       sizeof(double) * data.size(), MpiSupport::ANY_SOURCE,
+                       sizeof(Real) * data.size(), MpiSupport::ANY_SOURCE,
                        tag);
       return;
     }
@@ -1063,14 +1053,14 @@ auto NFFFT::setNodeTaskSurfaceZP(Divider::IndexTask task) -> void {
 
     if (!mpi_support.isRoot() && mpi_config.isRoot()) {
       mpi_support.send(mpi_support.config(), data.data(),
-                       sizeof(double) * data.size(),
+                       sizeof(Real) * data.size(),
                        mpi_support.config().root(), tag);
       return;
     }
 
     if (mpi_support.isRoot() && !mpi_config.isRoot()) {
       mpi_support.recv(mpi_support.config(), data.data(),
-                       sizeof(double) * data.size(), MpiSupport::ANY_SOURCE,
+                       sizeof(Real) * data.size(), MpiSupport::ANY_SOURCE,
                        tag);
       return;
     }

@@ -1,6 +1,7 @@
 #ifndef _XFDTD_CORE_NETWORK_H_
 #define _XFDTD_CORE_NETWORK_H_
 
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/network/port.h>
 
@@ -26,7 +27,7 @@ class Network {
   explicit Network(std::string output_dir);
 
   Network(std::vector<std::shared_ptr<Port>> ports,
-          xt::xarray<double> frequencies, std::string output_dir);
+          Array1D<Real> frequencies, std::string output_dir);
 
   Network(const Network& network) = default;
 
@@ -46,17 +47,17 @@ class Network {
 
   void addPort(std::shared_ptr<Port> port);
 
-  void setFrequencies(xt::xarray<double> frequencies);
+  void setFrequencies(Array1D<Real> frequencies);
 
   void setOutputDir(std::string output_dir);
 
  private:
   std::vector<std::shared_ptr<Port>> _ports;
-  xt::xarray<double> _frequencies;
+  Array1D<Real> _frequencies;
   std::string _output_dir;
 
   std::set<std::size_t> _port_set;
-  std::unordered_map<int, xt::xarray<std::complex<double>>> _s_parameters;
+  std::unordered_map<int, Array1D<std::complex<Real>>> _s_parameters;
 };
 
 }  // namespace xfdtd

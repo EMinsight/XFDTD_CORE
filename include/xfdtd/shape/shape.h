@@ -2,6 +2,7 @@
 #define _XFDTD_CORE_SHAPE_H_
 
 #include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/common/type_define.h>
 
 #include <memory>
 #include <vector>
@@ -52,7 +53,7 @@ class Shape {
 
   virtual std::string toString() const;
 
-  virtual bool isInside(double x, double y, double z) const = 0;
+  virtual bool isInside(Real x, Real y, Real z) const = 0;
 
   virtual bool isInside(const Vector& vector) const = 0;
 

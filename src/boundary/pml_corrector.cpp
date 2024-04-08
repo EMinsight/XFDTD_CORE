@@ -1,6 +1,6 @@
 #include "boundary/pml_corrector.h"
 
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/index_task.h>
 
 #include <sstream>
 #include <string>
@@ -12,10 +12,10 @@ namespace xfdtd {
 std::string PMLCorrectorX::toString() const {
   std::stringstream ss;
   ss << "PML X:\n";
-  auto e_x_range = Divider::makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
-  auto h_x_range = Divider::makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
-  auto y_range = Divider::makeIndexRange(_a_s, _a_s + _a_n);
-  auto z_range = Divider::makeIndexRange(_b_s, _b_s + _b_n);
+  auto e_x_range = makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
+  auto h_x_range = makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
+  auto y_range = makeIndexRange(_a_s, _a_s + _a_n);
+  auto z_range = makeIndexRange(_b_s, _b_s + _b_n);
   ss << " E: " << e_x_range.toString() << ", " << y_range.toString() << ", "
      << z_range.toString() << "\n";
   ss << " H: " << h_x_range.toString() << ", " << y_range.toString() << ", "
@@ -84,10 +84,10 @@ void PMLCorrectorX::correctH() {
 std::string PMLCorrectorY::toString() const {
   std::stringstream ss;
   ss << "PML Y:\n";
-  auto e_y_range = Divider::makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
-  auto h_y_range = Divider::makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
-  auto x_range = Divider::makeIndexRange(_b_s, _b_s + _b_n);
-  auto z_range = Divider::makeIndexRange(_a_s, _a_s + _a_n);
+  auto e_y_range = makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
+  auto h_y_range = makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
+  auto x_range = makeIndexRange(_b_s, _b_s + _b_n);
+  auto z_range = makeIndexRange(_a_s, _a_s + _a_n);
   ss << " E: " << x_range.toString() << ", " << e_y_range.toString() << ", "
      << z_range.toString() << "\n";
   ss << " H: " << x_range.toString() << ", " << h_y_range.toString() << ", "
@@ -162,10 +162,10 @@ void PMLCorrectorY::correctH() {
 std::string PMLCorrectorZ::toString() const {
   std::stringstream ss;
   ss << "PML Z:\n";
-  auto e_z_range = Divider::makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
-  auto h_z_range = Divider::makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
-  auto x_range = Divider::makeIndexRange(_a_s, _a_s + _a_n);
-  auto y_range = Divider::makeIndexRange(_b_s, _b_s + _b_n);
+  auto e_z_range = makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
+  auto h_z_range = makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
+  auto x_range = makeIndexRange(_a_s, _a_s + _a_n);
+  auto y_range = makeIndexRange(_b_s, _b_s + _b_n);
   ss << " E: " << x_range.toString() << ", " << y_range.toString() << ", "
      << e_z_range.toString() << "\n";
   ss << " H: " << x_range.toString() << ", " << y_range.toString() << ", "

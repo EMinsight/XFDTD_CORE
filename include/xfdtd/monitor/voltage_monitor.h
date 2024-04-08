@@ -38,11 +38,9 @@ class VoltageMonitor : public TimeMonitor {
  private:
   Axis::Direction _direction;
   std::size_t _is, _ie, _js, _je, _ks, _ke;
-  xt::xarray<double> _dc;
-  xt::xarray<double> _coff;
+  Array1D<Real> _dc, _coff;
 
-  // xt::xarray<double> _time;
-  xt::xarray<double> _node_data;
+  Array<Real> _node_data;
 };
 
 }  // namespace xfdtd

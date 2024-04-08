@@ -1,6 +1,7 @@
 #ifndef _XFDTD_CORE_FLOAT_COMPARE_H_
 #define _XFDTD_CORE_FLOAT_COMPARE_H_
 
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/exception/exception.h>
 
 #include <cstdlib>
@@ -16,12 +17,12 @@ enum class FloatCompareOperator {
   GreaterEqual,
 };
 
-inline bool floatCompareEqual(double lhs, double rhs, double epsilon = 1e-8) {
+inline bool floatCompareEqual(Real lhs, Real rhs, Real epsilon = 1e-8) {
   return std::abs(lhs - rhs) <= epsilon;
 }
 
-inline bool floatCompare(double lhs, double rhs, FloatCompareOperator op,
-                         double epsilon = 1e-8) {
+inline bool floatCompare(Real lhs, Real rhs, FloatCompareOperator op,
+                         Real epsilon = 1e-8) {
   switch (op) {
     case FloatCompareOperator::Equal:
       return floatCompareEqual(lhs, rhs, epsilon);

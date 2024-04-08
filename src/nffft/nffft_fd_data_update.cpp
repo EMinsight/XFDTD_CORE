@@ -98,7 +98,7 @@ auto FDPlaneData::update(std::size_t current_time_step) -> void {
 
 template <Axis::XYZ xyz, EMF::Field f>
 auto FDPlaneData::interpolate(const std::size_t& i, const std::size_t& j,
-                              const std::size_t& k) -> double {
+                              const std::size_t& k) -> Real {
   if constexpr (xyz == Axis::XYZ::X) {
     if constexpr (f == EMF::Field::HZ) {
       return interpolateHzFaceX(_emf->hz(), i, j, k);
@@ -148,8 +148,8 @@ auto FDPlaneData::calculateM(std::size_t current_time_step) -> void {
     return;
   }
 
-  double coff_ma = (Axis::directionPositive<direction>()) ? 1.0 : -1.0;
-  double coff_mb = (Axis::directionPositive<direction>()) ? -1.0 : 1.0;
+  Real coff_ma = (Axis::directionPositive<direction>()) ? 1.0 : -1.0;
+  Real coff_mb = (Axis::directionPositive<direction>()) ? -1.0 : 1.0;
 
   const auto is = task.xRange().start();
   const auto js = task.yRange().start();
@@ -185,9 +185,9 @@ auto FDPlaneData::calculateJ(std::size_t current_time_step) -> void {
     return;
   }
 
-  constexpr double coff_ja =
+  constexpr Real coff_ja =
       (Axis::directionPositive<direction>()) ? -1.0 : 1.0;
-  constexpr double coff_jb =
+  constexpr Real coff_jb =
       (Axis::directionPositive<direction>()) ? 1.0 : -1.0;
 
   constexpr auto xyz = Axis::fromDirectionToXYZ<direction>();

@@ -2,7 +2,7 @@
 #define _XFDTD_CORE_MONITOR_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/index_task.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
@@ -53,11 +53,11 @@ class Monitor {
 
   const std::string& outputDir() const;
 
-  const xt::xarray<double>& data() const;
+  const Array<Real>& data() const;
 
   std::unique_ptr<Shape>& shape();
 
-  xt::xarray<double>& data();
+  Array<Real>& data();
 
   void setName(std::string name);
 
@@ -75,9 +75,9 @@ class Monitor {
 
   virtual std::string toString() const;
 
-  auto globalTask() const -> Divider::IndexTask;
+  auto globalTask() const -> IndexTask;
 
-  auto nodeTask() const -> Divider::IndexTask;
+  auto nodeTask() const -> IndexTask;
 
   virtual auto valid() const -> bool;
 
@@ -94,7 +94,7 @@ class Monitor {
 
   auto nodeGridBox() -> GridBox&;
 
-  auto nodeTask() -> Divider::IndexTask&;
+  auto nodeTask() -> IndexTask&;
 
   MpiConfig& monitorMpiConfig();
 
@@ -104,9 +104,9 @@ class Monitor {
 
   auto setNodeGridBox(GridBox grid_box) -> void;
 
-  auto setGlobalTask(Divider::IndexTask task) -> void;
+  auto setGlobalTask(IndexTask task) -> void;
 
-  auto setNodeTask(Divider::IndexTask task) -> void;
+  auto setNodeTask(IndexTask task) -> void;
 
   auto makeMpiSubComm() -> void;
 
@@ -114,7 +114,7 @@ class Monitor {
   std::unique_ptr<Shape> _shape;
   std::string _name;
   std::string _output_dir;
-  xt::xarray<double> _data;
+  Array<Real> _data;
 
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const CalculationParam> _calculation_param;
@@ -122,8 +122,8 @@ class Monitor {
 
   GridBox _global_grid_box;
   GridBox _node_grid_box;
-  Divider::IndexTask _global_task;
-  Divider::IndexTask _node_task;
+  IndexTask _global_task;
+  IndexTask _node_task;
 
   MpiConfig _monitor_mpi_config;
 };

@@ -5,6 +5,7 @@
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/shape/cube.h>
 #include <xfdtd/shape/shape.h>
+#include <xfdtd/common/type_define.h>
 
 #include <cstddef>
 #include <memory>
@@ -113,49 +114,49 @@ class GridSpace {
 
   GridBox box() const;
 
-  double basedDx() const;
+  Real basedDx() const;
 
-  double basedDy() const;
+  Real basedDy() const;
 
-  double basedDz() const;
+  Real basedDz() const;
 
-  double minDx() const;
+  Real minDx() const;
 
-  double minDy() const;
+  Real minDy() const;
 
-  double minDz() const;
+  Real minDz() const;
 
   auto& gridWithMaterial() const { return _grid_with_material; }
 
   std::shared_ptr<GridSpace> globalGridSpace() const;
 
-  const xt::xarray<double>& eNodeX() const;
+  const Array1D<Real>& eNodeX() const;
 
-  const xt::xarray<double>& eNodeY() const;
+  const Array1D<Real>& eNodeY() const;
 
-  const xt::xarray<double>& eNodeZ() const;
+  const Array1D<Real>& eNodeZ() const;
 
-  const xt::xarray<double>& hNodeX() const;
+  const Array1D<Real>& hNodeX() const;
 
-  const xt::xarray<double>& hNodeY() const;
+  const Array1D<Real>& hNodeY() const;
 
-  const xt::xarray<double>& hNodeZ() const;
+  const Array1D<Real>& hNodeZ() const;
 
-  const xt::xarray<double>& eSizeX() const;
+  const Array1D<Real>& eSizeX() const;
 
-  const xt::xarray<double>& eSizeY() const;
+  const Array1D<Real>& eSizeY() const;
 
-  const xt::xarray<double>& eSizeZ() const;
+  const Array1D<Real>& eSizeZ() const;
 
-  const xt::xarray<double>& hSizeX() const;
+  const Array1D<Real>& hSizeX() const;
 
-  const xt::xarray<double>& hSizeY() const;
+  const Array1D<Real>& hSizeY() const;
 
-  const xt::xarray<double>& hSizeZ() const;
+  const Array1D<Real>& hSizeZ() const;
 
-  const xt::xarray<double>& eSize(Axis::XYZ xyz) const;
+  const Array1D<Real>& eSize(Axis::XYZ xyz) const;
 
-  const xt::xarray<double>& hSize(Axis::XYZ xyz) const;
+  const Array1D<Real>& hSize(Axis::XYZ xyz) const;
 
   std::size_t sizeX() const;
 
@@ -163,7 +164,7 @@ class GridSpace {
 
   std::size_t sizeZ() const;
 
-  Grid getGrid(double x, double y, double z) const;
+  Grid getGrid(Real x, Real y, Real z) const;
 
   Grid getGrid(const Vector& vector) const;
 
@@ -175,13 +176,14 @@ class GridSpace {
 
   auto getShapeMask(const Shape* shape) const;
 
-  auto getGridWithMaterialView(const xt::xarray<bool>& mask);
+  template<typename T>
+  auto getGridWithMaterialView(const T& mask);
 
   GridBox getGridBox(const Shape* shape) const;
 
   virtual void correctGridSpace() = 0;
 
-  void extendGridSpace(Axis::Direction direction, std::size_t num, double dl);
+  void extendGridSpace(Axis::Direction direction, std::size_t num, Real dl);
 
   virtual std::unique_ptr<GridSpace> subGridSpace(
       std::size_t start_i, std::size_t start_j, std::size_t start_k,
@@ -210,99 +212,99 @@ class GridSpace {
   GridBox transformNodeToGlobal(const GridBox& box) const;
 
  protected:
-  GridSpace(double dx, double dy, double dz, Dimension dimension,
-            xt::xarray<double> e_node_x, xt::xarray<double> e_node_y,
-            xt::xarray<double> e_node_z);
+  GridSpace(Real dx, Real dy, Real dz, Dimension dimension,
+            Array1D<Real> e_node_x, Array1D<Real> e_node_y,
+            Array1D<Real> e_node_z);
 
   // for subGridSpace
-  GridSpace(Dimension dimension, Type type, GridBox global_box, double based_dx,
-            double based_dy, double based_dz, double min_dx, double min_dy,
-            double min_dz, xt::xarray<double> e_node_x,
-            xt::xarray<double> e_node_y, xt::xarray<double> e_node_z,
-            xt::xarray<double> h_node_x, xt::xarray<double> h_node_y,
-            xt::xarray<double> h_node_z, xt::xarray<double> e_size_x,
-            xt::xarray<double> e_size_y, xt::xarray<double> e_size_z,
-            xt::xarray<double> h_size_x, xt::xarray<double> h_size_y,
-            xt::xarray<double> h_size_z);
+  GridSpace(Dimension dimension, Type type, GridBox global_box, Real based_dx,
+            Real based_dy, Real based_dz, Real min_dx, Real min_dy,
+            Real min_dz, Array1D<Real> e_node_x,
+            Array1D<Real> e_node_y, Array1D<Real> e_node_z,
+            Array1D<Real> h_node_x, Array1D<Real> h_node_y,
+            Array1D<Real> h_node_z, Array1D<Real> e_size_x,
+            Array1D<Real> e_size_y, Array1D<Real> e_size_z,
+            Array1D<Real> h_size_x, Array1D<Real> h_size_y,
+            Array1D<Real> h_size_z);
 
-  xt::xarray<double>& eNodeX();
+  Array1D<Real>& eNodeX();
 
-  xt::xarray<double>& eNodeY();
+  Array1D<Real>& eNodeY();
 
-  xt::xarray<double>& eNodeZ();
+  Array1D<Real>& eNodeZ();
 
-  xt::xarray<double>& hNodeX();
+  Array1D<Real>& hNodeX();
 
-  xt::xarray<double>& hNodeY();
+  Array1D<Real>& hNodeY();
 
-  xt::xarray<double>& hNodeZ();
+  Array1D<Real>& hNodeZ();
 
-  xt::xarray<double>& eSizeX();
+  Array1D<Real>& eSizeX();
 
-  xt::xarray<double>& eSizeY();
+  Array1D<Real>& eSizeY();
 
-  xt::xarray<double>& eSizeZ();
+  Array1D<Real>& eSizeZ();
 
-  xt::xarray<double>& hSizeX();
+  Array1D<Real>& hSizeX();
 
-  xt::xarray<double>& hSizeY();
+  Array1D<Real>& hSizeY();
 
-  xt::xarray<double>& hSizeZ();
+  Array1D<Real>& hSizeZ();
 
-  xt::xarray<double>& eSize(Axis::XYZ xyz);
+  Array1D<Real>& eSize(Axis::XYZ xyz);
 
-  xt::xarray<double>& hSize(Axis::XYZ xyz);
+  Array1D<Real>& hSize(Axis::XYZ xyz);
 
-  void setMinDx(double min_dx);
+  void setMinDx(Real min_dx);
 
-  void setMinDy(double min_dy);
+  void setMinDy(Real min_dy);
 
-  void setMinDz(double min_dz);
+  void setMinDz(Real min_dz);
 
-  virtual std::size_t handleTransformX(double x) const;
+  virtual std::size_t handleTransformX(Real x) const;
 
-  virtual std::size_t handleTransformY(double y) const;
+  virtual std::size_t handleTransformY(Real y) const;
 
-  virtual std::size_t handleTransformZ(double z) const;
+  virtual std::size_t handleTransformZ(Real z) const;
 
-  virtual std::size_t handleTransformXWithoutCheck(double x) const;
+  virtual std::size_t handleTransformXWithoutCheck(Real x) const;
 
-  virtual std::size_t handleTransformYWithoutCheck(double y) const;
+  virtual std::size_t handleTransformYWithoutCheck(Real y) const;
 
-  virtual std::size_t handleTransformZWithoutCheck(double z) const;
+  virtual std::size_t handleTransformZWithoutCheck(Real z) const;
 
-  void correctGridSpaceForOne(double dl, const xt::xarray<double>& e_node,
-                              xt::xarray<double>& h_node,
-                              xt::xarray<double>& e_size,
-                              xt::xarray<double>& h_size);
+  void correctGridSpaceForOne(Real dl, const Array1D<Real>& e_node,
+                              Array1D<Real>& h_node,
+                              Array1D<Real>& e_size,
+                              Array1D<Real>& h_size);
 
-  double _min_x, _min_y, _min_z;
-  double _max_x, _max_y, _max_z;
+  Real _min_x, _min_y, _min_z;
+  Real _max_x, _max_y, _max_z;
 
  private:
   Dimension _dimension{Dimension::UNDEFINED};
   Type _type{Type::UNDEFINED};
-  double _based_dx, _based_dy, _based_dz;
-  double _min_dx, _min_dy, _min_dz;
+  Real _based_dx, _based_dy, _based_dz;
+  Real _min_dx, _min_dy, _min_dz;
 
-  xt::xarray<double> _e_node_x, _e_node_y, _e_node_z;
-  xt::xarray<double> _h_node_x, _h_node_y, _h_node_z;
-  xt::xarray<double> _e_size_x, _e_size_y, _e_size_z;
-  xt::xarray<double> _h_size_x, _h_size_y, _h_size_z;
+  Array1D<Real> _e_node_x, _e_node_y, _e_node_z;
+  Array1D<Real> _h_node_x, _h_node_y, _h_node_z;
+  Array1D<Real> _e_size_x, _e_size_y, _e_size_z;
+  Array1D<Real> _h_size_x, _h_size_y, _h_size_z;
 
-  xt::xarray<std::shared_ptr<Grid>> _grid_with_material;
+  Array<std::shared_ptr<Grid>> _grid_with_material;
 
   std::weak_ptr<GridSpace> _global_grid_space;
 
   GridBox _global_box;
 
-  xt::xarray<double> calculateHNode(const xt::xarray<double>& e_node);
+  Array1D<Real> calculateHNode(const Array1D<Real>& e_node);
 
-  xt::xarray<double> calculateESize(const xt::xarray<double>& e_node);
+  Array1D<Real> calculateESize(const Array1D<Real>& e_node);
 
-  xt::xarray<double> calculateHSize(const xt::xarray<double>& h_node,
-                                    const xt::xarray<double>& e_node,
-                                    double dl);
+  Array1D<Real> calculateHSize(const Array1D<Real>& h_node,
+                                    const Array1D<Real>& e_node,
+                                    Real dl);
 };
 
 inline auto GridSpace::getShapeMask(const Shape* shape) const {
@@ -314,7 +316,8 @@ inline auto GridSpace::getShapeMask(const Shape* shape) const {
   return mask;
 }
 
-inline auto GridSpace::getGridWithMaterialView(const xt::xarray<bool>& mask) {
+template<typename T>
+inline auto GridSpace::getGridWithMaterialView(const T& mask) {
   return xt::filter(_grid_with_material, mask);
 }
 

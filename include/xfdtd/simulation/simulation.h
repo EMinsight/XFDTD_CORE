@@ -3,7 +3,7 @@
 
 #include <xfdtd/boundary/boundary.h>
 #include <xfdtd/calculation_param/calculation_param.h>
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
@@ -36,7 +36,7 @@ class XFDTDSimulationException : public XFDTDException {
 
 class Simulation {
  public:
-  Simulation(double dx, double dy, double dz, double cfl,
+  Simulation(Real dx, Real dy, Real dz, Real cfl,
              ThreadConfig thread_config = ThreadConfig{1, 1, 1});
 
   ~Simulation();
@@ -72,8 +72,8 @@ class Simulation {
   void init();
 
  private:
-  double _dx, _dy, _dz;
-  double _cfl;
+  Real _dx, _dy, _dz;
+  Real _cfl;
   ThreadConfig _thread_config;
   std::barrier<> _barrier;  // move to thread config
 
@@ -116,7 +116,7 @@ class Simulation {
 
   void correctUpdateCoefficient();
 
-  std::unique_ptr<Updator> makeUpdator(const Divider::IndexTask& task);
+  std::unique_ptr<Updator> makeUpdator(const IndexTask& task);
 };
 
 }  // namespace xfdtd

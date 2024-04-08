@@ -1,7 +1,7 @@
 #include "nffft/nffft_fd_data.h"
 
 #include <xfdtd/nffft/nffft.h>
-#include <xfdtd/util/constant.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/util/transform.h>
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
@@ -9,13 +9,13 @@
 namespace xfdtd {
 
 FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
-                         std::shared_ptr<const EMF> emf, double freq,
-                         const Divider::IndexTask& task_xn,
-                         const Divider::IndexTask& task_xp,
-                         const Divider::IndexTask& task_yn,
-                         const Divider::IndexTask& task_yp,
-                         const Divider::IndexTask& task_zn,
-                         const Divider::IndexTask& task_zp)
+                         std::shared_ptr<const EMF> emf, Real freq,
+                         const IndexTask& task_xn,
+                         const IndexTask& task_xp,
+                         const IndexTask& task_yn,
+                         const IndexTask& task_yp,
+                         const IndexTask& task_zn,
+                         const IndexTask& task_zp)
     : _grid_space{std::move(grid_space)},
       _emf{std::move(emf)},
       _freq{freq},
@@ -26,7 +26,7 @@ FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
       _task_zn{task_zn},
       _task_zp{task_zp} {
   auto generate_surface = [](const Axis::Direction& direction,
-                             const Divider::IndexTask& task, auto& ja, auto& jb,
+                             const IndexTask& task, auto& ja, auto& jb,
                              auto& ma, auto& mb) {
     if (!task.valid()) {
       return;
@@ -34,19 +34,19 @@ FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
 
     const auto [range_a, range_b, range_c] = transform::xYZToABC(
         std::tuple{task.xRange(), task.yRange(), task.zRange()},
-        Axis::formDirectionToXYZ(direction));
+        Axis::fromDirectionToXYZ(direction));
 
     if (range_c.size() != 1) {
       throw XFDTDNFFFTException("FDPlaneData: Major axis size != 1");
     }
 
-    ja = xt::zeros<std::complex<double>>(
+    ja = xt::zeros<std::complex<Real>>(
         {task.xRange().size(), task.yRange().size(), task.zRange().size()});
-    jb = xt::zeros<std::complex<double>>(
+    jb = xt::zeros<std::complex<Real>>(
         {task.xRange().size(), task.yRange().size(), task.zRange().size()});
-    ma = xt::zeros<std::complex<double>>(
+    ma = xt::zeros<std::complex<Real>>(
         {task.xRange().size(), task.yRange().size(), task.zRange().size()});
-    mb = xt::zeros<std::complex<double>>(
+    mb = xt::zeros<std::complex<Real>>(
         {task.xRange().size(), task.yRange().size(), task.zRange().size()});
   };
 
@@ -64,10 +64,10 @@ FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
                    _my_zp);
 }
 
-auto FDPlaneData::initDFT(std::size_t total_time_step, double dt) -> void {
+auto FDPlaneData::initDFT(std::size_t total_time_step, Real dt) -> void {
   using namespace std::complex_literals;
-  _transform_e = xt::zeros<std::complex<double>>({total_time_step});
-  _transform_h = xt::zeros<std::complex<double>>({total_time_step});
+  _transform_e = xt::zeros<std::complex<Real>>({total_time_step});
+  _transform_h = xt::zeros<std::complex<Real>>({total_time_step});
 
   for (std::size_t t{0}; t < total_time_step; ++t) {
     _transform_e(t) =
@@ -77,6 +77,6 @@ auto FDPlaneData::initDFT(std::size_t total_time_step, double dt) -> void {
   }
 }
 
-auto FDPlaneData::frequency() const -> double { return _freq; }
+auto FDPlaneData::frequency() const -> Real { return _freq; }
 
 }  // namespace xfdtd

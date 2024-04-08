@@ -42,7 +42,7 @@ void HardPoint::updateWaveformSource() {}
 // void HardPoint::correctH() {}
 
 std::unique_ptr<Corrector> HardPoint::generateCorrector(
-    const Divider::IndexTask& task) {
+    const IndexTask& task) {
   throw std::runtime_error("Not implemented");
 }
 

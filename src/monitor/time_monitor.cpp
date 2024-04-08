@@ -22,11 +22,11 @@ auto TimeMonitor::output() -> void {
 
 auto TimeMonitor::toString() const -> std::string { return "TimeMonitor"; }
 
-auto TimeMonitor::time() const -> const xt::xarray<double>& { return _time; }
+auto TimeMonitor::time() const -> const Array1D<Real>& { return _time; }
 
-auto TimeMonitor::time() -> xt::xarray<double>& { return _time; }
+auto TimeMonitor::time() -> Array1D<Real>& { return _time; }
 
-auto TimeMonitor::setTime(xt::xarray<double> time) -> void {
+auto TimeMonitor::setTime(Array1D<Real> time) -> void {
   _time = std::move(time);
 }
 
