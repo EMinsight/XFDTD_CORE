@@ -11,8 +11,7 @@
 namespace xfdtd {
 
 GridSpace3D::GridSpace3D(Real based_dx, Real based_dy, Real based_dz,
-                         Array1D<Real> e_node_x,
-                         Array1D<Real> e_node_y,
+                         Array1D<Real> e_node_x, Array1D<Real> e_node_y,
                          Array1D<Real> e_node_z)
     : GridSpace{based_dx,
                 based_dy,
@@ -22,15 +21,15 @@ GridSpace3D::GridSpace3D(Real based_dx, Real based_dy, Real based_dz,
                 std::move(e_node_y),
                 std::move(e_node_z)} {}
 
-GridSpace3D::GridSpace3D(
-    Type type, GridBox global_box, Real based_dx, Real based_dy,
-    Real based_dz, Real min_dx, Real min_dy, Real min_dz,
-    Array1D<Real> e_node_x, Array1D<Real> e_node_y,
-    Array1D<Real> e_node_z, Array1D<Real> h_node_x,
-    Array1D<Real> h_node_y, Array1D<Real> h_node_z,
-    Array1D<Real> e_size_x, Array1D<Real> e_size_y,
-    Array1D<Real> e_size_z, Array1D<Real> h_size_x,
-    Array1D<Real> h_size_y, Array1D<Real> h_size_z)
+GridSpace3D::GridSpace3D(Type type, GridBox global_box, Real based_dx,
+                         Real based_dy, Real based_dz, Real min_dx, Real min_dy,
+                         Real min_dz, Array1D<Real> e_node_x,
+                         Array1D<Real> e_node_y, Array1D<Real> e_node_z,
+                         Array1D<Real> h_node_x, Array1D<Real> h_node_y,
+                         Array1D<Real> h_node_z, Array1D<Real> e_size_x,
+                         Array1D<Real> e_size_y, Array1D<Real> e_size_z,
+                         Array1D<Real> h_size_x, Array1D<Real> h_size_y,
+                         Array1D<Real> h_size_z)
     : GridSpace{Dimension::THREE,
                 type,
                 global_box,
@@ -84,24 +83,18 @@ std::unique_ptr<GridSpace> GridSpace3D::subGridSpace(
   auto min_dx{minDx()};
   auto min_dy{minDy()};
   auto min_dz{minDz()};
-  Array1D<Real> e_node_x{
-      xt::view(eNodeX(), xt::range(start_i, end_i + 1))};
-  Array1D<Real> e_node_y{
-      xt::view(eNodeY(), xt::range(start_j, end_j + 1))};
-  Array1D<Real> e_node_z{
-      xt::view(eNodeZ(), xt::range(start_k, end_k + 1))};
+  Array1D<Real> e_node_x{xt::view(eNodeX(), xt::range(start_i, end_i + 1))};
+  Array1D<Real> e_node_y{xt::view(eNodeY(), xt::range(start_j, end_j + 1))};
+  Array1D<Real> e_node_z{xt::view(eNodeZ(), xt::range(start_k, end_k + 1))};
   Array1D<Real> h_node_x{xt::view(hNodeX(), xt::range(start_i, end_i))};
   Array1D<Real> h_node_y{xt::view(hNodeY(), xt::range(start_j, end_j))};
   Array1D<Real> h_node_z{xt::view(hNodeZ(), xt::range(start_k, end_k))};
   Array1D<Real> e_size_x{xt::view(eSizeX(), xt::range(start_i, end_i))};
   Array1D<Real> e_size_y{xt::view(eSizeY(), xt::range(start_j, end_j))};
   Array1D<Real> e_size_z{xt::view(eSizeZ(), xt::range(start_k, end_k))};
-  Array1D<Real> h_size_x{
-      xt::view(hSizeX(), xt::range(start_i, end_i + 1))};
-  Array1D<Real> h_size_y{
-      xt::view(hSizeY(), xt::range(start_j, end_j + 1))};
-  Array1D<Real> h_size_z{
-      xt::view(hSizeZ(), xt::range(start_k, end_k + 1))};
+  Array1D<Real> h_size_x{xt::view(hSizeX(), xt::range(start_i, end_i + 1))};
+  Array1D<Real> h_size_y{xt::view(hSizeY(), xt::range(start_j, end_j + 1))};
+  Array1D<Real> h_size_z{xt::view(hSizeZ(), xt::range(start_k, end_k + 1))};
 
   auto global_box =
       GridBox{Grid{start_i, start_j, start_k},
@@ -116,24 +109,6 @@ std::unique_ptr<GridSpace> GridSpace3D::subGridSpace(
 }
 
 void GridSpace3D::correctGridSpace() {
-  _max_x = eNodeX().back();
-  _max_y = eNodeY().back();
-  _max_z = eNodeZ().back();
-  _min_x = eNodeX().front();
-  _min_y = eNodeY().front();
-  _min_z = eNodeZ().front();
-  std::size_t nx = std::round<std::size_t>((_max_x - _min_x) / basedDx());
-  std::size_t ny = std::round<std::size_t>((_max_y - _min_y) / basedDy());
-  std::size_t nz = std::round<std::size_t>((_max_z - _min_z) / basedDz());
-  auto size_x = nx * basedDx();
-  auto size_y = ny * basedDy();
-  auto size_z = nz * basedDz();
-  _max_x = _min_x + size_x;
-  _max_y = _min_y + size_y;
-  _max_z = _min_z + size_z;
-  eNodeX() = xt::linspace<Real>(_min_x, _max_x, nx + 1);
-  eNodeY() = xt::linspace<Real>(_min_y, _max_y, ny + 1);
-  eNodeZ() = xt::linspace<Real>(_min_z, _max_z, nz + 1);
   correctGridSpaceForOne(basedDx(), eNodeX(), hNodeX(), eSizeX(), hSizeX());
   correctGridSpaceForOne(basedDy(), eNodeY(), hNodeY(), eSizeY(), hSizeY());
   correctGridSpaceForOne(basedDz(), eNodeZ(), hNodeZ(), eSizeZ(), hSizeZ());

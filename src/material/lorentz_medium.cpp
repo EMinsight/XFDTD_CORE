@@ -1,12 +1,6 @@
-#include <complex>
-#include <cstddef>
-#include <numeric>
-#include <utility>
-
-#include "material/dispersive_solver_common.h"
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/common/constant.h"
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/constant.h>
+#include <xfdtd/material/dispersive_material.h>
 
 namespace xfdtd {
 
@@ -20,9 +14,9 @@ static auto lorentzSusceptibility(const T& omega_p, const T& eps_delta,
          (omega_p * omega_p + 2i * nv * omega - omega * omega);
 }
 
-LorentzMedium::LorentzMedium(std::string_view name, double eps_inf,
-                             xt::xarray<double> eps_static,
-                             xt::xarray<double> omega_p, xt::xarray<double> nv)
+LorentzMedium::LorentzMedium(const std::string& name, Real eps_inf,
+                             Array1D<Real> eps_static,
+                             Array1D<Real> omega_p, Array1D<Real> nv)
     : LinearDispersiveMaterial{name, LinearDispersiveMaterial::Type::LORENTZ},
       _eps_inf{eps_inf},
       _eps_static{std::move(eps_static)},
@@ -35,11 +29,11 @@ LorentzMedium::LorentzMedium(std::string_view name, double eps_inf,
   }
 }
 
-xt::xarray<std::complex<double>> LorentzMedium::relativePermittivity(
-    const xt::xarray<double>& freq) const {
+xt::xarray<std::complex<Real>> LorentzMedium::relativePermittivity(
+    const Array1D<Real>& freq) const {
   return xt::make_lambda_xfunction(
       [this](const auto& f) {
-        std::complex<double> sum{0, 0};
+        std::complex<Real> sum{0, 0};
         for (std::size_t p = 0; p < numberOfPoles(); ++p) {
           sum += susceptibility(f, p);
         }
@@ -48,7 +42,7 @@ xt::xarray<std::complex<double>> LorentzMedium::relativePermittivity(
       freq);
 }
 
-std::complex<double> LorentzMedium::susceptibility(double freq,
+std::complex<Real> LorentzMedium::susceptibility(Real freq,
                                                    size_t p) const {
   if (numberOfPoles() <= p) {
     throw std::runtime_error(
@@ -87,9 +81,9 @@ void LorentzMedium::calculateCoeffForADE(
 
   auto n{_omega_p.size()};
 
-  xt::xarray<double> alpha = xt::zeros<double>({n});
-  xt::xarray<double> xi = xt::zeros<double>({n});
-  xt::xarray<double> gamma = xt::zeros<double>({n});
+  Array1D<Real> alpha = xt::zeros<Real>({n});
+  Array1D<Real> xi = xt::zeros<Real>({n});
+  Array1D<Real> gamma = xt::zeros<Real>({n});
   const auto& dt = calculation_param->timeParam()->dt();
   for (std::size_t i = 0; i < n; ++i) {
     const auto& temp = temp_ade(_nv(i), dt);
@@ -103,7 +97,7 @@ void LorentzMedium::calculateCoeffForADE(
   const auto& sigma_e = emProperty().sigmaE();
   const auto& sum_gamma = std::accumulate(
       gamma.begin(), gamma.end(), 0.0,
-      [](double acc, const auto& gamma_i) { return acc + gamma_i; });
+      [](Real acc, const auto& gamma_i) { return acc + gamma_i; });
 
   const auto& coeff_a = 2 * eps_0 * eps_inf + 0.5 * sum_gamma + sigma_e * dt;
   const auto& c1 = (0.5 * sum_gamma) / coeff_a;

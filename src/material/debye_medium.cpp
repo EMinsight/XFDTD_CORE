@@ -15,15 +15,15 @@ static auto debyeSusceptibility(const T& eps_inf, const T& eps_static,
   return (eps_delta) / (1.0 + 1i * omega * tau);
 }
 
-DebyeMedium::DebyeMedium(std::string_view name, double eps_inf,
-                         xt::xarray<double> eps_static, xt::xarray<double> tau)
+DebyeMedium::DebyeMedium(const std::string& name, double eps_inf,
+                         Array1D<Real> eps_static, Array1D<Real> tau)
     : LinearDispersiveMaterial{name, Type::DEBYE},
       _eps_inf{eps_inf},
       _eps_static{std::move(eps_static)},
       _tau{std::move(tau)} {}
 
 xt::xarray<std::complex<double>> DebyeMedium::relativePermittivity(
-    const xt::xarray<double>& freq) const {
+    const Array1D<Real>& freq) const {
   return xt::make_lambda_xfunction(
       [this](const auto& f) {
         std::complex<double> sum{0, 0};

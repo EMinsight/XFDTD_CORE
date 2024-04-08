@@ -743,8 +743,8 @@ IndexTask TFSFCorrector::globalEyTaskZP() const {
 }
 
 void TFSF1DCorrector::correctE() {
-  const auto lk = task()._z_range[0];
-  const auto rk = task()._z_range[1];
+  const auto lk = task().zRange().start();
+  const auto rk = task().zRange().end();
 
   auto& ex_zn{emfPtr()->ex()(0, 0, lk)};
   auto hy_i{hyInc(0, 0, lk - 1)};
@@ -756,8 +756,8 @@ void TFSF1DCorrector::correctE() {
 }
 
 void TFSF1DCorrector::correctH() {
-  const auto lk = task()._z_range[0];
-  const auto rk = task()._z_range[1];
+  const auto lk = task().zRange().start();
+  const auto rk = task().zRange().end();
 
   auto& hy_zn{emfPtr()->hy()(0, 0, lk - 1)};
   auto ex_i{exInc(0, 0, lk)};

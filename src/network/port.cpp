@@ -121,7 +121,8 @@ void Port::calculateSParameters(const Array1D<Real>& frequencies) {
   auto dt{_dt};
   auto z{_impedance};
   auto k{std::sqrt(std::real(z))};
-  auto i{dft(current, dt, frequencies, -0.5 * dt)};
+  auto i{dft(current, dt, frequencies,
+             -1.5 * dt)};  // TODO(franzero): why -1.5*dt?
   auto v{dft(voltage, dt, frequencies)};
 
   _a = 0.5 * (v + z * i) / k;

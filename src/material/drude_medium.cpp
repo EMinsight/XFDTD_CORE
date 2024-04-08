@@ -15,15 +15,15 @@ static auto drudeSusceptibility(const T& omega_p, const T& gamma,
   return -(omega_p * omega_p) / (omega * omega - 1i * gamma * omega);
 }
 
-DrudeMedium::DrudeMedium(std::string_view name, double eps_inf,
-                         xt::xarray<double> omega_p, xt::xarray<double> gamma)
+DrudeMedium::DrudeMedium(const std::string& name, double eps_inf,
+                         Array1D<Real> omega_p, Array1D<Real> gamma)
     : LinearDispersiveMaterial{name, Type::DRUDE},
       _eps_inf{eps_inf},
       _omega_p{std::move(omega_p)},
       _gamma{std::move(gamma)} {}
 
 xt::xarray<std::complex<double>> DrudeMedium::relativePermittivity(
-    const xt::xarray<double>& freq) const {
+    const Array1D<Real>& freq) const {
   return xt::make_lambda_xfunction(
       [eps_inf = _eps_inf, this](const auto& f) {
         std::complex<double> sum{0, 0};

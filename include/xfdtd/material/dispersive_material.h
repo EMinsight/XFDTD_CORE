@@ -1,24 +1,49 @@
 #ifndef _XFDTD_CORE_DISPERSIVE_MATERIAL_H_
 #define _XFDTD_CORE_DISPERSIVE_MATERIAL_H_
 
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/material/material.h>
 
-#include <complex>
-#include <string_view>
-
-#include "material/dispersive_solver_common.h"
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/grid_space/grid_space.h"
-
 namespace xfdtd {
+
+namespace ade {
+struct LorentzCoeff {
+  Array1D<Real> _alpha;
+  Array1D<Real> _xi;
+  Array1D<Real> _gamma;
+
+  Real _c1;
+  Real _c2;
+  Real _c3;
+};
+
+struct DrudeCoeff {
+  Array1D<Real> _k;
+  Array1D<Real> _beta;
+
+  Real _a;
+  Real _b;
+};
+
+struct DebyCoeff {
+  Array1D<Real> _k;
+  Array1D<Real> _beta;
+
+  Real _a;
+  Real _b;
+};
+
+}  // namespace ade
 
 class LinearDispersiveMaterial : public Material {
  public:
   enum class Type { UNKNOW, DEBYE, DRUDE, LORENTZ };
 
   explicit LinearDispersiveMaterial(
-      std::string_view name, Type type,
+      const std::string& name, Type type,
       ElectroMagneticProperty emp = ElectroMagneticProperty::air());
 
   LinearDispersiveMaterial(const LinearDispersiveMaterial& other) = default;
@@ -35,15 +60,14 @@ class LinearDispersiveMaterial : public Material {
 
   Type type() const;
 
-  virtual xt::xarray<std::complex<double>> relativePermittivity(
-      const xt::xarray<double>& freq) const = 0;
+  virtual xt::xarray<std::complex<Real>> relativePermittivity(
+      const Array1D<Real>& freq) const = 0;
 
   virtual void calculateCoeff(const GridSpace* grid_space,
                               const CalculationParam* calculation_param,
                               const EMF* emf) = 0;
 
-  virtual std::complex<double> susceptibility(double freq,
-                                              std::size_t p) const = 0;
+  virtual std::complex<Real> susceptibility(Real freq, std::size_t p) const = 0;
 
  private:
   Type _type;
@@ -51,9 +75,9 @@ class LinearDispersiveMaterial : public Material {
 
 class LorentzMedium : public LinearDispersiveMaterial {
  public:
-  LorentzMedium(std::string_view name, double eps_inf,
-                xt::xarray<double> eps_static, xt::xarray<double> omega_p,
-                xt::xarray<double> nv);
+  LorentzMedium(const std::string& name, Real eps_inf,
+                Array1D<Real> eps_static, Array1D<Real> omega_p,
+                Array1D<Real> nv);
 
   LorentzMedium(const LorentzMedium& other) = default;
 
@@ -77,19 +101,18 @@ class LorentzMedium : public LinearDispersiveMaterial {
 
   const auto& coeffForADE() const { return _coeff_for_ade; }
 
-  xt::xarray<std::complex<double>> relativePermittivity(
-      const xt::xarray<double>& freq) const override;
+  xt::xarray<std::complex<Real>> relativePermittivity(
+      const Array1D<Real>& freq) const override;
 
-  std::complex<double> susceptibility(double freq,
-                                      std::size_t p) const override;
+  std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
 
   void calculateCoeff(const GridSpace* grid_space,
                       const CalculationParam* calculation_param,
                       const EMF* emf) override;
 
  private:
-  double _eps_inf;
-  xt::xarray<double> _eps_static, _omega_p, _nv;
+  Real _eps_inf;
+  Array1D<Real> _eps_static, _omega_p, _nv;
   ade::LorentzCoeff _coeff_for_ade;
 
   void calculateCoeffForADE(const CalculationParam* calculation_param);
@@ -97,8 +120,8 @@ class LorentzMedium : public LinearDispersiveMaterial {
 
 class DrudeMedium : public LinearDispersiveMaterial {
  public:
-  DrudeMedium(std::string_view name, double eps_inf, xt::xarray<double> omega_p,
-              xt::xarray<double> gamma);
+  DrudeMedium(const std::string& name, Real eps_inf, Array1D<Real> omega_p,
+              Array1D<Real> gamma);
 
   ~DrudeMedium() override = default;
 
@@ -112,19 +135,18 @@ class DrudeMedium : public LinearDispersiveMaterial {
 
   const auto& coeffForADE() const { return _coeff_for_ade; }
 
-  xt::xarray<std::complex<double>> relativePermittivity(
-      const xt::xarray<double>& freq) const override;
+  xt::xarray<std::complex<Real>> relativePermittivity(
+      const Array1D<Real>& freq) const override;
 
-  std::complex<double> susceptibility(double freq,
-                                      std::size_t p) const override;
+  std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
 
   void calculateCoeff(const GridSpace* grid_space,
                       const CalculationParam* calculation_param,
                       const EMF* emf) override;
 
  private:
-  double _eps_inf;
-  xt::xarray<double> _omega_p, _gamma;
+  Real _eps_inf;
+  Array1D<Real> _omega_p, _gamma;
   ade::DrudeCoeff _coeff_for_ade;
 
   void calculateCoeffForADE(const CalculationParam* calculation_param);
@@ -132,8 +154,8 @@ class DrudeMedium : public LinearDispersiveMaterial {
 
 class DebyeMedium : public LinearDispersiveMaterial {
  public:
-  DebyeMedium(std::string_view name, double eps_inf,
-              xt::xarray<double> eps_static, xt::xarray<double> tau);
+  DebyeMedium(const std::string& name, Real eps_inf,
+              Array1D<Real> eps_static, Array1D<Real> tau);
 
   ~DebyeMedium() override = default;
 
@@ -147,19 +169,18 @@ class DebyeMedium : public LinearDispersiveMaterial {
 
   const auto& coeffForADE() const { return _coeff_for_ade; }
 
-  xt::xarray<std::complex<double>> relativePermittivity(
-      const xt::xarray<double>& freq) const override;
+  xt::xarray<std::complex<Real>> relativePermittivity(
+      const Array1D<Real>& freq) const override;
 
-  std::complex<double> susceptibility(double freq,
-                                      std::size_t p) const override;
+  std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
 
   void calculateCoeff(const GridSpace* grid_space,
                       const CalculationParam* calculation_param,
                       const EMF* emf) override;
 
  private:
-  double _eps_inf;
-  xt::xarray<double> _eps_static, _tau;
+  Real _eps_inf;
+  Array1D<Real> _eps_static, _tau;
   ade::DebyCoeff _coeff_for_ade;
 };
 

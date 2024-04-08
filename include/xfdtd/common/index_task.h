@@ -11,19 +11,19 @@ class Range {
   Range() = default;
   Range(T start, T end) : _start(start), _end(end) {}
 
-  auto operator[](std::size_t index) const {
-    if (index == 0) {
-      return _start;
-    }
-    return _end;
-  }
+  // auto operator[](std::size_t index) const {
+  //   if (index == 0) {
+  //     return _start;
+  //   }
+  //   return _end;
+  // }
 
-  auto& operator[](std::size_t index) {
-    if (index == 0) {
-      return _start;
-    }
-    return _end;
-  }
+  // auto& operator[](std::size_t index) {
+  //   if (index == 0) {
+  //     return _start;
+  //   }
+  //   return _end;
+  // }
 
   auto operator+(T value) const { return Range{_start + value, _end + value}; }
 
@@ -101,7 +101,7 @@ inline auto makeIndexTask(const Range<Index>& x_range,
 
 template <typename T>
 inline bool intersected(const Range<T>& domain, const Range<T>& range) {
-  return !(range[1] <= domain[0] || domain[1] <= range[0]);
+  return !(range.end() <= domain.start() || domain.end() <= range.start());
 }
 
 template <typename T>

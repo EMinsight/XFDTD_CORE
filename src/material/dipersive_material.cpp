@@ -2,7 +2,7 @@
 
 namespace xfdtd {
 
-LinearDispersiveMaterial::LinearDispersiveMaterial(std::string_view name,
+LinearDispersiveMaterial::LinearDispersiveMaterial(const std::string& name,
                                                    Type type,
                                                    ElectroMagneticProperty emp)
     : Material{name, emp, true}, _type{type} {}

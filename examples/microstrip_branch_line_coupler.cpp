@@ -165,7 +165,7 @@ void microstripBranchLineCoupler() {
       xt::linspace<double>(1e9, 10e9, 100),
       "./data/microstrip_branch_line_coupler")};
 
-  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, xfdtd::ThreadConfig{1, 1, 1}}};
+  auto s{xfdtd::Simulation{dx, dy, dz, 0.9, xfdtd::ThreadConfig{1, 2, 1}}};
   s.addObject(domain);
   s.addObject(substrate);
   s.addObject(microstrip_1);

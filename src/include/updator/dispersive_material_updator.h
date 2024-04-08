@@ -1,15 +1,13 @@
 #ifndef _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_
 #define _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_
 
-#include <cstddef>
+#include <xfdtd/material/dispersive_material.h>
+
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include <xtensor/xtensor.hpp>
 
-#include "material/dispersive_solver_common.h"
 #include "updator/basic_updator.h"
-#include "xfdtd/material/dispersive_material.h"
 
 namespace xfdtd {
 
@@ -19,7 +17,7 @@ namespace xfdtd {
  * @brief using ADE-FDTD
  *
  */
-class LinearDispersiveMaterialADEUpdator : public BasicUpdator {
+class LinearDispersiveMaterialADEUpdator : public BasicUpdator3D {
  public:
   LinearDispersiveMaterialADEUpdator(
       std::shared_ptr<const GridSpace> grid_space,
@@ -40,17 +38,31 @@ class LinearDispersiveMaterialADEUpdator : public BasicUpdator {
 
   ~LinearDispersiveMaterialADEUpdator() override = default;
 
- protected:
-  //   auto linearDispersiveMaterialPtr() const { return
-  //   _dispersive_martial.get(); }
+  template <typename T>
+  static void handleDispersiveMaterialADEUpdator(
+      std::unordered_map<std::size_t, std::size_t>& map,
+      std::vector<std::shared_ptr<T>>& dispersion_arr,
+      const std::vector<std::shared_ptr<Material>>& material_arr) {
+    std::size_t m_index = 0;
+    std::size_t temp_i = 0;
+    for (const auto& m : material_arr) {
+      if (!m->dispersion()) {
+        ++m_index;
+        continue;
+      }
 
- protected:
-  void updateEEdge() override { throw std::runtime_error("Not implemented"); }
+      auto dispersive_material = std::dynamic_pointer_cast<T>(m);
+      if (dispersive_material == nullptr) {
+        ++m_index;
+        continue;
+      }
 
-  void updateHEdge() override { throw std::runtime_error("Not implemented"); }
-
- private:
-  //   std::shared_ptr<LinearDispersiveMaterial> _dispersive_martial;
+      map.insert({m_index, temp_i});
+      dispersion_arr.emplace_back(dispersive_material);
+      ++m_index;
+      ++temp_i;
+    }
+  }
 };
 
 class LorentzADEUpdator : public LinearDispersiveMaterialADEUpdator {
@@ -74,16 +86,17 @@ class LorentzADEUpdator : public LinearDispersiveMaterialADEUpdator {
  protected:
  private:
   struct LorentzADERecord {
-    xt::xtensor<double, 4> _jx_prev, _jy_prev, _jz_prev, _jx, _jy, _jz;
+    Array4D<Real> _jx_prev, _jy_prev, _jz_prev, _jx, _jy, _jz;
   };
   std::unordered_map<std::size_t, std::size_t> _lorentz_map;
   std::vector<std::shared_ptr<LorentzMedium>> _lorentz_mediums;
   std::vector<ade::LorentzCoeff> _coeff;
   std::vector<LorentzADERecord> _j_record;
+  Array3D<Real> _ex_prev, _ey_prev, _ez_prev;
 
   void init();
 
-  void allocate();
+  auto updateEEdge() -> void override;
 };
 
 class DrudeADEUpdator : public LinearDispersiveMaterialADEUpdator {
@@ -106,7 +119,7 @@ class DrudeADEUpdator : public LinearDispersiveMaterialADEUpdator {
 
  private:
   struct DrudeADERecord {
-    xt::xtensor<double, 4> _jx, _jy, _jz;
+    Array4D<Real> _jx, _jy, _jz;
   };
 
   std::unordered_map<std::size_t, std::size_t> _drude_map;
@@ -116,7 +129,7 @@ class DrudeADEUpdator : public LinearDispersiveMaterialADEUpdator {
 
   void init();
 
-  void allocate();
+  auto updateEEdge() -> void override;
 };
 
 class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
@@ -139,7 +152,7 @@ class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
 
  private:
   struct DebyeADERecord {
-    xt::xtensor<double, 4> _jx, _jy, _jz;
+    Array4D<Real> _jx, _jy, _jz;
   };
 
   std::unordered_map<std::size_t, std::size_t> _debye_map;
@@ -148,6 +161,8 @@ class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
   std::vector<DebyeADERecord> _j_record;
 
   void init();
+
+  auto updateEEdge() -> void override;
 };
 
 }  // namespace xfdtd

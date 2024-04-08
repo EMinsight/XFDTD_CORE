@@ -1,11 +1,11 @@
 #ifndef _XFDTD_CORE_GRID_SPACE_H_
 #define _XFDTD_CORE_GRID_SPACE_H_
 
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/shape/cube.h>
 #include <xfdtd/shape/shape.h>
-#include <xfdtd/common/type_define.h>
 
 #include <cstddef>
 #include <memory>
@@ -92,10 +92,10 @@ class GridBox {
 
 class GridSpace {
  public:
-  using GridSpaceRegion = Cube;
   enum class Dimension { UNDEFINED, ONE, TWO, THREE };
   enum class Type { UNDEFINED, UNIFORM, NONUNIFORM };
 
+ public:
   GridSpace(const GridSpace&) = default;
 
   GridSpace(GridSpace&&) noexcept = default;
@@ -110,7 +110,7 @@ class GridSpace {
 
   Type type() const;
 
-  GridSpaceRegion region() const;
+  Cube region() const;
 
   GridBox box() const;
 
@@ -176,7 +176,7 @@ class GridSpace {
 
   auto getShapeMask(const Shape* shape) const;
 
-  template<typename T>
+  template <typename T>
   auto getGridWithMaterialView(const T& mask);
 
   GridBox getGridBox(const Shape* shape) const;
@@ -218,14 +218,13 @@ class GridSpace {
 
   // for subGridSpace
   GridSpace(Dimension dimension, Type type, GridBox global_box, Real based_dx,
-            Real based_dy, Real based_dz, Real min_dx, Real min_dy,
-            Real min_dz, Array1D<Real> e_node_x,
-            Array1D<Real> e_node_y, Array1D<Real> e_node_z,
-            Array1D<Real> h_node_x, Array1D<Real> h_node_y,
-            Array1D<Real> h_node_z, Array1D<Real> e_size_x,
-            Array1D<Real> e_size_y, Array1D<Real> e_size_z,
-            Array1D<Real> h_size_x, Array1D<Real> h_size_y,
-            Array1D<Real> h_size_z);
+            Real based_dy, Real based_dz, Real min_dx, Real min_dy, Real min_dz,
+            Array1D<Real> e_node_x, Array1D<Real> e_node_y,
+            Array1D<Real> e_node_z, Array1D<Real> h_node_x,
+            Array1D<Real> h_node_y, Array1D<Real> h_node_z,
+            Array1D<Real> e_size_x, Array1D<Real> e_size_y,
+            Array1D<Real> e_size_z, Array1D<Real> h_size_x,
+            Array1D<Real> h_size_y, Array1D<Real> h_size_z);
 
   Array1D<Real>& eNodeX();
 
@@ -274,8 +273,7 @@ class GridSpace {
   virtual std::size_t handleTransformZWithoutCheck(Real z) const;
 
   void correctGridSpaceForOne(Real dl, const Array1D<Real>& e_node,
-                              Array1D<Real>& h_node,
-                              Array1D<Real>& e_size,
+                              Array1D<Real>& h_node, Array1D<Real>& e_size,
                               Array1D<Real>& h_size);
 
   Real _min_x, _min_y, _min_z;
@@ -303,8 +301,7 @@ class GridSpace {
   Array1D<Real> calculateESize(const Array1D<Real>& e_node);
 
   Array1D<Real> calculateHSize(const Array1D<Real>& h_node,
-                                    const Array1D<Real>& e_node,
-                                    Real dl);
+                               const Array1D<Real>& e_node, Real dl);
 };
 
 inline auto GridSpace::getShapeMask(const Shape* shape) const {
@@ -316,7 +313,7 @@ inline auto GridSpace::getShapeMask(const Shape* shape) const {
   return mask;
 }
 
-template<typename T>
+template <typename T>
 inline auto GridSpace::getGridWithMaterialView(const T& mask) {
   return xt::filter(_grid_with_material, mask);
 }

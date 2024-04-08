@@ -2,6 +2,7 @@
 #define __XFDTD_EXAMPLE_DISPERSIVE_SPHERE_SCATTER_H__
 
 #include <xfdtd/boundary/pml.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/material/dispersive_material.h>
 #include <xfdtd/material/material.h>
@@ -9,7 +10,6 @@
 #include <xfdtd/shape/cube.h>
 #include <xfdtd/shape/sphere.h>
 #include <xfdtd/simulation/simulation.h>
-#include <xfdtd/common/constant.h>
 #include <xfdtd/waveform_source/tfsf_3d.h>
 
 #include <complex>
@@ -62,13 +62,13 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
         (sphere_scatter_dir / "relative_permittivity.npy").string());
   }
 
-  constexpr double dl{5e-3};
+  constexpr double dl{7.5e-3};
 
-  auto domain = std::make_shared<xfdtd::Object>(
+  auto domain{std::make_shared<xfdtd::Object>(
       "domain",
-      std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.3, -0.3, -0.3},
-                                    xfdtd::Vector{0.6, 0.6, 0.6}),
-      xfdtd::Material::createAir());
+      std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, -0.175, -0.175},
+                                    xfdtd::Vector{0.35, 0.35, 0.35}),
+      xfdtd::Material::createAir())};
 
   constexpr double radius = 1e-1;
   auto sphere = std::make_shared<xfdtd::Object>(
@@ -81,33 +81,33 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
   constexpr auto t_0{4.5 * tau};
   constexpr std::size_t left_len{static_cast<size_t>((0.3 / dl))};
   constexpr std::size_t remain_len{static_cast<size_t>(left_len - 0.1 / dl)};
-  constexpr std::size_t tfsf_start{static_cast<size_t>((remain_len / 2) + 10)};
+  constexpr std::size_t tfsf_start{static_cast<size_t>(15)};
   auto tfsf{std::make_shared<xfdtd::TFSF3D>(
       tfsf_start, tfsf_start, tfsf_start, 0, 0, 0,
       std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
 
-  constexpr std::size_t nffft_start{static_cast<size_t>((remain_len / 3) + 10)};
+  constexpr std::size_t nffft_start{static_cast<size_t>(11)};
   auto nffft_fd{std::make_shared<xfdtd::NFFFT>(
       nffft_start, nffft_start, nffft_start, xt::xarray<double>{FREQ},
       (sphere_scatter_dir).string())};
 
-  auto simulation = xfdtd::Simulation{dl, dl, dl, 0.99};
+  auto simulation = xfdtd::Simulation{dl, dl, dl, 0.9};
   simulation.addObject(domain);
   simulation.addObject(sphere);
   simulation.addWaveformSource(tfsf);
   simulation.addNF2FF(nffft_fd);
   simulation.addBoundary(
-      std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::XN));
+      std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::XN));
   simulation.addBoundary(
-      std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::XP));
+      std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::XP));
   simulation.addBoundary(
-      std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::YN));
+      std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YN));
   simulation.addBoundary(
-      std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::YP));
+      std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YP));
   simulation.addBoundary(
-      std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::ZN));
+      std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   simulation.addBoundary(
-      std::make_shared<xfdtd::PML>(10, xfdtd::Axis::Direction::ZP));
+      std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
 
   simulation.run(2200);
 

@@ -60,12 +60,12 @@ std::string BasicUpdatorTE::toString() const {
 }
 
 void BasicUpdatorTE::updateEEdge() {
-  const auto is = task()._x_range[0];
-  const auto ie = task()._x_range[1];
-  const auto js = task()._y_range[0];
-  const auto je = task()._y_range[1];
-  const auto ks = task()._z_range[0];
-  const auto ke = task()._z_range[1];
+  const auto is = task().xRange().start();
+  const auto ie = task().xRange().end();
+  const auto js = task().yRange().start();
+  const auto je = task().yRange().end();
+  const auto ks = task().zRange().start();
+  const auto ke = task().zRange().end();
 
   const auto& ceze{_calculation_param->fdtdCoefficient()->ceze()};
   const auto& cezhx{_calculation_param->fdtdCoefficient()->cezhx()};

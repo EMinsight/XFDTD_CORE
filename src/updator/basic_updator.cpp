@@ -116,8 +116,8 @@ BasicUpdatorTEM::BasicUpdatorTEM(
                    std::move(emf), task) {}
 
 void BasicUpdatorTEM::updateE() {
-  const auto ks = task()._z_range[0];
-  const auto ke = task()._z_range[1];
+  const auto ks = task().zRange().start();
+  const auto ke = task().zRange().end();
 
   const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
   const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};

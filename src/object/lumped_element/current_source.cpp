@@ -211,12 +211,12 @@ std::unique_ptr<Corrector> CurrentSource::generateCorrector(
   }
 
   auto local_task = makeTask(
-      makeRange(intersection->_x_range[0] - domain._x_range[0],
-                         intersection->_x_range[1] - domain._x_range[0]),
-      makeRange(intersection->_y_range[0] - domain._y_range[0],
-                         intersection->_y_range[1] - domain._y_range[0]),
-      makeRange(intersection->_z_range[0] - domain._z_range[0],
-                         intersection->_z_range[1] - domain._z_range[0]));
+      makeRange(intersection->xRange().start() - domain.xRange().start(),
+                         intersection->xRange().end() - domain.xRange().start()),
+      makeRange(intersection->yRange().start() - domain.yRange().start(),
+                         intersection->yRange().end() - domain.yRange().start()),
+      makeRange(intersection->zRange().start() - domain.zRange().start(),
+                         intersection->zRange().end() - domain.zRange().start()));
 
   return std::make_unique<CurrentSourceCorrector>(
       intersection.value(), local_task, calculationParam(),

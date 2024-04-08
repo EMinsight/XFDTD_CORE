@@ -123,91 +123,6 @@ void Simulation::run(std::size_t time_step) {
     }
   }
 
-  // MpiSupport::instance().barrier();
-
-  // {
-  //   std::stringstream ss;
-  //   ss << "\n";
-  //   ss << "Rank: " << myRank() << "\n";
-  //   ss << _grid_space->toString();
-  //   std::cout << ss.str();
-  //   MpiSupport::instance().barrier();
-  // }
-
-  // {
-  //   std::stringstream ss;
-  //   ss << "\n";
-  //   ss << "Rank: " << myRank() << "\n";
-  //   ss << MpiSupport::instance().config().toString() << "\n";
-  //   std::cout << ss.str();
-  //   MpiSupport::instance().barrier();
-  // }
-
-  // {
-  // std::stringstream ss;
-  // ss << "\n";
-  // for (const auto& d : _domains) {
-  //   ss << "Rank: " << myRank() << "\n";
-  //   ss << d->toString() << "\n";
-  //   std::cout << ss.str() << std::flush;
-  //   MpiSupport::instance().barrier();
-  //   ss.str("");
-  // }
-  // }
-
-  // {
-  //   std::stringstream ss;
-  //   ss << "\n";
-  //   for (const auto& m : _monitors) {
-  //     auto v = std::dynamic_pointer_cast<CurrentMonitor>(m);
-  //     if (v == nullptr) {
-  //       continue;
-  //     }
-
-  //     if (!v->valid()) {
-  //       continue;
-  //     }
-
-  //     if (!MpiSupport::instance().isRoot()) {
-  //       std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  //     }
-
-  //     ss << "Rank: " << myRank() << "\n";
-  //     ss << v->toString() << "\n";
-  //     std::cout << ss.str();
-  //     ss.str("");
-  //   }
-  // }
-
-  // auto& mpi_support = MpiSupport::instance();
-  // auto rank_str = std::to_string(mpi_support.rank());
-  // std::filesystem::path check_data = "./data/check_mpi_" + rank_str;
-
-  // if (!std::filesystem::exists(check_data)) {
-  //   std::filesystem::create_directory(check_data);
-  // }
-
-  // xt::dump_npy(check_data / "cexe.npy",
-  //              _calculation_param->fdtdCoefficient()->cexe());
-  // xt::dump_npy(check_data / "cexhy.npy",
-  //              _calculation_param->fdtdCoefficient()->cexhy());
-  // xt::dump_npy(check_data / "cexhz.npy",
-  //              _calculation_param->fdtdCoefficient()->cexhz());
-  // xt::dump_npy(check_data / "ceye.npy",
-  //              _calculation_param->fdtdCoefficient()->ceye());
-  // xt::dump_npy(check_data / "ceyhx.npy",
-  //              _calculation_param->fdtdCoefficient()->ceyhx());
-  // xt::dump_npy(check_data / "ceyhz.npy",
-  //              _calculation_param->fdtdCoefficient()->ceyhz());
-  // xt::dump_npy(check_data / "ceze.npy",
-  //              _calculation_param->fdtdCoefficient()->ceze());
-  // xt::dump_npy(check_data / "cezhy.npy",
-  //              _calculation_param->fdtdCoefficient()->cezhy());
-  // xt::dump_npy(check_data / "cezhx.npy",
-  //              _calculation_param->fdtdCoefficient()->cezhx());
-
-  // exit(0);
-
   {
     std::vector<std::thread> threads;
     for (std::size_t i = 1; i < _domains.size(); ++i) {
@@ -406,46 +321,14 @@ void Simulation::generateGridSpace() {
   for (const auto& o : _objects) {
     shapes.emplace_back(o->shape().get());
   }
-
-  _global_grid_space =
-      GridSpaceGenerator::generateUniformGridSpace(shapes, _dx, _dy, _dz);
+  std::vector<const Boundary*> boundaries;
+  boundaries.reserve(_boundaries.size());
   for (const auto& b : _boundaries) {
-    if (auto pml = dynamic_cast<PML*>(b.get()); pml != nullptr) {
-      auto direction = pml->direction();
-      auto num = pml->thickness();
-      auto main_axis = pml->mainAxis();
-
-      auto space_dim = _global_grid_space->dimension();
-      if (space_dim == GridSpace::Dimension::ONE && main_axis != Axis::XYZ::Z) {
-        throw XFDTDSimulationException("PML has to be in Z direction");
-      }
-
-      if (space_dim == GridSpace::Dimension::TWO && main_axis == Axis::XYZ::Z) {
-        throw XFDTDSimulationException("PML has to be in X or Y direction");
-      }
-
-      if (num < 0) {
-        continue;
-      }
-
-      switch (main_axis) {
-        case xfdtd::Axis::XYZ::X: {
-          _global_grid_space->extendGridSpace(direction, num, _dx);
-          break;
-        }
-        case xfdtd::Axis::XYZ::Y: {
-          _global_grid_space->extendGridSpace(direction, num, _dy);
-          break;
-        }
-        case xfdtd::Axis::XYZ::Z: {
-          _global_grid_space->extendGridSpace(direction, num, _dz);
-          break;
-        }
-        default:
-          throw XFDTDSimulationException("Invalid main axis");
-      }
-    }
+    boundaries.emplace_back(b.get());
   }
+
+  _global_grid_space = GridSpaceGenerator::generateUniformGridSpace(
+      shapes, boundaries, _dx, _dy, _dz);
 
   _global_grid_space->correctGridSpace();
 }

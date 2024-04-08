@@ -1,3 +1,4 @@
+#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/grid_space/grid_space.h>
 
 #include <memory>
@@ -6,7 +7,6 @@
 #include <xtensor.hpp>
 
 #include "util/float_compare.h"
-#include <xfdtd/coordinate_system/coordinate_system.h>
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
 
@@ -73,14 +73,14 @@ GridSpace::GridSpace(Real dx, Real dy, Real dz, Dimension dimension,
       _e_node_z{std::move(e_node_z)} {}
 
 GridSpace::GridSpace(Dimension dimension, Type type, GridBox global_box,
-                     Real based_dx, Real based_dy, Real based_dz,
-                     Real min_dx, Real min_dy, Real min_dz,
-                     Array1D<Real> e_node_x, Array1D<Real> e_node_y,
-                     Array1D<Real> e_node_z, Array1D<Real> h_node_x,
-                     Array1D<Real> h_node_y, Array1D<Real> h_node_z,
-                     Array1D<Real> e_size_x, Array1D<Real> e_size_y,
-                     Array1D<Real> e_size_z, Array1D<Real> h_size_x,
-                     Array1D<Real> h_size_y, Array1D<Real> h_size_z)
+                     Real based_dx, Real based_dy, Real based_dz, Real min_dx,
+                     Real min_dy, Real min_dz, Array1D<Real> e_node_x,
+                     Array1D<Real> e_node_y, Array1D<Real> e_node_z,
+                     Array1D<Real> h_node_x, Array1D<Real> h_node_y,
+                     Array1D<Real> h_node_z, Array1D<Real> e_size_x,
+                     Array1D<Real> e_size_y, Array1D<Real> e_size_z,
+                     Array1D<Real> h_size_x, Array1D<Real> h_size_y,
+                     Array1D<Real> h_size_z)
     : _dimension{dimension},
       _type{type},
       _global_box{global_box},
@@ -107,7 +107,7 @@ GridSpace::Dimension GridSpace::dimension() const { return _dimension; }
 
 GridSpace::Type GridSpace::type() const { return _type; }
 
-GridSpace::GridSpaceRegion GridSpace::region() const {
+Cube GridSpace::region() const {
   return Cube{Vector{eNodeX().front(), eNodeY().front(), eNodeZ().front()},
               Vector{eNodeX().back() - eNodeX().front(),
                      eNodeY().back() - eNodeY().front(),
@@ -434,8 +434,8 @@ std::string GridSpace::toString() const {
   ss << " Dimension: " << dimensionToString(dimension()) << "\n";
   ss << " Type: " << typeToString(type()) << "\n";
   ss << " Region: " << region().toString() << "\n";
-  ss << " Box: " << box().toString() << "\n";
-  ss << " GlobalBox: " << globalBox().toString();
+  ss << "  " << box().toString() << "\n";
+  ss << " Global " << globalBox().toString();
 
   return ss.str();
 }
@@ -489,8 +489,7 @@ std::size_t GridSpace::handleTransformZWithoutCheck(Real z) const {
   return xt::argmin(xt::abs(_e_node_z - z)).front();
 }
 
-void GridSpace::correctGridSpaceForOne(Real dl,
-                                       const Array1D<Real>& e_node,
+void GridSpace::correctGridSpaceForOne(Real dl, const Array1D<Real>& e_node,
                                        Array1D<Real>& h_node,
                                        Array1D<Real>& e_size,
                                        Array1D<Real>& h_size) {
@@ -511,8 +510,7 @@ Array1D<Real> GridSpace::calculateESize(const Array1D<Real>& e_node) {
 }
 
 Array1D<Real> GridSpace::calculateHSize(const Array1D<Real>& h_node,
-                                             const Array1D<Real>& e_node,
-                                             Real dl) {
+                                        const Array1D<Real>& e_node, Real dl) {
   auto front_point{Array1D<Real>{e_node.front() - dl / 2}};
   auto back_point{Array1D<Real>{e_node.back() + dl / 2}};
   Array1D<Real> temp{
