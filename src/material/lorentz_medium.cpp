@@ -7,16 +7,15 @@ namespace xfdtd {
 template <typename T, typename F>
 static auto lorentzSusceptibility(const T& omega_p, const T& eps_delta,
                                   const T& nv, const F& freq) {
-  using namespace std::complex_literals;
   auto omega = 2 * constant::PI * freq;
 
   return (eps_delta * omega_p * omega_p) /
-         (omega_p * omega_p + 2i * nv * omega - omega * omega);
+         (omega_p * omega_p + 2.0 * constant::II * nv * omega - omega * omega);
 }
 
 LorentzMedium::LorentzMedium(const std::string& name, Real eps_inf,
-                             Array1D<Real> eps_static,
-                             Array1D<Real> omega_p, Array1D<Real> nv)
+                             Array1D<Real> eps_static, Array1D<Real> omega_p,
+                             Array1D<Real> nv)
     : LinearDispersiveMaterial{name, LinearDispersiveMaterial::Type::LORENTZ},
       _eps_inf{eps_inf},
       _eps_static{std::move(eps_static)},
@@ -29,7 +28,7 @@ LorentzMedium::LorentzMedium(const std::string& name, Real eps_inf,
   }
 }
 
-xt::xarray<std::complex<Real>> LorentzMedium::relativePermittivity(
+Array1D<std::complex<Real>> LorentzMedium::relativePermittivity(
     const Array1D<Real>& freq) const {
   return xt::make_lambda_xfunction(
       [this](const auto& f) {
@@ -42,8 +41,7 @@ xt::xarray<std::complex<Real>> LorentzMedium::relativePermittivity(
       freq);
 }
 
-std::complex<Real> LorentzMedium::susceptibility(Real freq,
-                                                   size_t p) const {
+std::complex<Real> LorentzMedium::susceptibility(Real freq, size_t p) const {
   if (numberOfPoles() <= p) {
     throw std::runtime_error(
         "LorentzMedium::susceptibility: "

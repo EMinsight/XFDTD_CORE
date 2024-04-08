@@ -4,7 +4,6 @@
 #include <xfdtd/common/type_define.h>
 
 #include <cstddef>
-#include <xtensor/xarray.hpp>
 
 #include "corrector/corrector.h"
 

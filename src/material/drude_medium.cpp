@@ -1,32 +1,30 @@
-#include <complex>
-#include <numeric>
+#include <xfdtd/common/constant.h>
+#include <xfdtd/material/dispersive_material.h>
 
-#include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/common/constant.h"
+#include <complex>
 
 namespace xfdtd {
 
 template <typename T, typename F>
 static auto drudeSusceptibility(const T& omega_p, const T& gamma,
                                 const F& freq) {
-  using namespace std::complex_literals;
   auto omega = 2 * constant::PI * freq;
 
-  return -(omega_p * omega_p) / (omega * omega - 1i * gamma * omega);
+  return -(omega_p * omega_p) / (omega * omega - constant::II * gamma * omega);
 }
 
-DrudeMedium::DrudeMedium(const std::string& name, double eps_inf,
+DrudeMedium::DrudeMedium(const std::string& name, Real eps_inf,
                          Array1D<Real> omega_p, Array1D<Real> gamma)
     : LinearDispersiveMaterial{name, Type::DRUDE},
       _eps_inf{eps_inf},
       _omega_p{std::move(omega_p)},
       _gamma{std::move(gamma)} {}
 
-xt::xarray<std::complex<double>> DrudeMedium::relativePermittivity(
+Array1D<std::complex<Real>> DrudeMedium::relativePermittivity(
     const Array1D<Real>& freq) const {
   return xt::make_lambda_xfunction(
       [eps_inf = _eps_inf, this](const auto& f) {
-        std::complex<double> sum{0, 0};
+        std::complex<Real> sum{0, 0};
         for (std::size_t p = 0; p < numberOfPoles(); ++p) {
           sum += susceptibility(f, p);
         }
@@ -35,8 +33,7 @@ xt::xarray<std::complex<double>> DrudeMedium::relativePermittivity(
       freq);
 }
 
-std::complex<double> DrudeMedium::susceptibility(double freq,
-                                                 std::size_t p) const {
+std::complex<Real> DrudeMedium::susceptibility(Real freq, std::size_t p) const {
   if (numberOfPoles() <= p) {
     throw std::runtime_error(
         "DrudeMedium::susceptibility: "

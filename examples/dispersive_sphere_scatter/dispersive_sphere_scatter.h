@@ -16,7 +16,6 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <xtensor/xnpy.hpp>
 
 inline constexpr double FREQ = 1e9;

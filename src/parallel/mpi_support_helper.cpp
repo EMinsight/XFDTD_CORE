@@ -10,6 +10,8 @@
  */
 #include <xfdtd/parallel/mpi_support.h>
 
+#include "parallel/mpi_type_define.h"
+
 #if defined(XFDTD_CORE_WITH_MPI)
 #include <mpi.h>
 #endif
@@ -160,8 +162,8 @@ auto MpiSupport::sendRecv(const MpiConfig& config, const Real* send_buf,
                           const Block& recv_block, int source, int recv_tag)
     -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Sendrecv(send_buf, send_count, MPI_DOUBLE, dest, send_tag,
-               &recv_buf[recv_block.profile()._disp], recv_count,
+  MPI_Sendrecv(send_buf, send_count, mpi_type::XFDTD_MPI_REAL_TYPE, dest,
+               send_tag, &recv_buf[recv_block.profile()._disp], recv_count,
                recv_block.block(), source, recv_tag, config.comm(),
                MPI_STATUS_IGNORE);
 #endif
@@ -205,8 +207,8 @@ auto MpiSupport::iSendRecv(const MpiConfig& config, const Real* send_buf,
     -> std::size_t {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request request;
-  MPI_Isendrecv(send_buf, send_count, MPI_DOUBLE, dest, send_tag,
-                &recv_buf[recv_block.profile()._disp], recv_count,
+  MPI_Isendrecv(send_buf, send_count, mpi_type::XFDTD_MPI_REAL_TYPE, dest,
+                send_tag, &recv_buf[recv_block.profile()._disp], recv_count,
                 recv_block.block(), source, recv_tag, config.comm(), &request);
   _requests.emplace_back(request);
   return _requests.size() - 1;
@@ -296,8 +298,8 @@ auto MpiSupport::allGather(const MpiConfig& config, const void* send_buf,
 auto MpiSupport::reduceSum(const MpiConfig& config, const Real* send_buf,
                            Real* recv_buf, int count) -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Reduce(send_buf, recv_buf, count, MPI_DOUBLE, MPI_SUM, config.root(),
-             config.comm());
+  MPI_Reduce(send_buf, recv_buf, count, mpi_type::XFDTD_MPI_REAL_TYPE, MPI_SUM,
+             config.root(), config.comm());
 #endif
 }
 
@@ -310,8 +312,8 @@ auto MpiSupport::reduceSum(const MpiConfig& config,
   MPI_Reduce(send_buf, recv_buf, count, MPI_COMPLEX, MPI_SUM, config.root(),
              config.comm());
 #else
-  MPI_Reduce(send_buf, recv_buf, count, MPI_DOUBLE_COMPLEX, MPI_SUM,
-             config.root(), config.comm());
+  MPI_Reduce(send_buf, recv_buf, count, mpi_type::XFDTD_MPI_COMPLEX_TYPE,
+             MPI_SUM, config.root(), config.comm());
 #endif
 #endif
 }

@@ -39,11 +39,10 @@ class CurrentMonitor : public TimeMonitor {
  private:
   Axis::Direction _direction;
   std::size_t _is, _ie, _js, _je, _ks, _ke;
-  xt::xarray<Real> _da, _db;
+  Array1D<Real> _da, _db;
   Real _positive;
 
-  xt::xarray<Real> _node_data;
-  xt::xarray<Real> _integral_a, _integral_b;
+  Array1D<Real> _node_data;
   IndexRange _ha_range_bn, _ha_range_bp, _hb_range_an, _hb_range_ap;
 };
 

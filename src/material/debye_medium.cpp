@@ -1,7 +1,7 @@
+#include <xfdtd/common/constant.h>
 #include <xfdtd/material/dispersive_material.h>
 
 #include <complex>
-#include <numeric>
 #include <utility>
 
 namespace xfdtd {
@@ -9,10 +9,9 @@ namespace xfdtd {
 template <typename T, typename F>
 static auto debyeSusceptibility(const T& eps_inf, const T& eps_static,
                                 const T& tau, const F& freq) {
-  using namespace std::complex_literals;
   auto&& eps_delta = eps_static - eps_inf;
   auto&& omega = 2 * constant::PI * freq;
-  return (eps_delta) / (1.0 + 1i * omega * tau);
+  return (eps_delta) / (1.0 + constant::II * omega * tau);
 }
 
 DebyeMedium::DebyeMedium(const std::string& name, double eps_inf,
@@ -22,7 +21,7 @@ DebyeMedium::DebyeMedium(const std::string& name, double eps_inf,
       _eps_static{std::move(eps_static)},
       _tau{std::move(tau)} {}
 
-xt::xarray<std::complex<double>> DebyeMedium::relativePermittivity(
+Array1D<std::complex<double>> DebyeMedium::relativePermittivity(
     const Array1D<Real>& freq) const {
   return xt::make_lambda_xfunction(
       [this](const auto& f) {

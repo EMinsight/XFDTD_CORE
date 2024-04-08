@@ -116,16 +116,16 @@ auto NFFFT::update() -> void {
   }
 }
 
-auto NFFFT::processFarField(const xt::xtensor<Real, 1>& theta, Real phi,
+auto NFFFT::processFarField(const Array1D<Real>& theta, Real phi,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
-  processFarField(theta, xt::xtensor<Real, 1>{phi}, sub_dir, origin);
+  processFarField(theta, Array1D<Real>{phi}, sub_dir, origin);
 }
 
-auto NFFFT::processFarField(Real theta, const xt::xtensor<Real, 1>& phi,
+auto NFFFT::processFarField(Real theta, const Array1D<Real>& phi,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
-  processFarField(xt::xtensor<Real, 1>{theta}, phi, sub_dir, origin);
+  processFarField(Array1D<Real>{theta}, phi, sub_dir, origin);
 }
 
 void NFFFT::outputRadiationPower() {
@@ -134,9 +134,9 @@ void NFFFT::outputRadiationPower() {
   }
 
   auto num_freq = _fd_plane_data.size();
-  xt::xtensor<Real, 1> freq_arr = xt::zeros<Real>({num_freq});
-  xt::xtensor<Real, 1> node_power_arr = xt::zeros<Real>({num_freq});
-  xt::xtensor<Real, 1> power_arr = xt::zeros<Real>({num_freq});
+  Array1D<Real> freq_arr = xt::zeros<Real>({num_freq});
+  Array1D<Real> node_power_arr = xt::zeros<Real>({num_freq});
+  Array1D<Real> power_arr = xt::zeros<Real>({num_freq});
 
   for (auto i = 0; i < num_freq; ++i) {
     freq_arr(i) = _fd_plane_data[i].frequency();
@@ -340,15 +340,15 @@ auto NFFFT::generateSurface() -> void {
   }
 }
 
-auto NFFFT::processFarField(const xt::xtensor<Real, 1>& theta,
-                            const xt::xtensor<Real, 1>& phi,
+auto NFFFT::processFarField(const Array1D<Real>& theta,
+                            const Array1D<Real>& phi,
                             const std::string& sub_dir,
                             const Vector& origin) const -> void {
   if (!valid()) {
     return;
   }
 
-  xt::xtensor<std::complex<Real>, 1> node_data;
+  Array1D<std::complex<Real>> node_data;
   for (const auto& f : _fd_plane_data) {
     const auto freq = f.frequency();
     auto node_a_theta = f.aTheta(theta, phi, origin);
@@ -356,10 +356,10 @@ auto NFFFT::processFarField(const xt::xtensor<Real, 1>& theta,
     auto node_a_phi = f.aPhi(theta, phi, origin);
     auto node_f_theta = f.fTheta(theta, phi, origin);
 
-    xt::xtensor<std::complex<Real>, 1> a_theta = xt::zeros_like(node_a_theta);
-    xt::xtensor<std::complex<Real>, 1> f_phi = xt::zeros_like(node_f_phi);
-    xt::xtensor<std::complex<Real>, 1> a_phi = xt::zeros_like(node_a_phi);
-    xt::xtensor<std::complex<Real>, 1> f_theta = xt::zeros_like(node_f_theta);
+    Array1D<std::complex<Real>> a_theta = xt::zeros_like(node_a_theta);
+    Array1D<std::complex<Real>> f_phi = xt::zeros_like(node_f_phi);
+    Array1D<std::complex<Real>> a_phi = xt::zeros_like(node_a_phi);
+    Array1D<std::complex<Real>> f_theta = xt::zeros_like(node_f_theta);
 
     node_data = xt::concatenate(xt::xtuple(node_data, node_a_theta));
     node_data = xt::concatenate(xt::xtuple(node_data, node_f_phi));
@@ -369,8 +369,8 @@ auto NFFFT::processFarField(const xt::xtensor<Real, 1>& theta,
 
   // rename later
   auto nffft_gather_func =
-      [this](const xt::xtensor<std::complex<Real>, 1>& send_data,
-             xt::xtensor<std::complex<Real>, 1>& recv_data) {
+      [this](const Array1D<std::complex<Real>>& send_data,
+             Array1D<std::complex<Real>>& recv_data) {
         if (this->nffftMPIConfig().size() <= 1) {
           recv_data = send_data;
           return;

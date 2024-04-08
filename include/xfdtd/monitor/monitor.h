@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <string>
-#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 

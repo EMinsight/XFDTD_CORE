@@ -1,6 +1,0 @@
-#ifndef __XFDTD_CORE_MPI_SUPPORT_IMP_H__
-#define __XFDTD_CORE_MPI_SUPPORT_IMP_H__
-
-
-
-#endif // __XFDTD_CORE_MPI_SUPPORT_IMP_H__

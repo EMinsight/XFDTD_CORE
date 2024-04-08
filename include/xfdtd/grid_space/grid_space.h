@@ -11,7 +11,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <xtensor/xarray.hpp>
 #include <xtensor/xindex_view.hpp>
 
 namespace xfdtd {
@@ -305,7 +304,7 @@ class GridSpace {
 };
 
 inline auto GridSpace::getShapeMask(const Shape* shape) const {
-  xt::xarray<bool> mask{xt::make_lambda_xfunction(
+  Array3D<bool> mask{xt::make_lambda_xfunction(
       [shape, this](auto&& g) {
         return shape->isInside(getGridCenterVector(*g));
       },

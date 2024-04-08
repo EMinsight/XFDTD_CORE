@@ -22,6 +22,9 @@ class XFDTDMpiSupportException : public XFDTDException {
 
 class MpiSupport {
  public:
+  static auto setMpiParallelDim(int nx, int ny, int nz) -> void;
+
+ public:
   class Block {
    public:
     struct Profile {
@@ -350,8 +353,8 @@ class MpiSupport {
   auto iRecv(const MpiConfig& config, void* buf, int count,
              const TypeGuard& type, int source, int tag) -> std::size_t;
 
-  auto iRecv(const MpiConfig& config, Real* buf, int count,
-             const Block& block, int source, int tag) -> std::size_t;
+  auto iRecv(const MpiConfig& config, Real* buf, int count, const Block& block,
+             int source, int tag) -> std::size_t;
 
   auto sendRecv(const MpiConfig& config, const void* send_buf, int send_count,
                 int dest, int send_tag, void* recv_buf, int recv_count,
@@ -375,10 +378,10 @@ class MpiSupport {
                  void* recv_buf, int recv_count, const TypeGuard& recv_type,
                  int source, int recv_tag) -> std::size_t;
 
-  auto iSendRecv(const MpiConfig& config, const Real* send_buf,
-                 int send_count, int dest, int send_tag, Real* recv_buf,
-                 int recv_count, const Block& recv_block, int source,
-                 int recv_tag) -> std::size_t;
+  auto iSendRecv(const MpiConfig& config, const Real* send_buf, int send_count,
+                 int dest, int send_tag, Real* recv_buf, int recv_count,
+                 const Block& recv_block, int source, int recv_tag)
+      -> std::size_t;
 
   auto gather(const MpiConfig& config, const void* send_buf, int send_count,
               void* recv_buf, int recv_count, int root) -> void;
@@ -388,8 +391,8 @@ class MpiSupport {
               const TypeGuard& recv_type, int root) -> void;
 
   auto gather(const MpiConfig& config, const Real* send_buf, int send_count,
-              Real* recv_buf, int recv_count, const Block& recv_block,
-              int root) -> void;
+              Real* recv_buf, int recv_count, const Block& recv_block, int root)
+      -> void;
 
   auto iGather(const MpiConfig& config, const void* send_buf, int send_count,
                void* recv_buf, int recv_count, int root) -> std::size_t;
@@ -405,11 +408,16 @@ class MpiSupport {
   auto allGather(const MpiConfig& config, const void* send_buf, int send_count,
                  void* recv_buf, int recv_count) -> void;
 
-  auto reduceSum(const MpiConfig& config, const Real* send_buf,
-                 Real* recv_buf, int count) -> void;
+  auto reduceSum(const MpiConfig& config, const Real* send_buf, Real* recv_buf,
+                 int count) -> void;
 
   auto reduceSum(const MpiConfig& config, const std::complex<Real>* send_buf,
                  std::complex<Real>* recv_buf, int count) const -> void;
+
+ private:
+  inline static int config_nx{1};
+  inline static int config_ny{1};
+  inline static int config_nz{1};
 
  private:
   explicit MpiSupport(int argc = 0, char** argv = nullptr);

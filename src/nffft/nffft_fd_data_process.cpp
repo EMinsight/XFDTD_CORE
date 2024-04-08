@@ -123,8 +123,6 @@ auto FDPlaneData::calculatePotential(
   const auto je = task.yRange().end();
   const auto ke = task.zRange().end();
 
-  using namespace std::complex_literals;
-
   auto wave_number = 2.0 * constant::PI * _freq / constant::C_0;
   auto&& cos_t = xt::cos(theta);
   auto&& sin_t{xt::sin(theta)};
@@ -143,7 +141,7 @@ auto FDPlaneData::calculatePotential(
         auto&& r = rVector<xyz>(i, j, k) - origin;
         auto&& ds = this->ds<xyz>(i, j, k);
         auto&& phase_shift = xt::exp(
-            1i * wave_number *
+            constant::II * wave_number *
             (r.x() * sin_t_cos_p + r.y() * sin_t_sin_p + r.z() * cos_t));
         data += (a(i - is, j - js, k - ks) * transform_a +
                  +b(i - is, j - js, k - ks) * transform_b) *

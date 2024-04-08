@@ -9,12 +9,10 @@
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/parallel/mpi_config.h>
 
-#include <complex>
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
-#include <xtensor/xtensor.hpp>
 
 namespace xfdtd {
 
@@ -50,12 +48,12 @@ class NFFFT {
 
   void update();
 
-  auto processFarField(const xt::xtensor<Real, 1>& theta, Real phi,
+  auto processFarField(const Array1D<Real>& theta, Real phi,
                        const std::string& sub_dir,
                        const Vector& origin = Vector{0.0, 0.0, 0.0}) const
       -> void;
 
-  auto processFarField(Real theta, const xt::xtensor<Real, 1>& phi,
+  auto processFarField(Real theta, const Array1D<Real>& phi,
                        const std::string& sub_dir,
                        const Vector& origin = Vector{0.0, 0.0, 0.0}) const
       -> void;
@@ -105,8 +103,8 @@ class NFFFT {
   auto nffftMPIConfig() const -> const MpiConfig&;
 
  protected:
-  auto processFarField(const xt::xtensor<Real, 1>& theta,
-                       const xt::xtensor<Real, 1>& phi,
+  auto processFarField(const Array1D<Real>& theta,
+                       const Array1D<Real>& phi,
                        const std::string& sub_dir, const Vector& origin) const
       -> void;
 
@@ -168,10 +166,6 @@ class NFFFT {
   MpiConfig _nffft_mpi_config;
 
   std::vector<FDPlaneData> _fd_plane_data;
-
-  xt::xarray<std::complex<Real>> _transform_e, _transform_h;
-
-  xt::xarray<std::complex<Real>> _a_theta, _a_phi, _f_theta, _f_phi;
 
   auto initGlobal() -> void;
 

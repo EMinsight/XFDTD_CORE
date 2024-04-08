@@ -9,9 +9,6 @@
 #include <xfdtd/nffft/nffft.h>
 #include <xfdtd/util/transform.h>
 
-#include <complex>
-#include <xtensor/xtensor.hpp>
-
 namespace xfdtd {
 
 class FDPlaneData {

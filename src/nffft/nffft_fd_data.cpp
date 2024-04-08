@@ -1,21 +1,17 @@
 #include "nffft/nffft_fd_data.h"
 
-#include <xfdtd/nffft/nffft.h>
 #include <xfdtd/common/constant.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/nffft/nffft.h>
 #include <xfdtd/util/transform.h>
-
-#include "xfdtd/coordinate_system/coordinate_system.h"
 
 namespace xfdtd {
 
 FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
                          std::shared_ptr<const EMF> emf, Real freq,
-                         const IndexTask& task_xn,
-                         const IndexTask& task_xp,
-                         const IndexTask& task_yn,
-                         const IndexTask& task_yp,
-                         const IndexTask& task_zn,
-                         const IndexTask& task_zp)
+                         const IndexTask& task_xn, const IndexTask& task_xp,
+                         const IndexTask& task_yn, const IndexTask& task_yp,
+                         const IndexTask& task_zn, const IndexTask& task_zp)
     : _grid_space{std::move(grid_space)},
       _emf{std::move(emf)},
       _freq{freq},
@@ -65,15 +61,14 @@ FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
 }
 
 auto FDPlaneData::initDFT(std::size_t total_time_step, Real dt) -> void {
-  using namespace std::complex_literals;
   _transform_e = xt::zeros<std::complex<Real>>({total_time_step});
   _transform_h = xt::zeros<std::complex<Real>>({total_time_step});
 
   for (std::size_t t{0}; t < total_time_step; ++t) {
-    _transform_e(t) =
-        dt * std::exp(-1i * 2.0 * constant::PI * (_freq * (t + 1) * dt));
-    _transform_h(t) =
-        dt * std::exp(-1i * 2.0 * constant::PI * (_freq * (t + 0.5) * dt));
+    _transform_e(t) = dt * std::exp(-constant::II * 2.0 * constant::PI *
+                                    (_freq * (t + 1) * dt));
+    _transform_h(t) = dt * std::exp(-constant::II * 2.0 * constant::PI *
+                                    (_freq * (t + 0.5) * dt));
   }
 }
 

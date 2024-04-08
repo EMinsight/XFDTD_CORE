@@ -169,9 +169,9 @@ class TFSF : public WaveformSource {
   Real _theta, _phi, _psi;
   Real _sin_theta, _cos_theta, _sin_phi, _cos_phi, _sin_psi, _cos_psi;
   Vector _k;
-  xt::xtensor<Real, 2> _rotation_matrix;
+  Array2D<Real> _rotation_matrix;
   Vector _k_e;
-  xt::xarray<Real> _transform_e, _transform_h;
+  Array<Real> _transform_e, _transform_h;
 
   //   std::unique_ptr<GridBox> _box;
   GridBox _global_box;

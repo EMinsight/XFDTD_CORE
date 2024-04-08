@@ -10,6 +10,7 @@
 #include "xfdtd/monitor/movie_monitor.h"
 #include "xfdtd/nffft/nffft.h"
 #include "xfdtd/object/object.h"
+#include "xfdtd/parallel/mpi_support.h"
 #include "xfdtd/parallel/parallelized_config.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/sphere.h"
@@ -18,6 +19,7 @@
 #include "xfdtd/waveform_source/tfsf_3d.h"
 
 void dielectricSphereScatter() {
+  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
   constexpr double dl{7.5e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(

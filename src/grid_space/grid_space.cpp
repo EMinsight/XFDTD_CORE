@@ -352,7 +352,7 @@ void GridSpace::setMinDz(Real min_dz) { _min_dz = min_dz; }
 void GridSpace::generateMaterialGrid(std::size_t nx, std::size_t ny,
                                      std::size_t nz) {
   _grid_with_material =
-      xt::xarray<std::shared_ptr<Grid>>::from_shape({nx, ny, nz});
+      Array3D<std::shared_ptr<Grid>>::from_shape({nx, ny, nz});
   for (auto i{0}; i < nx; ++i) {
     for (auto j{0}; j < ny; ++j) {
       for (auto k{0}; k < nz; ++k) {

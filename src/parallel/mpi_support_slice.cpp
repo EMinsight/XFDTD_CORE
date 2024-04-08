@@ -1,5 +1,8 @@
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/util/fdtd_basic.h>
+
+#include "parallel/mpi_type_define.h"
 
 #if defined(XFDTD_CORE_WITH_MPI)
 #include <mpi.h>
@@ -12,7 +15,7 @@ auto MpiSupport::Slice::makeRowMajorXSlice(std::size_t nx, std::size_t ny,
     -> MpiSupport::Slice {
   Slice slice;
 #if defined(XFDTD_CORE_WITH_MPI)
-  slice.createVec(1, ny * nz, 1, MPI_DOUBLE);
+  slice.createVec(1, ny * nz, 1, mpi_type::XFDTD_MPI_REAL_TYPE);
   slice.createStruct(1, {1}, {0});
 #endif
   return slice;
@@ -23,10 +26,10 @@ auto MpiSupport::Slice::makeRowMajorYSlice(std::size_t nx, std::size_t ny,
     -> MpiSupport::Slice {
   Slice slice;
 #if defined(XFDTD_CORE_WITH_MPI)
-  slice.createVec(1, nz, 1, MPI_DOUBLE);
+  slice.createVec(1, nz, 1, mpi_type::XFDTD_MPI_REAL_TYPE);
   std::vector<MPI_Aint> offsets(nx, 0);
   for (std::size_t i = 0; i < nx; ++i) {
-    offsets[i] = sizeof(double) * i * ny * nz;
+    offsets[i] = sizeof(Real) * i * ny * nz;
   }
   slice.createStruct(nx, std::vector<int>(nx, 1), std::move(offsets));
 #endif
@@ -38,10 +41,10 @@ auto MpiSupport::Slice::makeRowMajorZSlice(std::size_t nx, std::size_t ny,
     -> MpiSupport::Slice {
   Slice slice;
 #if defined(XFDTD_CORE_WITH_MPI)
-  slice.createVec(ny, 1, nz, MPI_DOUBLE);
+  slice.createVec(ny, 1, nz, mpi_type::XFDTD_MPI_REAL_TYPE);
   std::vector<MPI_Aint> offsets(nx, 0);
   for (std::size_t i = 0; i < nx; ++i) {
-    offsets[i] = sizeof(double) * i * ny * nz;
+    offsets[i] = sizeof(Real) * i * ny * nz;
   }
   slice.createStruct(nx, std::vector<int>(nx, 1), std::move(offsets));
 #endif

@@ -10,7 +10,6 @@
 
 #include <memory>
 #include <vector>
-#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 

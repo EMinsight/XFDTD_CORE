@@ -60,7 +60,7 @@ class LinearDispersiveMaterial : public Material {
 
   Type type() const;
 
-  virtual xt::xarray<std::complex<Real>> relativePermittivity(
+  virtual Array1D<std::complex<Real>> relativePermittivity(
       const Array1D<Real>& freq) const = 0;
 
   virtual void calculateCoeff(const GridSpace* grid_space,
@@ -101,7 +101,7 @@ class LorentzMedium : public LinearDispersiveMaterial {
 
   const auto& coeffForADE() const { return _coeff_for_ade; }
 
-  xt::xarray<std::complex<Real>> relativePermittivity(
+  Array1D<std::complex<Real>> relativePermittivity(
       const Array1D<Real>& freq) const override;
 
   std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
@@ -135,7 +135,7 @@ class DrudeMedium : public LinearDispersiveMaterial {
 
   const auto& coeffForADE() const { return _coeff_for_ade; }
 
-  xt::xarray<std::complex<Real>> relativePermittivity(
+  Array1D<std::complex<Real>> relativePermittivity(
       const Array1D<Real>& freq) const override;
 
   std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
@@ -169,7 +169,7 @@ class DebyeMedium : public LinearDispersiveMaterial {
 
   const auto& coeffForADE() const { return _coeff_for_ade; }
 
-  xt::xarray<std::complex<Real>> relativePermittivity(
+  Array1D<std::complex<Real>> relativePermittivity(
       const Array1D<Real>& freq) const override;
 
   std::complex<Real> susceptibility(Real freq, std::size_t p) const override;

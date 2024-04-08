@@ -1,4 +1,7 @@
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/parallel/mpi_support.h>
+
+#include "parallel/mpi_type_define.h"
 
 namespace xfdtd {
 
@@ -13,13 +16,14 @@ auto MpiSupport::Block::make(Profile profile) -> Block {
   auto nz = profile._nz;
   auto stride_vec = profile._stride_vec;
   auto stride_elem = profile._stride_elem;
-  MPI_Type_vector(ny, nz, stride_elem, MPI_DOUBLE, &block._vec_type);
+  MPI_Type_vector(ny, nz, stride_elem, mpi_type::XFDTD_MPI_REAL_TYPE,
+                  &block._vec_type);
   MPI_Type_commit(&block._vec_type);
   block._vec_types = std::vector<MPI_Datatype>(nx, block._vec_type);
   block._block_lens = std::vector<int>(nx, 1);
   block._offsets = std::vector<MPI_Aint>(nx, 0);
   for (int i = 0; i < nx; ++i) {
-    block._offsets[i] = sizeof(double) * i * stride_vec;
+    block._offsets[i] = sizeof(Real) * i * stride_vec;
   }
   MPI_Type_create_struct(nx, block._block_lens.data(), block._offsets.data(),
                          block._vec_types.data(), &block._block);
