@@ -18,6 +18,10 @@
 #include <string>
 #include <xtensor/xnpy.hpp>
 
+#include "xfdtd/monitor/field_monitor.h"
+#include "xfdtd/monitor/movie_monitor.h"
+#include "xfdtd/parallel/mpi_support.h"
+
 inline constexpr double FREQ = 1e9;
 
 inline auto relativePermittivityToNonDispersive(
@@ -39,7 +43,8 @@ inline void outputRelativePermittivity(
     const xt::xarray<double>& freq,
     const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material,
     const std::string& file_name) {
-  xt::dump_npy(file_name, material->relativePermittivity(freq));
+  xt::dump_npy(file_name, xt::stack(xt::xtuple(
+                              freq, material->relativePermittivity(freq))));
 }
 
 inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
@@ -90,6 +95,13 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       nffft_start, nffft_start, nffft_start, xt::xarray<double>{FREQ},
       (sphere_scatter_dir).string())};
 
+  auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
+      std::make_unique<xfdtd::FieldMonitor>(
+          std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, 0, -0.175},
+                                        xfdtd::Vector{0.35, dl, 0.35}),
+          xfdtd::Axis::XYZ::Y, xfdtd::EMF::Field::EX, "", ""),
+      10, "movie_ex_xz", (sphere_scatter_dir / "movie_ex_xz").string())};
+
   auto simulation = xfdtd::Simulation{dl, dl, dl, 0.9};
   simulation.addObject(domain);
   simulation.addObject(sphere);
@@ -107,7 +119,8 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   simulation.addBoundary(
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
-
+//   simulation.addMonitor(movie_ex_xz);
+  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
   simulation.run(2200);
 
   nffft_fd->processFarField(

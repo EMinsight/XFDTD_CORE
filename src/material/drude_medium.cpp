@@ -54,7 +54,7 @@ void DrudeMedium::calculateCoeff(const GridSpace* grid_space,
 
   auto ade_beta = [&dt, eps_0 = constant::EPSILON_0](const auto& omega_p,
                                                      const auto& gamma) {
-    return (eps_0 * omega_p * omega_p * dt * dt / 2) / (1 + gamma * dt / 2);
+    return (eps_0 * omega_p * omega_p * dt / 2) / (1 + gamma * dt / 2);
   };
 
   auto ade_a = [](const auto& eps_inf, const auto& eps_0, const auto& sum_beta,

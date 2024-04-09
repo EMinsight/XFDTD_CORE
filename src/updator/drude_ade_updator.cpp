@@ -65,9 +65,9 @@ void DrudeADEUpdator::updateE() {
     double j_sum{0};
     auto num_p = coeff._k.size();
     for (decltype(num_p) p = 0; p < num_p; ++p) {
-      const auto& k = coeff._k(p);
+      const auto& k_p = coeff._k(p);
       const auto& jj = j_arr(i, j, k, p);
-      j_sum += ((1 + k)) * jj;
+      j_sum += ((1 + k_p)) * jj;
     }
     return 0.5 * j_sum;
   };
@@ -77,10 +77,10 @@ void DrudeADEUpdator::updateE() {
                      const auto& e_cur, auto&& jj) {
     auto num_p = coeff._k.size();
     for (decltype(num_p) p = 0; p < num_p; ++p) {
-      const auto& k = coeff._k(p);
+      const auto& k_p = coeff._k(p);
       const auto& beta = coeff._beta(p);
 
-      jj(i, j, k, p) = k * jj(i, j, k, p) + beta * (e_next + e_cur);
+      jj(i, j, k, p) = k_p * jj(i, j, k, p) + beta * (e_next + e_cur);
     }
   };
 
@@ -233,9 +233,9 @@ auto DrudeADEUpdator::updateEEdge() -> void {
     double j_sum{0};
     auto num_p = coeff._k.size();
     for (decltype(num_p) p = 0; p < num_p; ++p) {
-      const auto& k = coeff._k(p);
+      const auto& k_p = coeff._k(p);
       const auto& jj = j_arr(i, j, k, p);
-      j_sum += ((1 + k)) * jj;
+      j_sum += ((1 + k_p)) * jj;
     }
     return 0.5 * j_sum;
   };
@@ -245,10 +245,10 @@ auto DrudeADEUpdator::updateEEdge() -> void {
                      const auto& e_cur, auto&& jj) {
     auto num_p = coeff._k.size();
     for (decltype(num_p) p = 0; p < num_p; ++p) {
-      const auto& k = coeff._k(p);
+      const auto& k_p= coeff._k(p);
       const auto& beta = coeff._beta(p);
 
-      jj(i, j, k, p) = k * jj(i, j, k, p) + beta * (e_next + e_cur);
+      jj(i, j, k, p) = k_p * jj(i, j, k, p) + beta * (e_next + e_cur);
     }
   };
 
