@@ -101,6 +101,12 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
                                         xfdtd::Vector{0.35, dl, 0.35}),
           xfdtd::Axis::XYZ::Y, xfdtd::EMF::Field::EX, "", ""),
       10, "movie_ex_xz", (sphere_scatter_dir / "movie_ex_xz").string())};
+  auto movie_ex_yz = std::make_shared<xfdtd::MovieMonitor>(
+      std::make_unique<xfdtd::FieldMonitor>(
+          std::make_unique<xfdtd::Cube>(xfdtd::Vector{0, -0.175, -0.175},
+                                        xfdtd::Vector{dl, 0.35, 0.35}),
+          xfdtd::Axis::XYZ::X, xfdtd::EMF::Field::EX, "", ""),
+      10, "movie_ex_yz", (sphere_scatter_dir / "movie_ex_yz").string());
 
   auto simulation = xfdtd::Simulation{dl, dl, dl, 0.9};
   simulation.addObject(domain);
@@ -119,7 +125,8 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   simulation.addBoundary(
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
-//   simulation.addMonitor(movie_ex_xz);
+  simulation.addMonitor(movie_ex_xz);
+  simulation.addMonitor(movie_ex_yz);
   xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
   simulation.run(2200);
 
@@ -138,6 +145,9 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
 
   auto time = tfsf->waveform()->time();
   auto incident_wave_data = tfsf->waveform()->value();
+  if (!xfdtd::MpiSupport::instance().isRoot()) {
+    return;
+  }
   xt::dump_npy((sphere_scatter_dir / "time.npy").string(), time);
   xt::dump_npy((sphere_scatter_dir / "incident_wave.npy").string(),
                incident_wave_data);

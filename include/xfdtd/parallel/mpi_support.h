@@ -37,26 +37,16 @@ class MpiSupport {
     };
 
    public:
-    static auto makeBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
+    static auto makeRowMajorXSlice(std::size_t thickness_x, std::size_t ny,
+                                   std::size_t nz, std::size_t disp) -> Block;
 
-    static auto makeExBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
+    static auto makeRowMajorYSlice(std::size_t thickness_y, std::size_t nx,
+                                   std::size_t ny, std::size_t nz,
+                                   std::size_t disp) -> Block;
 
-    static auto makeEyBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
-
-    static auto makeEzBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
-
-    static auto makeHxBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
-
-    static auto makeHyBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
-
-    static auto makeHzBlock(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Block;
+    static auto makeRowMajorZSlice(std::size_t thickness_z, std::size_t nx,
+                                   std::size_t ny, std::size_t nz,
+                                   std::size_t disp) -> Block;
 
     static auto make(Profile profile) -> Block;
 
@@ -90,96 +80,6 @@ class MpiSupport {
     std::vector<MPI_Aint> _offsets;
 
     MPI_Datatype _block{MPI_DATATYPE_NULL};
-#endif
-  };
-
-  // TODO(franzero): Slice is 2D block. remove it later.
-  class Slice {
-   public:
-    static auto makeRowMajorXSlice(std::size_t nx, std::size_t ny,
-                                   std::size_t nz) -> Slice;
-
-    static auto makeRowMajorYSlice(std::size_t nx, std::size_t ny,
-                                   std::size_t nz) -> Slice;
-
-    static auto makeRowMajorZSlice(std::size_t nx, std::size_t ny,
-                                   std::size_t nz) -> Slice;
-
-    static auto makeEyXSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeEzXSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeEzYSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeExYSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeExZSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeEyZSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeHyXSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeHzXSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeHzYSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeHxYSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeHxZSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    static auto makeHyZSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-        -> Slice;
-
-    Slice() = default;
-
-    Slice(Slice const&) = delete;
-
-    Slice(Slice&&) noexcept;
-
-    auto operator=(Slice const&) -> Slice& = delete;
-
-    auto operator=(Slice&&) noexcept -> Slice&;
-
-    ~Slice();
-
-#if defined(XFDTD_CORE_WITH_MPI)
-    auto createVec(int count, int block_len, int stripe, MPI_Datatype type)
-        -> void;
-
-    auto createStruct(int count, std::vector<int> block_lens,
-                      std::vector<MPI_Aint> offsets) -> void;
-
-    auto vecTypes() const -> const std::vector<MPI_Datatype>& {
-      return _vec_types;
-    }
-
-    auto offsets() const -> const std::vector<MPI_Aint>& { return _offsets; }
-
-    auto blockLens() const -> const std::vector<int>& { return _block_lens; }
-
-    auto slice() const -> MPI_Datatype { return _slice; }
-#endif
-
-   private:
-#if defined(XFDTD_CORE_WITH_MPI)
-    MPI_Datatype _vec_type{MPI_DATATYPE_NULL};
-
-    std::vector<MPI_Datatype> _vec_types;
-    std::vector<int> _block_lens;
-    std::vector<MPI_Aint> _offsets;
-
-    MPI_Datatype _slice{MPI_DATATYPE_NULL};
 #endif
   };
 
@@ -434,13 +334,33 @@ class MpiSupport {
 
   MpiConfig _config;
 
-  // Slice must be destroyed before MPI_Finalize.
-  Slice _hz_y_slice;
-  Slice _hx_y_slice;
-  Slice _hy_x_slice;
-  Slice _hz_x_slice;
-  Slice _hx_z_slice;
-  Slice _hy_z_slice;
+  // Block must be destroyed before MPI_Finalize.
+  Block _hy_xn_r_block;
+  Block _hy_xn_s_block;
+  Block _hz_xn_r_block;
+  Block _hz_xn_s_block;
+  Block _hx_yn_r_block;
+  Block _hx_yn_s_block;
+  Block _hz_yn_r_block;
+  Block _hz_yn_s_block;
+  Block _hx_zn_r_block;
+  Block _hx_zn_s_block;
+  Block _hy_zn_r_block;
+  Block _hy_zn_s_block;
+
+  Block _hy_xp_r_block;
+  Block _hy_xp_s_block;
+  Block _hz_xp_r_block;
+  Block _hz_xp_s_block;
+  Block _hx_yp_r_block;
+  Block _hx_yp_s_block;
+  Block _hz_yp_r_block;
+  Block _hz_yp_s_block;
+  Block _hx_zp_r_block;
+  Block _hx_zp_s_block;
+  Block _hy_zp_r_block;
+  Block _hy_zp_s_block;
+
 #if defined(XFDTD_CORE_WITH_MPI)
   std::vector<MPI_Request> _requests;
 #endif

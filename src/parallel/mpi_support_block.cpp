@@ -5,6 +5,51 @@
 
 namespace xfdtd {
 
+auto MpiSupport::Block::makeRowMajorXSlice(std::size_t thickness_x,
+                                           std::size_t ny, std::size_t nz,
+                                           std::size_t disp)
+    -> MpiSupport::Block {
+  Profile p;
+  p._nx = thickness_x;
+  p._ny = ny;
+  p._nz = nz;
+  p._stride_elem = nz;
+  p._stride_vec = ny * nz;
+  p._disp = disp;
+
+  return make(p);
+}
+
+auto MpiSupport::Block::makeRowMajorYSlice(std::size_t thickness_y,
+                                           std::size_t nx, std::size_t ny,
+                                           std::size_t nz, std::size_t disp)
+    -> MpiSupport::Block {
+  Profile p;
+  p._nx = nx;
+  p._ny = thickness_y;
+  p._nz = nz;
+  p._stride_elem = nz;
+  p._stride_vec = ny * nz;
+  p._disp = disp;
+
+  return make(p);
+}
+
+auto MpiSupport::Block::makeRowMajorZSlice(std::size_t thickness_z,
+                                           std::size_t nx, std::size_t ny,
+                                           std::size_t nz, std::size_t disp)
+    -> MpiSupport::Block {
+  Profile p;
+  p._nx = nx;
+  p._ny = ny;
+  p._nz = thickness_z;
+  p._stride_elem = nz;
+  p._stride_vec = ny * nz;
+  p._disp = disp;
+
+  return make(p);
+}
+
 auto MpiSupport::Block::make(Profile profile) -> Block {
   Block block;
 

@@ -60,20 +60,14 @@ void FieldMonitor::init(
                                           static_cast<size_t>(offset_k)}});
 
   setGlobalTask(makeIndexTask(
-      makeIndexRange(globalGridBox().origin().i(),
-                              globalGridBox().end().i()),
-      makeIndexRange(globalGridBox().origin().j(),
-                              globalGridBox().end().j()),
-      makeIndexRange(globalGridBox().origin().k(),
-                              globalGridBox().end().k())));
+      makeIndexRange(globalGridBox().origin().i(), globalGridBox().end().i()),
+      makeIndexRange(globalGridBox().origin().j(), globalGridBox().end().j()),
+      makeIndexRange(globalGridBox().origin().k(), globalGridBox().end().k())));
 
-  setNodeTask(
-      makeIndexTask(makeIndexRange(nodeGridBox().origin().i(),
-                                                     nodeGridBox().end().i()),
-                             makeIndexRange(nodeGridBox().origin().j(),
-                                                     nodeGridBox().end().j()),
-                             makeIndexRange(nodeGridBox().origin().k(),
-                                                     nodeGridBox().end().k())));
+  setNodeTask(makeIndexTask(
+      makeIndexRange(nodeGridBox().origin().i(), nodeGridBox().end().i()),
+      makeIndexRange(nodeGridBox().origin().j(), nodeGridBox().end().j()),
+      makeIndexRange(nodeGridBox().origin().k(), nodeGridBox().end().k())));
 }
 
 void FieldMonitor::update() {}
@@ -156,9 +150,9 @@ auto FieldMonitor::gatherData() -> void {
 
   auto& mpi_support = MpiSupport::instance();
   if (monitorMpiConfig().isRoot()) {
-    Array3D<Real> recv_buffer = xt::zeros<Real>(
-        {globalTask().xRange().size(), globalTask().yRange().size(),
-         globalTask().zRange().size()});
+    Array3D<Real> recv_buffer = xt::zeros<Real>({globalTask().xRange().size(),
+                                                 globalTask().yRange().size(),
+                                                 globalTask().zRange().size()});
     for (int i = 1; i < monitorMpiConfig().size(); ++i) {
       mpi_support.iRecv(monitorMpiConfig(), recv_buffer.data(), 1,
                         _blocks_mpi[i], i, 0);

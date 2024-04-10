@@ -175,6 +175,7 @@ auto MpiSupport::iSendRecv(const MpiConfig& config, const void* send_buf,
                            int recv_tag) -> std::size_t {
 #if defined(XFDTD_CORE_WITH_MPI)
   MPI_Request request;
+  // WARNING: This method is only available in open-mpi 5.+
   MPI_Isendrecv(send_buf, send_count, MPI_BYTE, dest, send_tag, recv_buf,
                 recv_count, MPI_BYTE, source, recv_tag, config.comm(),
                 &request);
@@ -308,13 +309,8 @@ auto MpiSupport::reduceSum(const MpiConfig& config,
                            std::complex<Real>* recv_buf, int count) const
     -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
-#if defined(XFDTD_CORE_SINGLE_PRECISION)
-  MPI_Reduce(send_buf, recv_buf, count, MPI_COMPLEX, MPI_SUM, config.root(),
-             config.comm());
-#else
   MPI_Reduce(send_buf, recv_buf, count, mpi_type::XFDTD_MPI_COMPLEX_TYPE,
              MPI_SUM, config.root(), config.comm());
-#endif
 #endif
 }
 

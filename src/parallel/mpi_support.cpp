@@ -1,8 +1,13 @@
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/parallel/mpi_support.h>
 
+#include <cstddef>
+#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "xfdtd/common/type_define.h"
 
 #if defined(XFDTD_CORE_WITH_MPI)
 #include <mpi.h>
@@ -20,12 +25,7 @@ auto MpiSupport::setMpiParallelDim(int nx, int ny, int nz) -> void {
   config_nz = nz;
 }
 
-MpiSupport::MpiSupport(int argc, char** argv) {
-#if defined(XFDTD_CORE_SINGLE_PRECISION)
-  throw XFDTDException("MpiSupport is not supported with single precision.");
-#endif
-  mpiInit(argc, argv);
-}
+MpiSupport::MpiSupport(int argc, char** argv) { mpiInit(argc, argv); }
 
 auto MpiSupport::abort(int error_code) const -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
@@ -41,16 +41,74 @@ auto MpiSupport::barrier() const -> void {
 #endif
 }
 
+inline static auto getAddress(const Real* ptr) -> ptrdiff_t {
+  return reinterpret_cast<ptrdiff_t>(ptr);
+}
+
+inline static auto getRealAddressOffset(const Real* ptr_a, const Real* ptr_b)
+    -> ptrdiff_t {
+  return getAddress(ptr_a) - getAddress(ptr_b);
+}
+
 auto MpiSupport::generateSlice(std::size_t nx, std::size_t ny, std::size_t nz)
     -> void {
-  _hx_z_slice = Slice::makeHxZSlice(nx, ny, nz);
-  _hy_z_slice = Slice::makeHyZSlice(nx, ny, nz);
+  _hy_xn_s_block = Block::makeRowMajorXSlice(1, ny + 1, nz, (ny + 1) * nz);
+  _hy_xn_r_block = Block::makeRowMajorXSlice(1, ny + 1, nz, 0);
 
-  _hx_y_slice = Slice::makeHxYSlice(nx, ny, nz);
-  _hz_y_slice = Slice::makeHzYSlice(nx, ny, nz);
+  _hy_xp_r_block =
+      Block::makeRowMajorXSlice(1, ny + 1, nz, ((ny + 1) * nz) * (nx - 1));
+  _hy_xp_s_block =
+      Block::makeRowMajorXSlice(1, ny + 1, nz, ((ny + 1) * nz) * (nx - 2));
 
-  _hy_x_slice = Slice::makeHyXSlice(nx, ny, nz);
-  _hz_x_slice = Slice::makeHzXSlice(nx, ny, nz);
+  _hz_xn_s_block = Block::makeRowMajorXSlice(1, ny, nz + 1, ny * (nz + 1));
+  _hz_xn_r_block = Block::makeRowMajorXSlice(1, ny, nz + 1, 0);
+
+  _hz_xp_r_block =
+      Block::makeRowMajorXSlice(1, ny, nz + 1, (ny * (nz + 1)) * (nx - 1));
+  _hz_xp_s_block =
+      Block::makeRowMajorXSlice(1, ny, nz + 1, (ny * (nz + 1)) * (nx - 2));
+
+  _hz_yn_s_block =
+      Block::makeRowMajorYSlice(1, nx, ny, nz + 1, (nz + 1));  // send hz(0,1,0)
+  _hz_yn_r_block =
+      Block::makeRowMajorYSlice(1, nx, ny, nz + 1, 0);  // recv hz(0,0,0)
+
+  _hz_yp_r_block = Block::makeRowMajorYSlice(
+      1, nx, ny, nz + 1, (nz + 1) * (ny - 1));  // recv hz(0,ny-1,0)
+  _hz_yp_s_block = Block::makeRowMajorYSlice(
+      1, nx, ny, nz + 1, (nz + 1) * (ny - 2));  // send hz(0,ny-2,0)
+
+  _hx_yn_s_block =
+      Block::makeRowMajorYSlice(1, nx + 1, ny, nz, nz);  // send hx(0,1,0)
+  _hx_yn_r_block =
+      Block::makeRowMajorYSlice(1, nx + 1, ny, nz, 0);  // recv hx(0,0,0)
+
+  _hx_yp_r_block =
+      Block::makeRowMajorYSlice(1, nx + 1, ny, nz,
+                                (ny - 1) * nz);  // recv hx(0,ny-1,0)
+  _hx_yp_s_block =
+      Block::makeRowMajorYSlice(1, nx + 1, ny, nz,
+                                (ny - 2) * nz);  // send hx(0,ny-2,0)
+
+  _hx_zn_s_block =
+      Block::makeRowMajorZSlice(1, nx + 1, ny, nz, 1);  // send hx(0,0,1)
+  _hx_zn_r_block =
+      Block::makeRowMajorZSlice(1, nx + 1, ny, nz, 0);  // recv hx(0,0,0)
+
+  _hx_zp_r_block = Block::makeRowMajorZSlice(1, nx + 1, ny, nz,
+                                             (nz - 1));  // recv hx(0,0,nz-1)
+  _hx_zp_s_block = Block::makeRowMajorZSlice(1, nx + 1, ny, nz,
+                                             (nz - 2));  // send hx(0,0,nz-2)
+
+  _hy_zn_s_block =
+      Block::makeRowMajorZSlice(1, nx, ny + 1, nz, 1);  // send hy(0,0,1)
+  _hy_zn_r_block =
+      Block::makeRowMajorZSlice(1, nx, ny + 1, nz, 0);  // recv hy(0,0,0)
+
+  _hy_zp_r_block = Block::makeRowMajorZSlice(1, nx, ny + 1, nz,
+                                             (nz - 1));  // recv hy(0,0,nz-1)
+  _hy_zp_s_block = Block::makeRowMajorZSlice(1, nx, ny + 1, nz,
+                                             (nz - 2));  // send hy(0,0,nz-2)
 }
 
 auto MpiSupport::xNext() const -> int { return _config.xNext(); }
@@ -66,195 +124,63 @@ auto MpiSupport::zNext() const -> int { return _config.zNext(); }
 auto MpiSupport::zPrev() const -> int { return _config.zPrev(); }
 
 auto MpiSupport::sendRecvHyXHead(Array3D<Real>& hy) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request s_request;
-  MPI_Request r_request;
-
-  MPI_Isend(&hy(1, 0, 0), 1, _hy_x_slice.slice(), xPrev(), exchange_hy_x_sr_tag,
-            _config.comm(), &s_request);
-  MPI_Irecv(hy.data(), 1, _hy_x_slice.slice(), xPrev(), exchange_hy_x_rs_tag,
-            _config.comm(), &r_request);
-
-  _requests.emplace_back(s_request);
-  _requests.emplace_back(r_request);
-#endif
+  iSend(config(), hy.data(), 1, _hy_xn_s_block, xPrev(), exchange_hy_x_sr_tag);
+  iRecv(config(), hy.data(), 1, _hy_xn_r_block, xPrev(), exchange_hy_x_rs_tag);
 }
 
 auto MpiSupport::recvSendHyXTail(Array3D<Real>& hy) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto nx = hy.shape()[0];
-
-  MPI_Request r_request;
-  MPI_Request s_request;
-
-  MPI_Irecv(&hy(nx - 1, 0, 0), 1, _hy_x_slice.slice(), xNext(),
-            exchange_hy_x_sr_tag, _config.comm(), &r_request);
-  MPI_Isend(&hy(nx - 2, 0, 0), 1, _hy_x_slice.slice(), xNext(),
-            exchange_hy_x_rs_tag, _config.comm(), &s_request);
-
-  _requests.emplace_back(r_request);
-  _requests.emplace_back(s_request);
-#endif
+  iRecv(config(), hy.data(), 1, _hy_xp_r_block, xNext(), exchange_hy_x_sr_tag);
+  iSend(config(), hy.data(), 1, _hy_xp_s_block, xNext(), exchange_hy_x_rs_tag);
 }
 
 auto MpiSupport::sendRecvHzXHead(Array3D<Real>& hz) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request s_request;
-  MPI_Request r_request;
-
-  MPI_Isend(&hz(1, 0, 0), 1, _hz_x_slice.slice(), xPrev(), exchange_hz_x_sr_tag,
-            _config.comm(), &s_request);
-  MPI_Irecv(hz.data(), 1, _hz_x_slice.slice(), xPrev(), exchange_hz_x_rs_tag,
-            _config.comm(), &r_request);
-
-  _requests.emplace_back(s_request);
-  _requests.emplace_back(r_request);
-#endif
+  iSend(config(), hz.data(), 1, _hz_xn_s_block, xPrev(), exchange_hz_x_sr_tag);
+  iRecv(config(), hz.data(), 1, _hz_xn_r_block, xPrev(), exchange_hz_x_rs_tag);
 }
 
 auto MpiSupport::recvSendHzXTail(Array3D<Real>& hz) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto nx = hz.shape()[0];
-
-  MPI_Request r_request;
-  MPI_Request s_request;
-
-  MPI_Irecv(&hz(nx - 1, 0, 0), 1, _hz_x_slice.slice(), xNext(),
-            exchange_hz_x_sr_tag, _config.comm(), &r_request);
-  MPI_Isend(&hz(nx - 2, 0, 0), 1, _hz_x_slice.slice(), xNext(),
-            exchange_hz_x_rs_tag, _config.comm(), &s_request);
-
-  _requests.emplace_back(r_request);
-  _requests.emplace_back(s_request);
-#endif
+  iRecv(config(), hz.data(), 1, _hz_xp_r_block, xNext(), exchange_hz_x_sr_tag);
+  iSend(config(), hz.data(), 1, _hz_xp_s_block, xNext(), exchange_hz_x_rs_tag);
 }
 
 auto MpiSupport::sendRecvHzYHead(Array3D<Real>& hz) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request s_request;
-  MPI_Request r_request;
-
-  MPI_Isend(&hz(0, 1, 0), 1, _hz_y_slice.slice(), yPrev(), exchange_hz_y_sr_tag,
-            _config.comm(), &s_request);
-  MPI_Irecv(hz.data(), 1, _hz_y_slice.slice(), yPrev(), exchange_hz_y_rs_tag,
-            _config.comm(), &r_request);
-
-  _requests.emplace_back(s_request);
-  _requests.emplace_back(r_request);
-#endif
+  iSend(config(), hz.data(), 1, _hz_yn_s_block, yPrev(), exchange_hz_y_sr_tag);
+  iRecv(config(), hz.data(), 1, _hz_yn_r_block, yPrev(), exchange_hz_y_rs_tag);
 }
 
 auto MpiSupport::recvSendHzYTail(Array3D<Real>& hz) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto ny = hz.shape()[1];
-
-  MPI_Request r_request;
-  MPI_Request s_request;
-
-  MPI_Irecv(&hz(0, ny - 1, 0), 1, _hz_y_slice.slice(), yNext(),
-            exchange_hz_y_sr_tag, _config.comm(), &r_request);
-  MPI_Isend(&hz(0, ny - 2, 0), 1, _hz_y_slice.slice(), yNext(),
-            exchange_hz_y_rs_tag, _config.comm(), &s_request);
-
-  _requests.emplace_back(r_request);
-  _requests.emplace_back(s_request);
-#endif
+  iRecv(config(), hz.data(), 1, _hz_yp_r_block, yNext(), exchange_hz_y_sr_tag);
+  iSend(config(), hz.data(), 1, _hz_yp_s_block, yNext(), exchange_hz_y_rs_tag);
 }
 
 auto MpiSupport::sendRecvHxYHead(Array3D<Real>& hx) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request s_request;
-  MPI_Request r_request;
-
-  MPI_Isend(&hx(0, 1, 0), 1, _hx_y_slice.slice(), yPrev(), exchange_hx_y_sr_tag,
-            _config.comm(), &s_request);
-  MPI_Irecv(hx.data(), 1, _hx_y_slice.slice(), yPrev(), exchange_hx_y_rs_tag,
-            _config.comm(), &r_request);
-
-  _requests.emplace_back(s_request);
-  _requests.emplace_back(r_request);
-#endif
+  iSend(config(), hx.data(), 1, _hx_yn_s_block, yPrev(), exchange_hx_y_sr_tag);
+  iRecv(config(), hx.data(), 1, _hx_yn_r_block, yPrev(), exchange_hx_y_rs_tag);
 }
 
 auto MpiSupport::recvSendHxYTail(Array3D<Real>& hx) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto ny = hx.shape()[1];
-
-  MPI_Request r_request;
-  MPI_Request s_request;
-
-  MPI_Irecv(&hx(0, ny - 1, 0), 1, _hx_y_slice.slice(), yNext(),
-            exchange_hx_y_sr_tag, _config.comm(), &r_request);
-  MPI_Isend(&hx(0, ny - 2, 0), 1, _hx_y_slice.slice(), yNext(),
-            exchange_hx_y_rs_tag, _config.comm(), &s_request);
-
-  _requests.emplace_back(r_request);
-  _requests.emplace_back(s_request);
-#endif
+  iRecv(config(), hx.data(), 1, _hx_yp_r_block, yNext(), exchange_hx_y_sr_tag);
+  iSend(config(), hx.data(), 1, _hx_yp_s_block, yNext(), exchange_hx_y_rs_tag);
 }
 
 auto MpiSupport::sendRecvHxZHead(Array3D<Real>& hx) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request s_request;
-  MPI_Request r_request;
-
-  MPI_Isend(&hx(0, 0, 1), 1, _hx_z_slice.slice(), zPrev(), exchange_hx_z_sr_tag,
-            _config.comm(), &s_request);
-  MPI_Irecv(hx.data(), 1, _hx_z_slice.slice(), zPrev(), exchange_hx_z_rs_tag,
-            _config.comm(), &r_request);
-
-  _requests.emplace_back(s_request);
-  _requests.emplace_back(r_request);
-#endif
+  iSend(config(), hx.data(), 1, _hx_zn_s_block, zPrev(), exchange_hx_z_sr_tag);
+  iRecv(config(), hx.data(), 1, _hx_zn_r_block, zPrev(), exchange_hx_z_rs_tag);
 }
 
 auto MpiSupport::recvSendHxZTail(Array3D<Real>& hx) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto nz = hx.shape()[2];
-
-  MPI_Request r_request;
-  MPI_Request s_request;
-
-  MPI_Irecv(&hx(0, 0, nz - 1), 1, _hx_z_slice.slice(), zNext(),
-            exchange_hx_z_sr_tag, _config.comm(), &r_request);
-  MPI_Isend(&hx(0, 0, nz - 2), 1, _hx_z_slice.slice(), zNext(),
-            exchange_hx_z_rs_tag, _config.comm(), &s_request);
-
-  _requests.emplace_back(r_request);
-  _requests.emplace_back(s_request);
-#endif
+  iRecv(config(), hx.data(), 1, _hx_zp_r_block, zNext(), exchange_hx_z_sr_tag);
+  iSend(config(), hx.data(), 1, _hx_zp_s_block, zNext(), exchange_hx_z_rs_tag);
 }
 
 auto MpiSupport::sendRecvHyZHead(Array3D<Real>& hy) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request s_request;
-  MPI_Request r_request;
-
-  MPI_Isend(&hy(0, 0, 1), 1, _hy_z_slice.slice(), zPrev(), exchange_hy_z_sr_tag,
-            _config.comm(), &s_request);
-  MPI_Irecv(hy.data(), 1, _hy_z_slice.slice(), zPrev(), exchange_hy_z_rs_tag,
-            _config.comm(), &r_request);
-
-  _requests.emplace_back(s_request);
-  _requests.emplace_back(r_request);
-#endif
+  iSend(config(), hy.data(), 1, _hy_zn_s_block, zPrev(), exchange_hy_z_sr_tag);
+  iRecv(config(), hy.data(), 1, _hy_zn_r_block, zPrev(), exchange_hy_z_rs_tag);
 }
 
 auto MpiSupport::recvSendHyZTail(Array3D<Real>& hy) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  const auto nz = hy.shape()[2];
-
-  MPI_Request r_request;
-  MPI_Request s_request;
-
-  MPI_Irecv(&hy(0, 0, nz - 1), 1, _hy_z_slice.slice(), zNext(),
-            exchange_hy_z_sr_tag, _config.comm(), &r_request);
-  MPI_Isend(&hy(0, 0, nz - 2), 1, _hy_z_slice.slice(), zNext(),
-            exchange_hy_z_rs_tag, _config.comm(), &s_request);
-
-  _requests.emplace_back(r_request);
-  _requests.emplace_back(s_request);
-#endif
+  iRecv(config(), hy.data(), 1, _hy_zp_r_block, zNext(), exchange_hy_z_sr_tag);
+  iSend(config(), hy.data(), 1, _hy_zp_s_block, zNext(), exchange_hy_z_rs_tag);
 }
 
 auto MpiSupport::waitAll() -> void {
@@ -275,7 +201,7 @@ auto MpiSupport::mpiInit(int argc, char** argv) -> void {
     if (_global_rank == 0) {
       std::stringstream ss;
       ss << "Info: MPI configuration "
-         << "(" << config_nx << " x " << config_nx << " x " << config_nx << ") "
+         << "(" << config_nx << " x " << config_ny << " x " << config_nz << ") "
          << "is not matched with the number of "
             "processes. "
             "Set the layout of MPI configuration to "
@@ -294,7 +220,7 @@ auto MpiSupport::mpiInit(int argc, char** argv) -> void {
   if (isRoot()) {
     std::stringstream ss;
     ss << "Info: MPI configuration "
-       << "(" << config_nx << " x " << config_nx << " x " << config_nx << ") "
+       << "(" << config_nx << " x " << config_ny << " x " << config_nz << ") "
        << "is set.\n";
     std::cout << ss.str();
   }
