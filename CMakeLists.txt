@@ -23,7 +23,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # commnad: cmake -D XFDTD_CORE_WITH_MPI=ON ${PROJECT_BIUILD_DIR}
 option(XFDTD_CORE_WITH_MPI "Enable MPI support" OFF)
 
-include("cmake/FindFFTW.cmake")
+# # add complier flag -fsanitize=address
+# if (XFDTDLib_MAIN_PROJECT)
+#   set(XFDTD_COMPLIER_FLAGS "-fsanitize=address -fsanitize=leak -fsanitize=undefined")
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XFDTD_COMPLIER_FLAGS}")
+#   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${XFDTD_COMPLIER_FLAGS}")
+#   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${XFDTD_COMPLIER_FLAGS}")
+#   set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} ${XFDTD_COMPLIER_FLAGS}")
+# endif()
+
+# include("cmake/FindFFTW.cmake")
 if(WIN32)
   find_package(OpenBLAS REQUIRED)
   set(BLAS_LIBRARIES ${CMAKE_INSTALL_PREFIX}${OpenBLAS_LIBRARIES})
@@ -35,8 +44,8 @@ endif()
 find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
 find_package(xtensor-blas REQUIRED)
-set(FFTW_USE_DOUBLE ON)
-find_package(xtensor-fftw REQUIRED)
+# set(FFTW_USE_DOUBLE ON)
+# find_package(xtensor-fftw REQUIRED)
 
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)

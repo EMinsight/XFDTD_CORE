@@ -6,9 +6,8 @@
 
 namespace xfdtd {
 
-template <typename T, typename F>
-static auto debyeSusceptibility(const T& eps_inf, const T& eps_static,
-                                const T& tau, const F& freq) {
+static auto debyeSusceptibility(const auto& eps_inf, const auto& eps_static,
+                                const auto& tau, const auto& freq) {
   auto&& eps_delta = eps_static - eps_inf;
   auto&& omega = 2 * constant::PI * freq;
   return (eps_delta) / (1.0 + constant::II * omega * tau);
@@ -77,7 +76,7 @@ void DebyeMedium::calculateCoeff(const GridSpace* grid_space,
   const auto& a = ade_a(_eps_inf, constant::EPSILON_0, sum_beta, dt, sigma);
   const auto& b = ade_b(_eps_inf, constant::EPSILON_0, sum_beta, dt, sigma);
 
-  _coeff_for_ade = ade::DebyCoeff{k, beta, a, b};
+  _coeff_for_ade = ade::DebyeCoeff{k, beta, a, b};
 }
 
 }  // namespace xfdtd

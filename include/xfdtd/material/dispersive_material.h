@@ -28,7 +28,7 @@ struct DrudeCoeff {
   Real _b;
 };
 
-struct DebyCoeff {
+struct DebyeCoeff {
   Array1D<Real> _k;
   Array1D<Real> _beta;
 
@@ -75,9 +75,8 @@ class LinearDispersiveMaterial : public Material {
 
 class LorentzMedium : public LinearDispersiveMaterial {
  public:
-  LorentzMedium(const std::string& name, Real eps_inf,
-                Array1D<Real> eps_static, Array1D<Real> omega_p,
-                Array1D<Real> nv);
+  LorentzMedium(const std::string& name, Real eps_inf, Array1D<Real> eps_static,
+                Array1D<Real> omega_p, Array1D<Real> nv);
 
   LorentzMedium(const LorentzMedium& other) = default;
 
@@ -154,8 +153,8 @@ class DrudeMedium : public LinearDispersiveMaterial {
 
 class DebyeMedium : public LinearDispersiveMaterial {
  public:
-  DebyeMedium(const std::string& name, Real eps_inf,
-              Array1D<Real> eps_static, Array1D<Real> tau);
+  DebyeMedium(const std::string& name, Real eps_inf, Array1D<Real> eps_static,
+              Array1D<Real> tau);
 
   ~DebyeMedium() override = default;
 
@@ -181,7 +180,7 @@ class DebyeMedium : public LinearDispersiveMaterial {
  private:
   Real _eps_inf;
   Array1D<Real> _eps_static, _tau;
-  ade::DebyCoeff _coeff_for_ade;
+  ade::DebyeCoeff _coeff_for_ade;
 };
 
 }  // namespace xfdtd

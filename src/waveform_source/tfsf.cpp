@@ -286,7 +286,7 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
                         (std::pow(cosPhi(), 4) + std::pow(sinPhi(), 4)) +
                     std::pow(cosTheta(), 4));
   _auxiliary_size =
-      std::ceil<std::size_t>(
+      std::ceil(
           _ratio_delta *
           (std::sqrt(pow(size_x, 2) + pow(size_y, 2) + pow(size_z, 2)))) +
       4 + 1;

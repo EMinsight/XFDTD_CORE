@@ -1,16 +1,14 @@
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/material/dispersive_material.h>
 #include <xfdtd/object/object.h>
+#include <xfdtd/shape/shape.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <memory>
 #include <utility>
-#include <xtensor.hpp>
 
 #include "corrector/corrector.h"
-#include "xfdtd/grid_space/grid_space.h"
-#include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/shape/shape.h"
-#include "xfdtd/common/constant.h"
 
 namespace xfdtd {
 
@@ -66,8 +64,6 @@ const std::unique_ptr<Shape>& Object::shape() const { return _shape; }
 
 void Object::defaultCorrectMaterialSpace(std::size_t index) {
   auto em_property{_material->emProperty()};
-  auto shape{_shape.get()};
-  auto mask{_grid_space->getShapeMask(_shape.get())};
   auto eps{em_property.epsilon()};
   auto mu{em_property.mu()};
   auto sigma_e{em_property.sigmaE()};
@@ -85,64 +81,48 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
   auto& sigma_m_y{_calculation_param->materialParam()->sigmaMY()};
   auto& sigma_m_z{_calculation_param->materialParam()->sigmaMZ()};
 
-  // remove const
+  // // remove const
   auto g_variety = std::const_pointer_cast<GridSpace>(_grid_space);
 
-  auto&& g_view = g_variety->getGridWithMaterialView(mask);
-  std::for_each(g_view.begin(), g_view.end(),
-                [index](auto&& g) { g->setMaterialIndex(index); });
+  auto correct_func = [&grid_space = _grid_space, &shape = _shape](
+                          Index is, Index ie, Index js, Index je, Index ks,
+                          Index ke, const auto& value, auto&& arr) {
+    for (auto i{is}; i < ie; ++i) {
+      for (auto j{js}; j < je; ++j) {
+        for (auto k{ks}; k < ke; ++k) {
+          if (!shape->isInside(grid_space->getGridCenterVector({i, j, k}))) {
+            continue;
+          }
+          arr(i, j, k) = value;
+        }
+      }
+    }
+  };
 
-  // if (dynamic_cast<Cube*>(shape) != nullptr) {
-  //   auto box{_grid_space->getGridBox(shape)};
-  //   auto is{box.origin().i()};
-  //   auto js{box.origin().j()};
-  //   auto ks{box.origin().k()};
-  //   auto ie{box.end().i()};
-  //   auto je{box.end().j()};
-  //   auto ke{box.end().k()};
-  //   xt::view(eps_x, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke))
-  //   =
-  //       eps;
-  //   xt::view(eps_y, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke))
-  //   =
-  //       eps;
-  //   xt::view(eps_z, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke))
-  //   =
-  //       eps;
+  auto nx = _grid_space->sizeX();
+  auto ny = _grid_space->sizeY();
+  auto nz = _grid_space->sizeZ();
 
-  //   xt::view(mu_x, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-  //       mu;
-  //   xt::view(mu_y, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-  //       mu;
-  //   xt::view(mu_z, xt::range(is, ie), xt::range(js, je), xt::range(ks, ke)) =
-  //       mu;
-  //   xt::view(sigma_e_x, xt::range(is, ie), xt::range(js, je),
-  //            xt::range(ks, ke)) = sigma_e;
-  //   xt::view(sigma_e_y, xt::range(is, ie), xt::range(js, je),
-  //            xt::range(ks, ke)) = sigma_e;
-  //   xt::view(sigma_e_z, xt::range(is, ie), xt::range(js, je),
-  //            xt::range(ks, ke)) = sigma_e;
-  //   xt::view(sigma_m_x, xt::range(is, ie), xt::range(js, je),
-  //            xt::range(ks, ke)) = sigma_m;
-  //   xt::view(sigma_m_y, xt::range(is, ie), xt::range(js, je),
-  //            xt::range(ks, ke)) = sigma_m;
-  //   xt::view(sigma_m_z, xt::range(is, ie), xt::range(js, je),
-  //            xt::range(ks, ke)) = sigma_m;
-  //   return;
-  // }
-
-  xt::filter(eps_x, mask) = eps;
-  xt::filter(eps_y, mask) = eps;
-  xt::filter(eps_z, mask) = eps;
-  xt::filter(mu_x, mask) = mu;
-  xt::filter(mu_y, mask) = mu;
-  xt::filter(mu_z, mask) = mu;
-  xt::filter(sigma_e_x, mask) = sigma_e;
-  xt::filter(sigma_e_y, mask) = sigma_e;
-  xt::filter(sigma_e_z, mask) = sigma_e;
-  xt::filter(sigma_m_x, mask) = sigma_m;
-  xt::filter(sigma_m_y, mask) = sigma_m;
-  xt::filter(sigma_m_z, mask) = sigma_m;
+  std::for_each(g_variety->gridWithMaterial().begin(),
+                g_variety->gridWithMaterial().end(),
+                [index, &grid_space = _grid_space, &shape = _shape](auto&& g) {
+                  if (!shape->isInside(grid_space->getGridCenterVector(*g))) {
+                    return;
+                  }
+                  g->setMaterialIndex(index);
+                });
+  correct_func(0, nx, 0, ny, 0, nz, eps, eps_x);
+  correct_func(0, nx, 0, ny, 0, nz, eps, eps_y);
+  correct_func(0, nx, 0, ny, 0, nz, eps, eps_z);
+  correct_func(0, nx, 0, ny, 0, nz, mu, mu_x);
+  correct_func(0, nx, 0, ny, 0, nz, mu, mu_y);
+  correct_func(0, nx, 0, ny, 0, nz, mu, mu_z);
+  correct_func(0, nx, 0, ny, 0, nz, sigma_e, sigma_e_x);
+  correct_func(0, nx, 0, ny, 0, nz, sigma_e, sigma_e_y);
+  correct_func(0, nx, 0, ny, 0, nz, sigma_e, sigma_e_z);
+  correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_x);
+  correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_y);
+  correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_z);
 }
 
 Shape* Object::shapePtr() { return _shape.get(); }
@@ -165,7 +145,25 @@ void Object::handleDispersion() {
   auto& ceze = _calculation_param->fdtdCoefficient()->ceze();
   auto& cezhx = _calculation_param->fdtdCoefficient()->cezhx();
   auto& cezhy = _calculation_param->fdtdCoefficient()->cezhy();
-  const auto& eps_0 = constant::EPSILON_0;
+
+  auto correct_func = [&grid_space = _grid_space, &shape = _shape](
+                          Index is, Index ie, Index js, Index je, Index ks,
+                          Index ke, const auto& value, auto&& arr) {
+    for (auto i{is}; i < ie; ++i) {
+      for (auto j{js}; j < je; ++j) {
+        for (auto k{ks}; k < ke; ++k) {
+          if (!shape->isInside(grid_space->getGridCenterVector({i, j, k}))) {
+            continue;
+          }
+          arr(i, j, k) = value;
+        }
+      }
+    }
+  };
+
+  auto nx = _grid_space->sizeX();
+  auto ny = _grid_space->sizeY();
+  auto nz = _grid_space->sizeZ();
 
   // Support for ADE-FDTD
   if (auto lorentz_medium = dynamic_cast<LorentzMedium*>(_material.get());
@@ -178,15 +176,16 @@ void Object::handleDispersion() {
     const auto& dx = _grid_space->basedDx();
     const auto& dy = _grid_space->basedDy();
     const auto& dz = _grid_space->basedDz();
-    xt::filter(cexe, mask) = c2;
-    xt::filter(cexhy, mask) = -c3 / dz;
-    xt::filter(cexhz, mask) = c3 / dy;
-    xt::filter(ceye, mask) = c2;
-    xt::filter(ceyhz, mask) = -c3 / dx;
-    xt::filter(ceyhx, mask) = c3 / dz;
-    xt::filter(ceze, mask) = c2;
-    xt::filter(cezhx, mask) = -c3 / dy;
-    xt::filter(cezhy, mask) = c3 / dx;
+
+    correct_func(0, nx, 0, ny, 0, nz, c2, cexe);
+    correct_func(0, nx, 0, ny, 0, nz, -c3 / dz, cexhy);
+    correct_func(0, nx, 0, ny, 0, nz, c3 / dy, cexhz);
+    correct_func(0, nx, 0, ny, 0, nz, c2, ceye);
+    correct_func(0, nx, 0, ny, 0, nz, -c3 / dx, ceyhz);
+    correct_func(0, nx, 0, ny, 0, nz, c3 / dz, ceyhx);
+    correct_func(0, nx, 0, ny, 0, nz, c2, ceze);
+    correct_func(0, nx, 0, ny, 0, nz, -c3 / dy, cezhx);
+    correct_func(0, nx, 0, ny, 0, nz, c3 / dx, cezhy);
     return;
   }
 
@@ -201,15 +200,15 @@ void Object::handleDispersion() {
     const auto& dy = _grid_space->basedDy();
     const auto& dz = _grid_space->basedDz();
 
-    xt::filter(cexe, mask) = a;
-    xt::filter(cexhy, mask) = -b / dz;
-    xt::filter(cexhz, mask) = b / dy;
-    xt::filter(ceye, mask) = a;
-    xt::filter(ceyhz, mask) = -b / dx;
-    xt::filter(ceyhx, mask) = b / dz;
-    xt::filter(ceze, mask) = a;
-    xt::filter(cezhx, mask) = -b / dy;
-    xt::filter(cezhy, mask) = b / dx;
+    correct_func(0, nx, 0, ny, 0, nz, a, cexe);
+    correct_func(0, nx, 0, ny, 0, nz, -b / dz, cexhy);
+    correct_func(0, nx, 0, ny, 0, nz, b / dy, cexhz);
+    correct_func(0, nx, 0, ny, 0, nz, a, ceye);
+    correct_func(0, nx, 0, ny, 0, nz, -b / dx, ceyhz);
+    correct_func(0, nx, 0, ny, 0, nz, b / dz, ceyhx);
+    correct_func(0, nx, 0, ny, 0, nz, a, ceze);
+    correct_func(0, nx, 0, ny, 0, nz, -b / dy, cezhx);
+    correct_func(0, nx, 0, ny, 0, nz, b / dx, cezhy);
     return;
   }
 
@@ -224,15 +223,15 @@ void Object::handleDispersion() {
     const auto& dy = _grid_space->basedDy();
     const auto& dz = _grid_space->basedDz();
 
-    xt::filter(cexe, mask) = a;
-    xt::filter(cexhy, mask) = -b / dz;
-    xt::filter(cexhz, mask) = b / dy;
-    xt::filter(ceye, mask) = a;
-    xt::filter(ceyhz, mask) = -b / dx;
-    xt::filter(ceyhx, mask) = b / dz;
-    xt::filter(ceze, mask) = a;
-    xt::filter(cezhx, mask) = -b / dy;
-    xt::filter(cezhy, mask) = b / dx;
+    correct_func(0, nx, 0, ny, 0, nz, a, cexe);
+    correct_func(0, nx, 0, ny, 0, nz, -b / dz, cexhy);
+    correct_func(0, nx, 0, ny, 0, nz, b / dy, cexhz);
+    correct_func(0, nx, 0, ny, 0, nz, a, ceye);
+    correct_func(0, nx, 0, ny, 0, nz, -b / dx, ceyhz);
+    correct_func(0, nx, 0, ny, 0, nz, b / dz, ceyhx);
+    correct_func(0, nx, 0, ny, 0, nz, a, ceze);
+    correct_func(0, nx, 0, ny, 0, nz, -b / dy, cezhx);
+    correct_func(0, nx, 0, ny, 0, nz, b / dx, cezhy);
     return;
   }
 }

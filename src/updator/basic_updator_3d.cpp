@@ -20,20 +20,17 @@ std::string BasicUpdator3D::toString() const {
   auto y_range = task()._y_range;
   auto z_range = task()._z_range;
 
-  auto ex_task =
-      makeTask(makeRange(x_range.start(), x_range.end()),
-                        makeRange(y_range.start() + 1, y_range.end()),
-                        makeRange(z_range.start() + 1, z_range.end()));
+  auto ex_task = makeTask(makeRange(x_range.start(), x_range.end()),
+                          makeRange(y_range.start() + 1, y_range.end()),
+                          makeRange(z_range.start() + 1, z_range.end()));
   ss << "Ex: " << ex_task.toString() << "\n";
-  auto ey_task =
-      makeTask(makeRange(x_range.start() + 1, x_range.end()),
-                        makeRange(y_range.start(), y_range.end()),
-                        makeRange(z_range.start() + 1, z_range.end()));
+  auto ey_task = makeTask(makeRange(x_range.start() + 1, x_range.end()),
+                          makeRange(y_range.start(), y_range.end()),
+                          makeRange(z_range.start() + 1, z_range.end()));
   ss << "Ey: " << ey_task.toString() << "\n";
-  auto ez_task =
-      makeTask(makeRange(x_range.start() + 1, x_range.end()),
-                        makeRange(y_range.start() + 1, y_range.end()),
-                        makeRange(z_range.start(), z_range.end()));
+  auto ez_task = makeTask(makeRange(x_range.start() + 1, x_range.end()),
+                          makeRange(y_range.start() + 1, y_range.end()),
+                          makeRange(z_range.start(), z_range.end()));
   ss << "Ez: " << ez_task.toString();
   return ss.str();
 }

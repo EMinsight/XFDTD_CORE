@@ -1,6 +1,36 @@
 #include <xfdtd/calculation_param/calculation_param.h>
 
+#include <xtensor/xnpy.hpp>
+
 namespace xfdtd {
+
+auto FDTDUpdateCoefficient::save(const std::string& dir) const -> void {
+  auto dir_path = std::filesystem::path(dir);
+
+  if (!std::filesystem::exists(dir_path) ||
+      !std::filesystem::is_directory(dir_path)) {
+    std::filesystem::create_directories(dir_path);
+  }
+
+  xt::dump_npy(dir_path / "cexe.npy", _cexe);
+  xt::dump_npy(dir_path / "cexhy.npy", _cexhy);
+  xt::dump_npy(dir_path / "cexhz.npy", _cexhz);
+  xt::dump_npy(dir_path / "ceye.npy", _ceye);
+  xt::dump_npy(dir_path / "ceyhx.npy", _ceyhx);
+  xt::dump_npy(dir_path / "ceyhz.npy", _ceyhz);
+  xt::dump_npy(dir_path / "ceze.npy", _ceze);
+  xt::dump_npy(dir_path / "cezhx.npy", _cezhx);
+  xt::dump_npy(dir_path / "cezhy.npy", _cezhy);
+  xt::dump_npy(dir_path / "chxh.npy", _chxh);
+  xt::dump_npy(dir_path / "chxey.npy", _chxey);
+  xt::dump_npy(dir_path / "chxez.npy", _chxez);
+  xt::dump_npy(dir_path / "chyh.npy", _chyh);
+  xt::dump_npy(dir_path / "chyez.npy", _chyez);
+  xt::dump_npy(dir_path / "chyex.npy", _chyex);
+  xt::dump_npy(dir_path / "chzh.npy", _chzh);
+  xt::dump_npy(dir_path / "chzex.npy", _chzex);
+  xt::dump_npy(dir_path / "chzey.npy", _chzey);
+}
 
 const Array3D<Real>& FDTDUpdateCoefficient::cexe() const { return _cexe; }
 

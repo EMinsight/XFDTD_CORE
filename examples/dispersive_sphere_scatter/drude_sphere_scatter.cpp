@@ -1,4 +1,3 @@
-
 #include <xfdtd/common/constant.h>
 
 #include "dispersive_sphere_scatter.h"
@@ -16,7 +15,10 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  testCase(std::make_unique<xfdtd::DrudeMedium>(xfdtd::DrudeMedium{
-               "drude_medium", 4, {1.5e9 * 2 * xfdtd::constant::PI}, {1e9}}),
+  testCase(std::make_unique<xfdtd::DrudeMedium>(
+               xfdtd::DrudeMedium{"drude_medium",
+                                  4,
+                                  {1e9 * xfdtd::constant::PI},
+                                  {1.2e9 * xfdtd::constant::PI}}),
            id);
 }

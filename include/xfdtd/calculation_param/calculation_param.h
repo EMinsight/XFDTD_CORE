@@ -1,12 +1,12 @@
 #ifndef _XFDTD_CORE_CALCULATION_PARAM_H_
 #define _XFDTD_CORE_CALCULATION_PARAM_H_
 
+#include <xfdtd/calculation_param/time_param.h>
 #include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/util/transform.h>
-#include <xfdtd/calculation_param/time_param.h>
 
 #include <memory>
 #include <vector>
@@ -14,7 +14,6 @@
 namespace xfdtd {
 
 class GridSpace;
-
 
 // forward declare
 class Material;
@@ -156,6 +155,8 @@ class FDTDUpdateCoefficient {
 
   template <EMF::Attribute c, Axis::XYZ xyz>
   auto coeffDualB() -> Array3D<Real>&;
+
+  auto save(const std::string& dir) const -> void;
 
  public:
   const Array3D<Real>& cexe() const;

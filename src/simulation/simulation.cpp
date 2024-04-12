@@ -529,38 +529,42 @@ std::unique_ptr<Updator> Simulation::makeUpdator(const IndexTask& task) {
 
   // Contains linear dispersive material
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
-    for (const auto& m : _calculation_param->materialParam()->materialArray()) {
-      if (!m->dispersion()) {
-        continue;
-      }
+    return std::make_unique<LinearDispersiveMaterialADEUpdator>(
+        _calculation_param->materialParam()->materialArray(), _grid_space,
+        _calculation_param, _emf, task);
+    // for (const auto& m :
+    // _calculation_param->materialParam()->materialArray()) {
+    //   if (!m->dispersion()) {
+    //     continue;
+    //   }
 
-      auto dispersion_material =
-          std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
-      if (!dispersion_material) {
-        break;
-      }
+    // auto dispersion_material =
+    //     std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
+    // if (!dispersion_material) {
+    //   break;
+    // }
 
-      if (auto lorentz_material =
-              std::dynamic_pointer_cast<LorentzMedium>(dispersion_material);
-          lorentz_material != nullptr) {
-        return std::make_unique<LorentzADEUpdator>(
-            _grid_space, _calculation_param, _emf, task);
-      }
+    // if (auto lorentz_material =
+    //         std::dynamic_pointer_cast<LorentzMedium>(dispersion_material);
+    //     lorentz_material != nullptr) {
+    //   return std::make_unique<LorentzADEUpdator>(
+    //       _grid_space, _calculation_param, _emf, task);
+    // }
 
-      if (auto drude_material =
-              std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
-          drude_material != nullptr) {
-        return std::make_unique<DrudeADEUpdator>(
-            _grid_space, _calculation_param, _emf, task);
-      }
+    // if (auto drude_material =
+    //         std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
+    //     drude_material != nullptr) {
+    //   return std::make_unique<DrudeADEUpdator>(
+    //       _grid_space, _calculation_param, _emf, task);
+    // }
 
-      if (auto debye_material =
-              std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
-          debye_material != nullptr) {
-        return std::make_unique<DebyeADEUpdator>(
-            _grid_space, _calculation_param, _emf, task);
-      }
-    }
+    // if (auto debye_material =
+    //         std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
+    //     debye_material != nullptr) {
+    //   return std::make_unique<DebyeADEUpdator>(
+    //       _grid_space, _calculation_param, _emf, task);
+    // }
+    // }
   }
 
   throw XFDTDSimulationException("don't support this type of updator yet.");

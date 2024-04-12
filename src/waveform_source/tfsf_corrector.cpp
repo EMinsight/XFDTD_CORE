@@ -694,53 +694,29 @@ void TFSFCorrector::correctHyZP() {
   }
 }
 
-IndexTask TFSFCorrector::globalEyTaskXN() const {
-  return _global_ey_task_xn;
-}
+IndexTask TFSFCorrector::globalEyTaskXN() const { return _global_ey_task_xn; }
 
-IndexTask TFSFCorrector::globalEzTaskXN() const {
-  return _global_ez_task_xn;
-}
+IndexTask TFSFCorrector::globalEzTaskXN() const { return _global_ez_task_xn; }
 
-IndexTask TFSFCorrector::globalEyTaskXP() const {
-  return _global_ey_task_xp;
-}
+IndexTask TFSFCorrector::globalEyTaskXP() const { return _global_ey_task_xp; }
 
-IndexTask TFSFCorrector::globalEzTaskXP() const {
-  return _global_ez_task_xp;
-}
+IndexTask TFSFCorrector::globalEzTaskXP() const { return _global_ez_task_xp; }
 
-IndexTask TFSFCorrector::globalEzTaskYN() const {
-  return _global_ez_task_yn;
-}
+IndexTask TFSFCorrector::globalEzTaskYN() const { return _global_ez_task_yn; }
 
-IndexTask TFSFCorrector::globalExTaskYN() const {
-  return _global_ex_task_yn;
-}
+IndexTask TFSFCorrector::globalExTaskYN() const { return _global_ex_task_yn; }
 
-IndexTask TFSFCorrector::globalEzTaskYP() const {
-  return _global_ez_task_yp;
-}
+IndexTask TFSFCorrector::globalEzTaskYP() const { return _global_ez_task_yp; }
 
-IndexTask TFSFCorrector::globalExTaskYP() const {
-  return _global_ex_task_yp;
-}
+IndexTask TFSFCorrector::globalExTaskYP() const { return _global_ex_task_yp; }
 
-IndexTask TFSFCorrector::globalExTaskZN() const {
-  return _global_ex_task_zn;
-}
+IndexTask TFSFCorrector::globalExTaskZN() const { return _global_ex_task_zn; }
 
-IndexTask TFSFCorrector::globalEyTaskZN() const {
-  return _global_ey_task_zn;
-}
+IndexTask TFSFCorrector::globalEyTaskZN() const { return _global_ey_task_zn; }
 
-IndexTask TFSFCorrector::globalExTaskZP() const {
-  return _global_ex_task_zp;
-}
+IndexTask TFSFCorrector::globalExTaskZP() const { return _global_ex_task_zp; }
 
-IndexTask TFSFCorrector::globalEyTaskZP() const {
-  return _global_ey_task_zp;
-}
+IndexTask TFSFCorrector::globalEyTaskZP() const { return _global_ey_task_zp; }
 
 void TFSF1DCorrector::correctE() {
   const auto lk = task().zRange().start();

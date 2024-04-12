@@ -135,7 +135,7 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace1D(
   min_z = std::min(min_z, cube->originZ());
   max_z = std::max(max_z, cube->endZ());
 
-  nz = std::round<size_t>((max_z - min_z) / dz);
+  nz = std::round((max_z - min_z) / dz);
   if (nz <= 1) {
     throw XFDTDGridSpaceException{"GridSpace is too small"};
   }
@@ -160,8 +160,8 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace2D(
   auto min_y = domain->originY();
   auto max_y = domain->endY();
 
-  nx = std::round<size_t>((max_x - min_x) / dx);
-  ny = std::round<size_t>((max_y - min_y) / dy);
+  nx = std::round((max_x - min_x) / dx);
+  ny = std::round((max_y - min_y) / dy);
   if (nx <= 1 || ny <= 1) {
     throw XFDTDGridSpaceException{"GridSpace is too small"};
   }
@@ -192,9 +192,9 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace3D(
   auto min_z = domain->originZ();
   auto max_z = domain->endZ();
 
-  nx = std::round<size_t>((max_x - min_x) / dx);
-  ny = std::round<size_t>((max_y - min_y) / dy);
-  nz = std::round<size_t>((max_z - min_z) / dz);
+  nx = std::round((max_x - min_x) / dx);
+  ny = std::round((max_y - min_y) / dy);
+  nz = std::round((max_z - min_z) / dz);
   if (nx <= 1 || ny <= 1 || nz <= 1) {
     throw XFDTDGridSpaceException{"GridSpace is too small"};
   }

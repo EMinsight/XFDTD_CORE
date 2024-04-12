@@ -6,7 +6,10 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/material/dispersive_material.h>
 #include <xfdtd/material/material.h>
+#include <xfdtd/monitor/field_monitor.h>
+#include <xfdtd/monitor/movie_monitor.h>
 #include <xfdtd/object/object.h>
+#include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/shape/cube.h>
 #include <xfdtd/shape/sphere.h>
 #include <xfdtd/simulation/simulation.h>
@@ -18,52 +21,29 @@
 #include <string>
 #include <xtensor/xnpy.hpp>
 
-#include "xfdtd/monitor/field_monitor.h"
-#include "xfdtd/monitor/movie_monitor.h"
-#include "xfdtd/parallel/mpi_support.h"
-
-inline constexpr double FREQ = 1e9;
-
-inline auto relativePermittivityToNonDispersive(
-    const std::complex<double>& relative_permittivity, const double& freq) {
-  const auto epsilon_r = std::real(relative_permittivity);
-  const auto sigma = std::abs(std::imag(relative_permittivity)) *
-                     xfdtd::constant::EPSILON_0 * 2 * xfdtd::constant::PI *
-                     freq;
-  return xfdtd::ElectroMagneticProperty{epsilon_r, 1, sigma, 0};
-}
-
-inline auto getNonDispersiveMaterial(
-    double freq, std::complex<double> relative_permittivity) {
-  auto em = relativePermittivityToNonDispersive(relative_permittivity, freq);
-  return std::make_unique<xfdtd::Material>("non_dispersive", em);
-}
-
 inline void outputRelativePermittivity(
     const xt::xarray<double>& freq,
     const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material,
     const std::string& file_name) {
-  xt::dump_npy(file_name, xt::stack(xt::xtuple(
+  xt::dump_npy(file_name, xt::stack(std::make_tuple(
                               freq, material->relativePermittivity(freq))));
+  //   xt::xtuple(freq, material->relativePermittivity(freq));
 }
 
 inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
-                          std::string_view dir) {
+                          std::string_view dir,
+                          const xt::xarray<double>& freq) {
+  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
   const std::filesystem::path sphere_scatter_dir{dir};
-  if (!std::filesystem::exists(sphere_scatter_dir) ||
-      !std::filesystem::is_directory(sphere_scatter_dir)) {
-    std::filesystem::create_directories(sphere_scatter_dir);
-  }
 
-  std::cout << "Save dir: " << std::filesystem::absolute(sphere_scatter_dir)
-            << "\n";
+  if (xfdtd::MpiSupport::instance().isRoot()) {
+    if (!std::filesystem::exists(sphere_scatter_dir) ||
+        !std::filesystem::is_directory(sphere_scatter_dir)) {
+      std::filesystem::create_directories(sphere_scatter_dir);
+    }
 
-  if (sphere_material->dispersion()) {
-    outputRelativePermittivity(
-        xt::linspace<double>(0, 5 * FREQ, 1000),
-        std::dynamic_pointer_cast<xfdtd::LinearDispersiveMaterial>(
-            sphere_material),
-        (sphere_scatter_dir / "relative_permittivity.npy").string());
+    std::cout << "Save dir: " << std::filesystem::absolute(sphere_scatter_dir)
+              << "\n";
   }
 
   constexpr double dl{7.5e-3};
@@ -83,17 +63,15 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
   constexpr auto l_min{dl * 20};
   constexpr auto tau{l_min / 6e8};
   constexpr auto t_0{4.5 * tau};
-  constexpr std::size_t left_len{static_cast<size_t>((0.3 / dl))};
-  constexpr std::size_t remain_len{static_cast<size_t>(left_len - 0.1 / dl)};
   constexpr std::size_t tfsf_start{static_cast<size_t>(15)};
   auto tfsf{std::make_shared<xfdtd::TFSF3D>(
       tfsf_start, tfsf_start, tfsf_start, 0, 0, 0,
       std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
 
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
-  auto nffft_fd{std::make_shared<xfdtd::NFFFT>(
-      nffft_start, nffft_start, nffft_start, xt::xarray<double>{FREQ},
-      (sphere_scatter_dir).string())};
+  auto nffft_fd{std::make_shared<xfdtd::NFFFT>(nffft_start, nffft_start,
+                                               nffft_start, freq,
+                                               (sphere_scatter_dir).string())};
 
   auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
@@ -108,7 +86,8 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
           xfdtd::Axis::XYZ::X, xfdtd::EMF::Field::EX, "", ""),
       10, "movie_ex_yz", (sphere_scatter_dir / "movie_ex_yz").string());
 
-  auto simulation = xfdtd::Simulation{dl, dl, dl, 0.9};
+  auto simulation =
+      xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}};
   simulation.addObject(domain);
   simulation.addObject(sphere);
   simulation.addWaveformSource(tfsf);
@@ -127,7 +106,6 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
   simulation.addMonitor(movie_ex_xz);
   simulation.addMonitor(movie_ex_yz);
-  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
   simulation.run(2200);
 
   nffft_fd->processFarField(
@@ -154,24 +132,59 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
 }
 
 inline void testCase(
-    const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material, int id) {
+    const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material, int id,
+    double concerned_freq = 1e9) {
+  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
+
   std::filesystem::path data_dir =
       std::filesystem::path("./data/dispersive_material_scatter");
 
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(2) << concerned_freq / 1e9 << "_GHz";
+  const auto concerned_freq_str = ss.str();
+
+  auto eps = material->relativePermittivity({concerned_freq}).front();
+  auto eps_r = std::real(eps);
+  auto sigma = -std::imag(eps) * xfdtd::constant::EPSILON_0 * 2 *
+               xfdtd::constant::PI * concerned_freq;
+
+  auto matched_material_em = xfdtd::ElectroMagneticProperty{eps_r, 1, sigma, 0};
+
+  if (xfdtd::MpiSupport::instance().isRoot()) {
+    std::cout << "Dispersive material: " << material->name() << " is equal to "
+              << matched_material_em.toString() << " in " << concerned_freq_str
+              << "\n";
+  }
+
   if (id != 0) {
-    std::cout << "Dispersive material: " + material->name() + "\n";
+    if (xfdtd::MpiSupport::instance().isRoot()) {
+      std::cout << "Simulation with dispersive material: " << material->name()
+                << "\n";
+    }
+
     data_dir /= material->name();
 
-    runSimulation(material, data_dir.string());
+    runSimulation(material, data_dir.string(), {concerned_freq});
   } else {
-    auto non_dispersive_material = getNonDispersiveMaterial(
-        FREQ, material->relativePermittivity({FREQ}).front());
-    std::cout << "Non-dispersive material: " + material->name() + "\n";
+    auto non_dispersive_material = std::make_shared<xfdtd::Material>(
+        material->name() + "_matched_" + concerned_freq_str,
+        matched_material_em);
 
-    data_dir /= "non_dispersive_" + material->name();
-    std::cout << "ElectroMagneticProperty: "
-              << non_dispersive_material->emProperty().toString() << "\n";
-    runSimulation(std::move(non_dispersive_material), data_dir.string());
+    if (xfdtd::MpiSupport::instance().isRoot()) {
+      std::cout << "Simulation with non-dispersive material: "
+                << non_dispersive_material->name() << "\n";
+      std::cout << "Non-dispersive material: "
+                << non_dispersive_material->toString() << "\n";
+    }
+
+    data_dir /= non_dispersive_material->name();
+    runSimulation(non_dispersive_material, data_dir.string(), {concerned_freq});
+  }
+
+  if (xfdtd::MpiSupport::instance().isRoot()) {
+    outputRelativePermittivity(
+        xt::linspace<double>(concerned_freq / 100, 5 * concerned_freq, 100),
+        material, (data_dir / "relative_permittivity.npy").string());
   }
 }
 

@@ -7,4 +7,6 @@ LinearDispersiveMaterial::LinearDispersiveMaterial(const std::string& name,
                                                    ElectroMagneticProperty emp)
     : Material{name, emp, true}, _type{type} {}
 
+auto LinearDispersiveMaterial::type() const -> Type { return _type; }
+
 }  // namespace xfdtd

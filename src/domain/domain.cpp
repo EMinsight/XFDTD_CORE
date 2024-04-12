@@ -59,7 +59,7 @@ void Domain::run() {
 
     exchangeH();
 
-    threadSynchronize();
+    synchronize();
 
     updateE();
 

@@ -1,17 +1,23 @@
 #ifndef _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_
 #define _XFDTD_CORE_DISPERSIVE_MATERIAL_UPDATOR_H_
 
+#include <updator/basic_updator.h>
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/exception/exception.h>
 #include <xfdtd/material/dispersive_material.h>
 
 #include <memory>
-#include <unordered_map>
 #include <vector>
-
-#include "updator/basic_updator.h"
 
 namespace xfdtd {
 
-// class Object;
+class XFDTDLinearDispersiveMaterialException : public XFDTDException {
+ public:
+  explicit XFDTDLinearDispersiveMaterialException(const std::string& message)
+      : XFDTDException(message) {}
+};
 
 /**
  * @brief using ADE-FDTD
@@ -19,150 +25,141 @@ namespace xfdtd {
  */
 class LinearDispersiveMaterialADEUpdator : public BasicUpdator3D {
  public:
+  class ADECorrector {
+   public:
+    ADECorrector(Index num_pole, IndexTask task, Real coeff_j,
+                 std::shared_ptr<const CalculationParam> calculation_param,
+                 std::shared_ptr<EMF> emf);
+
+    virtual ~ADECorrector() = default;
+
+    virtual auto updateEx(Index node_i, Index node_j, Index node_k) -> void = 0;
+
+    virtual auto updateEy(Index node_i, Index node_j, Index node_k) -> void = 0;
+
+    virtual auto updateEz(Index node_i, Index node_j, Index node_k) -> void = 0;
+
+    auto numPole() const -> Index { return _num_pole; }
+
+    auto task() const -> IndexTask { return _task; }
+
+    auto coeffJ() const -> Real { return _coeff_j; }
+
+   protected:
+    Array4D<Real> _jx, _jy, _jz;
+    std::shared_ptr<const CalculationParam> _calculation_param;
+    std::shared_ptr<EMF> _emf;
+
+   private:
+    Index _num_pole;
+    IndexTask _task;
+    Real _coeff_j;
+  };
+
+ public:
   LinearDispersiveMaterialADEUpdator(
+      std::vector<std::shared_ptr<Material>> material_arr,
       std::shared_ptr<const GridSpace> grid_space,
       std::shared_ptr<const CalculationParam> calculation_param,
       std::shared_ptr<EMF> emf, IndexTask task);
 
-  LinearDispersiveMaterialADEUpdator(
-      const LinearDispersiveMaterialADEUpdator&) = delete;
-
-  LinearDispersiveMaterialADEUpdator(
-      LinearDispersiveMaterialADEUpdator&&) noexcept = default;
-
-  LinearDispersiveMaterialADEUpdator& operator=(
-      const LinearDispersiveMaterialADEUpdator&) = delete;
-
-  LinearDispersiveMaterialADEUpdator& operator=(
-      LinearDispersiveMaterialADEUpdator&&) noexcept = default;
-
   ~LinearDispersiveMaterialADEUpdator() override = default;
 
-  template <typename T>
-  static void handleDispersiveMaterialADEUpdator(
-      std::unordered_map<std::size_t, std::size_t>& map,
-      std::vector<std::shared_ptr<T>>& dispersion_arr,
-      const std::vector<std::shared_ptr<Material>>& material_arr) {
-    std::size_t m_index = 0;
-    std::size_t temp_i = 0;
-    for (const auto& m : material_arr) {
-      if (!m->dispersion()) {
-        ++m_index;
-        continue;
-      }
+  auto updateE() -> void override;
 
-      auto dispersive_material = std::dynamic_pointer_cast<T>(m);
-      if (dispersive_material == nullptr) {
-        ++m_index;
-        continue;
-      }
+ protected:
+  auto updateEEdge() -> void override;
 
-      map.insert({m_index, temp_i});
-      dispersion_arr.emplace_back(dispersive_material);
-      ++m_index;
-      ++temp_i;
-    }
-  }
+ private:
+  std::vector<Index> _map;
+  std::vector<std::unique_ptr<ADECorrector>> _ade_correctors;
+
+  auto init(std::vector<std::shared_ptr<Material>> material_arr) -> void;
 };
 
-class LorentzADEUpdator : public LinearDispersiveMaterialADEUpdator {
+class DebyeADECorrector
+    : public LinearDispersiveMaterialADEUpdator::ADECorrector {
  public:
-  LorentzADEUpdator(std::shared_ptr<const GridSpace> grid_space,
+  DebyeADECorrector(const DebyeMedium& debye_medium,
                     std::shared_ptr<const CalculationParam> calculation_param,
                     std::shared_ptr<EMF> emf, IndexTask task);
 
-  LorentzADEUpdator(const LorentzADEUpdator&) = delete;
+  ~DebyeADECorrector() override = default;
 
-  LorentzADEUpdator(LorentzADEUpdator&&) noexcept = default;
+  auto updateEx(Index node_i, Index node_j, Index node_k) -> void override;
 
-  LorentzADEUpdator& operator=(const LorentzADEUpdator&) = delete;
+  auto updateEy(Index node_i, Index node_j, Index node_k) -> void override;
 
-  LorentzADEUpdator& operator=(LorentzADEUpdator&&) noexcept = delete;
-
-  ~LorentzADEUpdator() override = default;
-
-  void updateE() override;
+  auto updateEz(Index node_i, Index node_j, Index node_k) -> void override;
 
  protected:
+  auto calculateJSum(Index node_i, Index node_j, Index node_k,
+                     const Array4D<Real>& j_arr) const -> Real;
+
+  auto updateJ(Index node_i, Index node_j, Index node_k, Real e_next,
+               Real e_cur, Real dt, Array4D<Real>& j_arr) -> void;
+
  private:
-  struct LorentzADERecord {
-    Array4D<Real> _jx_prev, _jy_prev, _jz_prev, _jx, _jy, _jz;
-  };
-  std::unordered_map<std::size_t, std::size_t> _lorentz_map;
-  std::vector<std::shared_ptr<LorentzMedium>> _lorentz_mediums;
-  std::vector<ade::LorentzCoeff> _coeff;
-  std::vector<LorentzADERecord> _j_record;
+  Array1D<Real> _k;
+  Array1D<Real> _beta;
+};
+
+class DrudeADECorrector
+    : public LinearDispersiveMaterialADEUpdator::ADECorrector {
+ public:
+  DrudeADECorrector(const DrudeMedium& drude_medium,
+                    std::shared_ptr<const CalculationParam> calculation_param,
+                    std::shared_ptr<EMF> emf, IndexTask task);
+
+  ~DrudeADECorrector() override = default;
+
+  auto updateEx(Index node_i, Index node_j, Index node_k) -> void override;
+
+  auto updateEy(Index node_i, Index node_j, Index node_k) -> void override;
+
+  auto updateEz(Index node_i, Index node_j, Index node_k) -> void override;
+
+ protected:
+  auto calculateJSum(Index node_i, Index node_j, Index node_k,
+                     const Array4D<Real>& j_arr) const -> Real;
+
+  auto updateJ(Index node_i, Index node_j, Index node_k, Real e_next,
+               Real e_cur, Array4D<Real>& j_arr) -> void;
+
+ private:
+  Array1D<Real> _k;
+  Array1D<Real> _beta;
+};
+
+class LorentzADECorrector
+    : public LinearDispersiveMaterialADEUpdator::ADECorrector {
+ public:
+  LorentzADECorrector(const LorentzMedium& lorentz_medium,
+                      std::shared_ptr<const CalculationParam> calculation_param,
+                      std::shared_ptr<EMF> emf, IndexTask task);
+
+  ~LorentzADECorrector() override = default;
+
+  auto updateEx(Index node_i, Index node_j, Index node_k) -> void override;
+
+  auto updateEy(Index node_i, Index node_j, Index node_k) -> void override;
+
+  auto updateEz(Index node_i, Index node_j, Index node_k) -> void override;
+
+ private:
+  Array4D<Real> _jx_prev, _jy_prev, _jz_prev;
   Array3D<Real> _ex_prev, _ey_prev, _ez_prev;
 
-  void init();
+  Array1D<Real> _alpha, _xi, _gamma;
+  Real _c1;
 
-  auto updateEEdge() -> void override;
-};
+  auto calculateJSum(Index node_i, Index node_j, Index node_k,
+                     const Array4D<Real>& j_arr,
+                     const Array4D<Real>& j_prev_arr) const -> Real;
 
-class DrudeADEUpdator : public LinearDispersiveMaterialADEUpdator {
- public:
-  DrudeADEUpdator(std::shared_ptr<const GridSpace> grid_space,
-                  std::shared_ptr<const CalculationParam> calculation_param,
-                  std::shared_ptr<EMF> emf, IndexTask task);
-
-  DrudeADEUpdator(const DrudeADEUpdator&) = delete;
-
-  DrudeADEUpdator(DrudeADEUpdator&&) noexcept = default;
-
-  DrudeADEUpdator& operator=(const DrudeADEUpdator&) = delete;
-
-  DrudeADEUpdator& operator=(DrudeADEUpdator&&) noexcept = default;
-
-  ~DrudeADEUpdator() override = default;
-
-  void updateE() override;
-
- private:
-  struct DrudeADERecord {
-    Array4D<Real> _jx, _jy, _jz;
-  };
-
-  std::unordered_map<std::size_t, std::size_t> _drude_map;
-  std::vector<std::shared_ptr<DrudeMedium>> _drude_mediums;
-  std::vector<ade::DrudeCoeff> _coeff;
-  std::vector<DrudeADERecord> _j_record;
-
-  void init();
-
-  auto updateEEdge() -> void override;
-};
-
-class DebyeADEUpdator : public LinearDispersiveMaterialADEUpdator {
- public:
-  DebyeADEUpdator(std::shared_ptr<const GridSpace> grid_space,
-                  std::shared_ptr<const CalculationParam> calculation_param,
-                  std::shared_ptr<EMF> emf, IndexTask task);
-
-  DebyeADEUpdator(const DebyeADEUpdator&) = delete;
-
-  DebyeADEUpdator(DebyeADEUpdator&&) noexcept = default;
-
-  DebyeADEUpdator& operator=(const DebyeADEUpdator&) = delete;
-
-  DebyeADEUpdator& operator=(DebyeADEUpdator&&) noexcept = default;
-
-  ~DebyeADEUpdator() override = default;
-
-  void updateE() override;
-
- private:
-  struct DebyeADERecord {
-    Array4D<Real> _jx, _jy, _jz;
-  };
-
-  std::unordered_map<std::size_t, std::size_t> _debye_map;
-  std::vector<std::shared_ptr<DebyeMedium>> _debye_mediums;
-  std::vector<ade::DebyCoeff> _coeff;
-  std::vector<DebyeADERecord> _j_record;
-
-  void init();
-
-  auto updateEEdge() -> void override;
+  auto updateJ(Index node_i, Index node_j, Index node_k, Real e_next,
+               Real e_prev, Real dt, Array4D<Real>& j_arr,
+               Array4D<Real>& j_prev_arr) -> void;
 };
 
 }  // namespace xfdtd

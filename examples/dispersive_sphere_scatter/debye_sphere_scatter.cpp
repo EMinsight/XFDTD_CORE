@@ -1,5 +1,6 @@
+#include <xfdtd/common/constant.h>
+
 #include "dispersive_sphere_scatter.h"
-#include "xfdtd/common/constant.h"
 
 int main(int argc, char *argv[]) {
   int id = 1;
