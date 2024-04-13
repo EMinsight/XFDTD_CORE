@@ -3,6 +3,7 @@
 #include <limits>
 #include <memory>
 
+#include "xfdtd/common/constant.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/monitor/field_monitor.h"
@@ -13,11 +14,11 @@
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/cylinder.h"
 #include "xfdtd/simulation/simulation.h"
-#include "xfdtd/common/constant.h"
 #include "xfdtd/waveform/waveform.h"
 #include "xfdtd/waveform_source/tfsf_2d.h"
 
 void cylinderScatter2D() {
+  xfdtd::MpiSupport::setMpiParallelDim(1, 2, 2);
   constexpr double center_frequency{12e9};
   constexpr double max_frequency{20e9};
   constexpr double min_lambda{3e8 / max_frequency};
@@ -56,9 +57,8 @@ void cylinderScatter2D() {
           std::make_unique<xfdtd::Cube>(
               xfdtd::Vector{-175 * dx, -175 * dy,
                             -std::numeric_limits<double>::infinity()},
-              xfdtd::Vector{330 * dx, 350 * dy/2 - 10*dy,
-                            std::numeric_limits<double>::infinity()}),
-          xfdtd::Axis::XYZ::Z, xfdtd::EMF::Field::EZ, "", ""),
+              xfdtd::Vector{330 * dx, 350 * dy, xfdtd::constant::INF}),
+          xfdtd::EMF::Field::EZ, "", ""),
       20, "movie", "./data/cylinder_scatter_2d")};
   auto s{xfdtd::Simulation{dx, dy, 1, 0.8, xfdtd::ThreadConfig{2, 1, 1}}};
   s.addObject(domain);

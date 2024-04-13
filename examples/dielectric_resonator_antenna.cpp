@@ -74,7 +74,7 @@ void dielectricResonatorAntenna() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{0, -6e-3 - 10 * dy, -10 * dz},
           xfdtd::Vector{dx, 37e-3 + 20 * dy, 26.1e-3 + 20 * dz}),
-      xfdtd::Axis::XYZ::Z, xfdtd::EMF::Field::EZ, "e", "")};
+      xfdtd::EMF::Field::EZ, "e", "")};
 
   auto movie{std::make_shared<xfdtd::MovieMonitor>(
       std::move(e_monitor), 10, "movie",

@@ -1,9 +1,9 @@
 #include <xfdtd/boundary/pml.h>
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
-#include <xfdtd/common/constant.h>
 #include <xfdtd/util/transform.h>
 
 #include <cassert>
@@ -20,9 +20,8 @@
 
 namespace xfdtd {
 
-PML::PML(int thickness, Axis::Direction direction, int order,
-         Real sigma_ratio, Real alpha_min, Real alpha_max,
-         Real kappa_max)
+PML::PML(int thickness, Axis::Direction direction, int order, Real sigma_ratio,
+         Real alpha_min, Real alpha_max, Real kappa_max)
     : _thickness{thickness},
       _n{static_cast<std::size_t>(std::abs(thickness))},
       _direction{direction},
@@ -198,18 +197,14 @@ void PML::init(std::shared_ptr<const GridSpace> grid_space,
 
   auto node_global_box = gridSpacePtr()->globalBox();
   auto node_global_task = makeIndexTask(
-      makeIndexRange(node_global_box.origin().i(),
-                              node_global_box.end().i()),
-      makeIndexRange(node_global_box.origin().j(),
-                              node_global_box.end().j()),
-      makeIndexRange(node_global_box.origin().k(),
-                              node_global_box.end().k()));
+      makeIndexRange(node_global_box.origin().i(), node_global_box.end().i()),
+      makeIndexRange(node_global_box.origin().j(), node_global_box.end().j()),
+      makeIndexRange(node_global_box.origin().k(), node_global_box.end().k()));
 
   _pml_global_task_abc = makeIndexTask(
-      makeIndexRange(0, _global_na),
-      makeIndexRange(0, _global_nb),
+      makeIndexRange(0, _global_na), makeIndexRange(0, _global_nb),
       makeIndexRange(globalHNodeStartIndexMainAxis(),
-                              globalHNodeStartIndexMainAxis() + n()));
+                     globalHNodeStartIndexMainAxis() + n()));
   auto [x, y, z] =
       transform::aBCToXYZ(std::make_tuple(_pml_global_task_abc.xRange(),
                                           _pml_global_task_abc.yRange(),
@@ -219,20 +214,22 @@ void PML::init(std::shared_ptr<const GridSpace> grid_space,
 
   auto t = taskIntersection(node_global_task, _pml_global_task);
   if (!t.has_value()) {
-    _pml_node_task = makeIndexTask(makeIndexRange(0, 0),
-                                            makeIndexRange(0, 0),
-                                            makeIndexRange(0, 0));
-    _pml_node_task_abc = makeIndexTask(makeIndexRange(0, 0),
-                                                makeIndexRange(0, 0),
-                                                makeIndexRange(0, 0));
+    _pml_node_task = makeIndexTask(makeIndexRange(0, 0), makeIndexRange(0, 0),
+                                   makeIndexRange(0, 0));
+    _pml_node_task_abc = makeIndexTask(
+        makeIndexRange(0, 0), makeIndexRange(0, 0), makeIndexRange(0, 0));
     return;
   }
 
   _pml_node_task = t.value();
-  _pml_node_task = makeIndexTask(
-      _pml_node_task.xRange() - node_global_box.origin().i(),
-      _pml_node_task.yRange() - node_global_box.origin().j(),
-      _pml_global_task.zRange() - node_global_box.origin().k());
+  _pml_node_task =
+      makeIndexTask(_pml_node_task.xRange() - node_global_box.origin().i(),
+                    _pml_node_task.yRange() - node_global_box.origin().j(),
+                    _pml_node_task.zRange() - node_global_box.origin().k());
+
+  if (!_pml_node_task.valid()) {
+    throw XFDTDPMLException("Invalid PML node task");
+  }
 
   auto [a, b, c] = transform::xYZToABC(
       std::make_tuple(_pml_node_task.xRange(), _pml_node_task.yRange(),
@@ -339,7 +336,6 @@ std::unique_ptr<Corrector> PML::generateDomainCorrector(
       throw XFDTDPMLException("Invalid direction");
   }
 }
-// }
 
 void PML::correctCoefficientX() {
   const auto node_nx = _pml_node_task.xRange().size();
@@ -619,7 +615,7 @@ Real PML::calculateSigmaMax(Real dl) const {
 }
 
 Array1D<Real> PML::calculateRhoE(std::size_t n,
-                                      const Array1D<Real>& size) const {
+                                 const Array1D<Real>& size) const {
   assert(n == size.size());
   auto interval{size - 0.75 * size};
   Array1D<Real> d;
@@ -640,7 +636,7 @@ Array1D<Real> PML::calculateRhoE(std::size_t n,
 }
 
 Array1D<Real> PML::calculateRhoM(std::size_t n,
-                                      const Array1D<Real>& size) const {
+                                 const Array1D<Real>& size) const {
   assert(n == size.size());
   auto interval{size - 0.25 * size};
   Array1D<Real> d;
@@ -660,41 +656,39 @@ Array1D<Real> PML::calculateRhoM(std::size_t n,
   return d / sum;
 }
 
-Array1D<Real> PML::calculateSigma(Real sigma_max,
-                                       const Array1D<Real>& rho,
-                                       std::size_t order) const {
+Array1D<Real> PML::calculateSigma(Real sigma_max, const Array1D<Real>& rho,
+                                  std::size_t order) const {
   return sigma_max * xt::pow(rho, _order);
 }
 
-Array1D<Real> PML::calculateKappa(Real kappa_max,
-                                       const Array1D<Real>& rho,
-                                       std::size_t order) const {
+Array1D<Real> PML::calculateKappa(Real kappa_max, const Array1D<Real>& rho,
+                                  std::size_t order) const {
   return 1 + (kappa_max - 1) * xt::pow(rho, _order);
 }
 
 Array1D<Real> PML::calculateAlpha(Real alpha_min, Real alpha_max,
-                                       const Array1D<Real>& rho) const {
+                                  const Array1D<Real>& rho) const {
   return alpha_min + (alpha_max - alpha_min) * (1 - rho);
 }
 
-Array1D<Real> PML::calculateCoefficientA(
-    const Array1D<Real>& b, const Array1D<Real>& sigma,
-    const Array1D<Real>& kappa, const Array1D<Real>& alpha,
-    const Array1D<Real>& dl) const {
+Array1D<Real> PML::calculateCoefficientA(const Array1D<Real>& b,
+                                         const Array1D<Real>& sigma,
+                                         const Array1D<Real>& kappa,
+                                         const Array1D<Real>& alpha,
+                                         const Array1D<Real>& dl) const {
   return (b - 1) * sigma / ((sigma + kappa * alpha) * kappa * dl);
 }
 
 Array1D<Real> PML::calculateCoefficientB(const Array1D<Real>& sigma,
-                                              const Array1D<Real>& kappa,
-                                              const Array1D<Real>& alpha,
-                                              Real dt,
-                                              Real constant) const {
+                                         const Array1D<Real>& kappa,
+                                         const Array1D<Real>& alpha, Real dt,
+                                         Real constant) const {
   return xt::exp((-dt / constant) * (sigma / kappa + alpha));
 }
 
 Array1D<Real> PML::calculateCoeffPsi(const Array1D<Real>& coeff,
-                                          const Array1D<Real>& kappa,
-                                          const Array1D<Real>& dl) const {
+                                     const Array1D<Real>& kappa,
+                                     const Array1D<Real>& dl) const {
   return coeff * dl;
 }
 

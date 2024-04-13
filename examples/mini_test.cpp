@@ -59,7 +59,7 @@ void test() {
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, 0, -0.175},
                                         xfdtd::Vector{0.35, dl, 0.35}),
-          xfdtd::Axis::XYZ::Y, xfdtd::EMF::Field::EX, "", ""),
+          xfdtd::EMF::Field::EX, "", ""),
       10, "movie_ex_xz",
       "./data/dispersive_material_scatter/debye_medium/movie_ex_xz")};
 

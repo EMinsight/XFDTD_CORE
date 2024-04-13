@@ -1,7 +1,6 @@
 #ifndef _XFDTD_CORE_FIELD_MONITOR_H_
 #define _XFDTD_CORE_FIELD_MONITOR_H_
 
-#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/monitor/monitor.h>
 
@@ -11,7 +10,7 @@ namespace xfdtd {
 
 class FieldMonitor : public Monitor {
  public:
-  FieldMonitor(std::unique_ptr<Shape> shape, Axis::XYZ axis, EMF::Field field,
+  FieldMonitor(std::unique_ptr<Shape> shape, EMF::Field field,
                std::string name = "feild_monitor",
                std::string output_dir_path = "xfdtd_output");
 
@@ -40,11 +39,9 @@ class FieldMonitor : public Monitor {
   auto initParallelizedConfig() -> void override;
 
  protected:
-
   auto gatherData() -> void override;
 
  private:
-  Axis::XYZ _axis;
   EMF::Field _field;
 
   MpiSupport::Block _block;

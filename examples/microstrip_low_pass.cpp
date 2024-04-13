@@ -15,11 +15,13 @@
 #include "xfdtd/object/lumped_element/resistor.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
+#include "xfdtd/parallel/mpi_support.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 
 void microstripLowPass() {
+  xfdtd::MpiSupport::setMpiParallelDim(1, 1, 2);
   constexpr double dx{0.4064e-3};
   constexpr double dy{0.4233e-3};
   constexpr double dz{0.265e-3};
@@ -112,7 +114,7 @@ void microstripLowPass() {
   auto ez_monitor{std::make_unique<xfdtd::FieldMonitor>(
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-5 * dx, -5 * dy, 0},
                                     xfdtd::Vector{60 * dx, 56 * dy, 1 * dz}),
-      xfdtd::Axis::XYZ::Z, xfdtd::EMF::Field::EZ)};
+      xfdtd::EMF::Field::EZ)};
   auto movie_monitor{std::make_shared<xfdtd::MovieMonitor>(
       std::move(ez_monitor), 50, "movie", "./data/microstrip_low_pass/movie")};
 

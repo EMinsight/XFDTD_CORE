@@ -19,7 +19,7 @@
 #include "xfdtd/waveform_source/tfsf_3d.h"
 
 void dielectricSphereScatter() {
-  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
+  xfdtd::MpiSupport::setMpiParallelDim(1, 1, 2);
   constexpr double dl{7.5e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
@@ -53,21 +53,21 @@ void dielectricSphereScatter() {
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, 0, -0.175},
                                         xfdtd::Vector{0.35, dl, 0.35}),
-          xfdtd::Axis::XYZ::Y, xfdtd::EMF::Field::EX, "", ""),
+          xfdtd::EMF::Field::EX, "", ""),
       10, "movie_ex_xz", "./data/dielectric_sphere_scatter/movie_ex_xz")};
 
   auto movie_ex_yz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(xfdtd::Vector{0, -0.175, -0.175},
                                         xfdtd::Vector{dl, 0.35, 0.35}),
-          xfdtd::Axis::XYZ::X, xfdtd::EMF::Field::EX),
+          xfdtd::EMF::Field::EX),
       10, "movie_ex_yz", "./data/dielectric_sphere_scatter/movie_ex_yz")};
 
   auto movie_ex_xy = std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, -0.175, 0},
                                         xfdtd::Vector{0.35, 0.35, dl}),
-          xfdtd::Axis::XYZ::Z, xfdtd::EMF::Field::EX),
+          xfdtd::EMF::Field::EX),
       10, "movie_ex_xy", "./data/dielectric_sphere_scatter/movie_ex_xy");
 
   auto point_ex = std::make_shared<xfdtd::FieldTimeMonitor>(
@@ -77,7 +77,7 @@ void dielectricSphereScatter() {
       "./data/dielectric_sphere_scatter",
       xfdtd::EMF::Field::EX);  // record scatter field
 
-  auto s{xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 2, 1}}};
+  auto s{xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 1}}};
   s.addObject(domain);
   s.addObject(dielectric_sphere);
   s.addWaveformSource(tfsf);
@@ -88,11 +88,11 @@ void dielectricSphereScatter() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YP));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
-  //   s.addMonitor(movie_ex_xz);
+  s.addMonitor(movie_ex_xz);
   //   s.addMonitor(movie_ex_yz);
   //   s.addMonitor(movie_ex_xy);
   s.addMonitor(point_ex);
-  s.run(2000);
+  s.run(4000);
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,
@@ -104,6 +104,10 @@ void dielectricSphereScatter() {
   nffft_fd->processFarField(
       xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
+
+  if (!s.isRoot()) {
+    return;
+  }
 
   auto time{tfsf->waveform()->time()};
   auto incident_wave_data{tfsf->waveform()->value()};

@@ -169,53 +169,53 @@ auto MpiSupport::sendRecv(const MpiConfig& config, const Real* send_buf,
 #endif
 }
 
-auto MpiSupport::iSendRecv(const MpiConfig& config, const void* send_buf,
-                           int send_count, int dest, int send_tag,
-                           void* recv_buf, int recv_count, int source,
-                           int recv_tag) -> std::size_t {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request request;
-  // WARNING: This method is only available in open-mpi 5.+
-  MPI_Isendrecv(send_buf, send_count, MPI_BYTE, dest, send_tag, recv_buf,
-                recv_count, MPI_BYTE, source, recv_tag, config.comm(),
-                &request);
-  _requests.emplace_back(request);
-  return _requests.size() - 1;
-#endif
-  return -1;
-}
+// auto MpiSupport::iSendRecv(const MpiConfig& config, const void* send_buf,
+//                            int send_count, int dest, int send_tag,
+//                            void* recv_buf, int recv_count, int source,
+//                            int recv_tag) -> std::size_t {
+// #if defined(XFDTD_CORE_WITH_MPI)
+//   MPI_Request request;
+//   // WARNING: This method is only available in open-mpi 5.+
+//   MPI_Isendrecv(send_buf, send_count, MPI_BYTE, dest, send_tag, recv_buf,
+//                 recv_count, MPI_BYTE, source, recv_tag, config.comm(),
+//                 &request);
+//   _requests.emplace_back(request);
+//   return _requests.size() - 1;
+// #endif
+//   return -1;
+// }
 
-auto MpiSupport::iSendRecv(const MpiConfig& config, const void* send_buf,
-                           int send_count, const TypeGuard& send_type, int dest,
-                           int send_tag, void* recv_buf, int recv_count,
-                           const TypeGuard& recv_type, int source, int recv_tag)
-    -> std::size_t {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request request;
-  MPI_Isendrecv(send_buf, send_count, send_type._type, dest, send_tag, recv_buf,
-                recv_count, recv_type._type, source, recv_tag, config.comm(),
-                &request);
-  _requests.emplace_back(request);
-  return _requests.size() - 1;
-#endif
-  return -1;
-}
+// auto MpiSupport::iSendRecv(const MpiConfig& config, const void* send_buf,
+//                            int send_count, const TypeGuard& send_type, int dest,
+//                            int send_tag, void* recv_buf, int recv_count,
+//                            const TypeGuard& recv_type, int source, int recv_tag)
+//     -> std::size_t {
+// #if defined(XFDTD_CORE_WITH_MPI)
+//   MPI_Request request;
+//   MPI_Isendrecv(send_buf, send_count, send_type._type, dest, send_tag, recv_buf,
+//                 recv_count, recv_type._type, source, recv_tag, config.comm(),
+//                 &request);
+//   _requests.emplace_back(request);
+//   return _requests.size() - 1;
+// #endif
+//   return -1;
+// }
 
-auto MpiSupport::iSendRecv(const MpiConfig& config, const Real* send_buf,
-                           int send_count, int dest, int send_tag,
-                           Real* recv_buf, int recv_count,
-                           const Block& recv_block, int source, int recv_tag)
-    -> std::size_t {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Request request;
-  MPI_Isendrecv(send_buf, send_count, mpi_type::XFDTD_MPI_REAL_TYPE, dest,
-                send_tag, &recv_buf[recv_block.profile()._disp], recv_count,
-                recv_block.block(), source, recv_tag, config.comm(), &request);
-  _requests.emplace_back(request);
-  return _requests.size() - 1;
-#endif
-  return -1;
-}
+// auto MpiSupport::iSendRecv(const MpiConfig& config, const Real* send_buf,
+//                            int send_count, int dest, int send_tag,
+//                            Real* recv_buf, int recv_count,
+//                            const Block& recv_block, int source, int recv_tag)
+//     -> std::size_t {
+// #if defined(XFDTD_CORE_WITH_MPI)
+//   MPI_Request request;
+//   MPI_Isendrecv(send_buf, send_count, mpi_type::XFDTD_MPI_REAL_TYPE, dest,
+//                 send_tag, &recv_buf[recv_block.profile()._disp], recv_count,
+//                 recv_block.block(), source, recv_tag, config.comm(), &request);
+//   _requests.emplace_back(request);
+//   return _requests.size() - 1;
+// #endif
+//   return -1;
+// }
 
 auto MpiSupport::gather(const MpiConfig& config, const void* send_buf,
                         int send_count, void* recv_buf, int recv_count,

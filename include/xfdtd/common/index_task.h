@@ -3,27 +3,16 @@
 
 #include <xfdtd/common/type_define.h>
 
+#include <optional>
+
 namespace xfdtd {
 
 template <typename T>
 class Range {
  public:
   Range() = default;
+
   Range(T start, T end) : _start(start), _end(end) {}
-
-  // auto operator[](std::size_t index) const {
-  //   if (index == 0) {
-  //     return _start;
-  //   }
-  //   return _end;
-  // }
-
-  // auto& operator[](std::size_t index) {
-  //   if (index == 0) {
-  //     return _start;
-  //   }
-  //   return _end;
-  // }
 
   auto operator+(T value) const { return Range{_start + value, _end + value}; }
 

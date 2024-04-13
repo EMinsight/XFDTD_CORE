@@ -33,7 +33,6 @@ inline void outputRelativePermittivity(
 inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
                           std::string_view dir,
                           const xt::xarray<double>& freq) {
-  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
   const std::filesystem::path sphere_scatter_dir{dir};
 
   if (xfdtd::MpiSupport::instance().isRoot()) {
@@ -77,13 +76,13 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, 0, -0.175},
                                         xfdtd::Vector{0.35, dl, 0.35}),
-          xfdtd::Axis::XYZ::Y, xfdtd::EMF::Field::EX, "", ""),
+          xfdtd::EMF::Field::EX, "", ""),
       10, "movie_ex_xz", (sphere_scatter_dir / "movie_ex_xz").string())};
   auto movie_ex_yz = std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(xfdtd::Vector{0, -0.175, -0.175},
                                         xfdtd::Vector{dl, 0.35, 0.35}),
-          xfdtd::Axis::XYZ::X, xfdtd::EMF::Field::EX, "", ""),
+          xfdtd::EMF::Field::EX, "", ""),
       10, "movie_ex_yz", (sphere_scatter_dir / "movie_ex_yz").string());
 
   auto simulation =
@@ -121,6 +120,10 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
 
+  if (!xfdtd::MpiSupport::instance().isRoot()) {
+    return;
+  }
+
   auto time = tfsf->waveform()->time();
   auto incident_wave_data = tfsf->waveform()->value();
   if (!xfdtd::MpiSupport::instance().isRoot()) {
@@ -134,7 +137,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
 inline void testCase(
     const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material, int id,
     double concerned_freq = 1e9) {
-  xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
+  xfdtd::MpiSupport::setMpiParallelDim(1, 2, 2);
 
   std::filesystem::path data_dir =
       std::filesystem::path("./data/dispersive_material_scatter");

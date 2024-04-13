@@ -4,16 +4,11 @@
 #include <xfdtd/common/type_define.h>
 
 #include <complex>
-
-#ifdef _MSC_VER
-#define _USE_MATH_DEFINES
-#endif
-
-#include <cmath>
+#include <numbers>
 
 namespace xfdtd::constant {
 
-inline constexpr Real PI{M_PI};
+inline constexpr Real PI{std::numbers::pi_v<Real>};
 inline constexpr Real EPSILON_0{8.854187817e-12};
 inline constexpr Real MU_0{4 * PI * 1e-7};
 inline const Real C_0{1 / std::sqrt(EPSILON_0 * MU_0)};

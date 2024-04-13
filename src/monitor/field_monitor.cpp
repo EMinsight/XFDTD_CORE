@@ -1,5 +1,3 @@
-
-
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/field_monitor.h>
 #include <xfdtd/monitor/monitor.h>
@@ -9,11 +7,9 @@
 
 namespace xfdtd {
 
-FieldMonitor::FieldMonitor(std::unique_ptr<Shape> shape, Axis::XYZ axis,
-                           EMF::Field field, std::string name,
-                           std::string output_dir_path)
+FieldMonitor::FieldMonitor(std::unique_ptr<Shape> shape, EMF::Field field,
+                           std::string name, std::string output_dir_path)
     : Monitor{std::move(shape), std::move(name), std::move(output_dir_path)},
-      _axis{axis},
       _field{field} {}
 
 void FieldMonitor::init(
@@ -32,6 +28,28 @@ void FieldMonitor::init(
   auto offset_i = 0;
   auto offset_j = 0;
   auto offset_k = 0;
+
+  if (globalGridBox().origin().i() == 0) {
+    offset_i = 1;
+  }
+  if (globalGridBox().origin().j() == 0) {
+    offset_j = 1;
+  }
+  if (globalGridBox().origin().k() == 0) {
+    offset_k =
+        gridSpacePtr()->dimension() == GridSpace::Dimension::THREE ? 1 : 0;
+  }
+  setGlobalGridBox(
+      GridBox{globalGridBox().origin() + Grid{static_cast<size_t>(offset_i),
+                                              static_cast<size_t>(offset_j),
+                                              static_cast<size_t>(offset_k)},
+              globalGridBox().size() - Grid{static_cast<size_t>(offset_i),
+                                            static_cast<size_t>(offset_j),
+                                            static_cast<size_t>(offset_k)}});
+  offset_i = 0;
+  offset_j = 0;
+  offset_k = 0;
+
   if (nodeGridBox().origin().i() == 0) {
     offset_i = 1;
   }
@@ -42,14 +60,6 @@ void FieldMonitor::init(
     offset_k =
         gridSpacePtr()->dimension() == GridSpace::Dimension::THREE ? 1 : 0;
   }
-
-  setGlobalGridBox(
-      GridBox{globalGridBox().origin() + Grid{static_cast<size_t>(offset_i),
-                                              static_cast<size_t>(offset_j),
-                                              static_cast<size_t>(offset_k)},
-              globalGridBox().size() - Grid{static_cast<size_t>(offset_i),
-                                            static_cast<size_t>(offset_j),
-                                            static_cast<size_t>(offset_k)}});
 
   setNodeGridBox(
       GridBox{nodeGridBox().origin() + Grid{static_cast<size_t>(offset_i),
@@ -77,7 +87,6 @@ void FieldMonitor::output() {
     return;
   }
   auto em_field{emfPtr()};
-  auto calculation_param{calculationParamPtr()};
 
   auto grid_box{nodeGridBox()};
   auto grid_box_size{grid_box.size()};
@@ -88,8 +97,6 @@ void FieldMonitor::output() {
   gatherData();
   Monitor::output();
 }
-
-Axis::XYZ FieldMonitor::axis() const { return _axis; }
 
 EMF::Field FieldMonitor::field() const { return _field; }
 
@@ -158,14 +165,11 @@ auto FieldMonitor::gatherData() -> void {
                         _blocks_mpi[i], i, 0);
     }
 
-    auto index =
-        mpi_support.iSendRecv(monitorMpiConfig(), data().data(), data().size(),
-                              monitorMpiConfig().rank(), 0, recv_buffer.data(),
-                              1, _block, monitorMpiConfig().rank(), 0);
     mpi_support.waitAll();
-    if (index == -1) {
-      return;
-    }
+
+    mpi_support.sendRecv(monitorMpiConfig(), data().data(), data().size(),
+                         monitorMpiConfig().rank(), 0, recv_buffer.data(), 1,
+                         _block, monitorMpiConfig().rank(), 0);
 
     data() = std::move(recv_buffer);
   } else {
