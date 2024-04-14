@@ -3,7 +3,6 @@
 
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
-
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/nffft/nffft.h>
@@ -20,48 +19,38 @@ class FDPlaneData {
  public:
   FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
               std::shared_ptr<const EMF> emf, Real freq,
-              const IndexTask& task_xn,
-              const IndexTask& task_xp,
-              const IndexTask& task_yn,
-              const IndexTask& task_yp,
-              const IndexTask& task_zn,
-              const IndexTask& task_zp);
+              const IndexTask& task_xn, const IndexTask& task_xp,
+              const IndexTask& task_yn, const IndexTask& task_yp,
+              const IndexTask& task_zn, const IndexTask& task_zp);
 
   auto frequency() const -> Real;
 
   auto update(std::size_t current_time_step) -> void;
 
-  auto aTheta(const Array1D<Real>& theta,
-              const Array1D<Real>& phi, const Vector& origin) const
-      -> Array1D<std::complex<Real>>;
-  auto fPhi(const Array1D<Real>& theta,
-            const Array1D<Real>& phi, const Vector& origin) const
-      -> Array1D<std::complex<Real>>;
+  auto aTheta(const Array1D<Real>& theta, const Array1D<Real>& phi,
+              const Vector& origin) const -> Array1D<std::complex<Real>>;
+  auto fPhi(const Array1D<Real>& theta, const Array1D<Real>& phi,
+            const Vector& origin) const -> Array1D<std::complex<Real>>;
 
-  auto aPhi(const Array1D<Real>& theta,
-            const Array1D<Real>& phi, const Vector& origin) const
-      -> Array1D<std::complex<Real>>;
-  auto fTheta(const Array1D<Real>& theta,
-              const Array1D<Real>& phi, const Vector& origin) const
-      -> Array1D<std::complex<Real>>;
+  auto aPhi(const Array1D<Real>& theta, const Array1D<Real>& phi,
+            const Vector& origin) const -> Array1D<std::complex<Real>>;
+  auto fTheta(const Array1D<Real>& theta, const Array1D<Real>& phi,
+              const Vector& origin) const -> Array1D<std::complex<Real>>;
 
   auto power() const -> Real;
 
   auto initDFT(std::size_t total_time_step, Real dt) -> void;
 
   template <Potential p, transform::SCS scs>
-  auto getPotential(const Array1D<Real>& theta,
-                    const Array1D<Real>& phi,
-                    const Vector& origin) const
-      -> Array1D<std::complex<Real>>;
+  auto getPotential(const Array1D<Real>& theta, const Array1D<Real>& phi,
+                    const Vector& origin) const -> Array1D<std::complex<Real>>;
 
  private:
   template <Potential potential, Axis::Direction direction>
-  auto calculatePotential(
-      const Array1D<Real>& theta, const Array1D<Real>& phi,
-      const Vector& origin,
-      const Array1D<std::complex<Real>>& transform_a,
-      const Array1D<std::complex<Real>>& transform_b) const
+  auto calculatePotential(const Array1D<Real>& theta, const Array1D<Real>& phi,
+                          const Vector& origin,
+                          const Array1D<std::complex<Real>>& transform_a,
+                          const Array1D<std::complex<Real>>& transform_b) const
       -> Array1D<std::complex<Real>>;
 
   template <Axis::Direction direction>
@@ -114,31 +103,28 @@ class FDPlaneData {
                    const std::size_t& k) -> Real;
 
   template <Potential potential, Axis::Direction direction>
-  auto surfaceCurrent() -> std::tuple<Array3D<std::complex<Real>>&,
-                                      Array3D<std::complex<Real>>&>;
+  auto surfaceCurrent()
+      -> std::tuple<Array3D<std::complex<Real>>&, Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
-  auto surfaceJ() -> std::tuple<Array3D<std::complex<Real>>&,
-                                Array3D<std::complex<Real>>&>;
+  auto surfaceJ()
+      -> std::tuple<Array3D<std::complex<Real>>&, Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
-  auto surfaceM() -> std::tuple<Array3D<std::complex<Real>>&,
-                                Array3D<std::complex<Real>>&>;
+  auto surfaceM()
+      -> std::tuple<Array3D<std::complex<Real>>&, Array3D<std::complex<Real>>&>;
 
   template <Potential potential, Axis::Direction direction>
-  auto surfaceCurrent() const
-      -> std::tuple<const Array3D<std::complex<Real>>&,
-                    const Array3D<std::complex<Real>>&>;
+  auto surfaceCurrent() const -> std::tuple<const Array3D<std::complex<Real>>&,
+                                            const Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
-  auto surfaceJ() const
-      -> std::tuple<const Array3D<std::complex<Real>>&,
-                    const Array3D<std::complex<Real>>&>;
+  auto surfaceJ() const -> std::tuple<const Array3D<std::complex<Real>>&,
+                                      const Array3D<std::complex<Real>>&>;
 
   template <Axis::Direction direction>
-  auto surfaceM() const
-      -> std::tuple<const Array3D<std::complex<Real>>&,
-                    const Array3D<std::complex<Real>>&>;
+  auto surfaceM() const -> std::tuple<const Array3D<std::complex<Real>>&,
+                                      const Array3D<std::complex<Real>>&>;
 };
 
 template <Axis::Direction direction>
@@ -162,8 +148,7 @@ inline auto FDPlaneData::task() const -> const IndexTask& {
 
 template <FDPlaneData::Potential potential, Axis::Direction direction>
 inline auto FDPlaneData::surfaceCurrent()
-    -> std::tuple<Array3D<std::complex<Real>>&,
-                  Array3D<std::complex<Real>>&> {
+    -> std::tuple<Array3D<std::complex<Real>>&, Array3D<std::complex<Real>>&> {
   if constexpr (potential == Potential::A) {
     return surfaceJ<direction>();
   } else if constexpr (potential == Potential::F) {
@@ -175,8 +160,7 @@ inline auto FDPlaneData::surfaceCurrent()
 
 template <Axis::Direction direction>
 inline auto FDPlaneData::surfaceJ()
-    -> std::tuple<Array3D<std::complex<Real>>&,
-                  Array3D<std::complex<Real>>&> {
+    -> std::tuple<Array3D<std::complex<Real>>&, Array3D<std::complex<Real>>&> {
   if constexpr (direction == Axis::Direction::XN) {
     return std::make_tuple(std::ref(_jy_xn), std::ref(_jz_xn));
   } else if constexpr (direction == Axis::Direction::XP) {
@@ -196,8 +180,7 @@ inline auto FDPlaneData::surfaceJ()
 
 template <Axis::Direction direction>
 inline auto FDPlaneData::surfaceM()
-    -> std::tuple<Array3D<std::complex<Real>>&,
-                  Array3D<std::complex<Real>>&> {
+    -> std::tuple<Array3D<std::complex<Real>>&, Array3D<std::complex<Real>>&> {
   if constexpr (direction == Axis::Direction::XN) {
     return std::make_tuple(std::ref(_my_xn), std::ref(_mz_xn));
   } else if constexpr (direction == Axis::Direction::XP) {

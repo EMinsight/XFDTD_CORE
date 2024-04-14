@@ -32,17 +32,16 @@ void HardPoint::updateWaveformSource() {}
 //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
 //   //   ex(center.i(), center.j(), center.k()) +=
 //   //       waveform()
-//   //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+//   // ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
 
 //   //   ey(center.i(), center.j(), center.k()) +=
 //   //       waveform()
-//   //           ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
+//   // ->value()[calculationParamPtr()->timeParam()->currentTimeStep()];
 // }
 
 // void HardPoint::correctH() {}
 
-std::unique_ptr<Corrector> HardPoint::generateCorrector(
-    const IndexTask& task) {
+std::unique_ptr<Corrector> HardPoint::generateCorrector(const IndexTask& task) {
   throw std::runtime_error("Not implemented");
 }
 

@@ -52,9 +52,8 @@ void CurrentSource::init(std::shared_ptr<const GridSpace> grid_space,
     return c / (na * nb);
   }};
 
-  auto dx_dy_dz{[](const auto &x, const auto &y,
-                   const auto &z, auto &&x_range, auto &&y_range,
-                   auto &&z_range) {
+  auto dx_dy_dz{[](const auto &x, const auto &y, const auto &z, auto &&x_range,
+                   auto &&y_range, auto &&z_range) {
     return xt::meshgrid(xt::view(x, x_range), xt::view(y, y_range),
                         xt::view(z, z_range));
   }};
@@ -111,8 +110,7 @@ void CurrentSource::init(std::shared_ptr<const GridSpace> grid_space,
 
 void CurrentSource::correctUpdateCoefficient() {
   auto dt{calculationParamPtr()->timeParam()->dt()};
-  auto func{[this, dt](auto &cece, auto &cecha,
-                       auto &cechb, const auto &eps,
+  auto func{[this, dt](auto &cece, auto &cecha, auto &cechb, const auto &eps,
                        const auto &sigma) {
     auto range_x{rangeX()};
     auto range_y{rangeY()};
@@ -212,11 +210,11 @@ std::unique_ptr<Corrector> CurrentSource::generateCorrector(
 
   auto local_task = makeTask(
       makeRange(intersection->xRange().start() - domain.xRange().start(),
-                         intersection->xRange().end() - domain.xRange().start()),
+                intersection->xRange().end() - domain.xRange().start()),
       makeRange(intersection->yRange().start() - domain.yRange().start(),
-                         intersection->yRange().end() - domain.yRange().start()),
+                intersection->yRange().end() - domain.yRange().start()),
       makeRange(intersection->zRange().start() - domain.zRange().start(),
-                         intersection->zRange().end() - domain.zRange().start()));
+                intersection->zRange().end() - domain.zRange().start()));
 
   return std::make_unique<CurrentSourceCorrector>(
       intersection.value(), local_task, calculationParam(),

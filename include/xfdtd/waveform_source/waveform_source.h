@@ -9,9 +9,9 @@
 
 #include <memory>
 
-#include "corrector/corrector.h"
-
 namespace xfdtd {
+
+class Corrector;
 
 class WaveformSource {
  public:

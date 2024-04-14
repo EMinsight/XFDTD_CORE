@@ -1,8 +1,8 @@
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/material/material.h>
-#include <xfdtd/common/constant.h>
 #include <xfdtd/util/fdtd_basic.h>
 
 #include <memory>

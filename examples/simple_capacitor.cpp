@@ -93,8 +93,7 @@ void capacitorX() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_SOURCE_O_C, V_SOURCE_O_A, V_SOURCE_O_B},
           xfdtd::Vector{V_SOURCE_L_C, V_SOURCE_L_A, V_SOURCE_L_B}),
-      xfdtd::Axis::Direction::XP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::step(100 * dt)))};
+      xfdtd::Axis::Direction::XP, 50, xfdtd::Waveform::step(100 * dt))};
 
   auto capacitor{std::make_shared<xfdtd::Capacitor>(
       "capacitor",
@@ -152,8 +151,7 @@ void capacitorZ() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_SOURCE_O_A, V_SOURCE_O_B, V_SOURCE_O_C},
           xfdtd::Vector{V_SOURCE_L_A, V_SOURCE_L_B, V_SOURCE_L_C}),
-      xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::step(100 * dt)))};
+      xfdtd::Axis::Direction::ZP, 50, xfdtd::Waveform::step(100 * dt))};
 
   auto capacitor{std::make_shared<xfdtd::Capacitor>(
       "capacitor",

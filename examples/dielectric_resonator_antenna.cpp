@@ -55,8 +55,7 @@ void dielectricResonatorAntenna() {
       "v_s",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{0, 12.2e-3, 0},
                                     xfdtd::Vector{0, 1e-3, 1e-3}),
-      xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+      xfdtd::Axis::Direction::ZP, 50, xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto v1{std::make_shared<xfdtd::VoltageMonitor>(
       "v1",

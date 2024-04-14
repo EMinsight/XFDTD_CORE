@@ -1,7 +1,6 @@
 #ifndef _XFDTD_CORE_DOMAIN_H_
 #define _XFDTD_CORE_DOMAIN_H_
 
-
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/nffft/nffft.h>
@@ -9,7 +8,6 @@
 
 #include <barrier>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -21,8 +19,7 @@ namespace xfdtd {
 
 class Domain {
  public:
-  Domain(std::size_t id, IndexTask task,
-         std::shared_ptr<GridSpace> grid_space,
+  Domain(std::size_t id, IndexTask task, std::shared_ptr<GridSpace> grid_space,
          std::shared_ptr<CalculationParam> calculation_param,
          std::shared_ptr<EMF> emf, std::unique_ptr<Updator> updator,
          std::vector<std::shared_ptr<WaveformSource>> waveform_sources,
@@ -31,8 +28,7 @@ class Domain {
          std::vector<std::shared_ptr<NFFFT>> nfffts, std::barrier<>& barrier,
          bool master = false);
 
-  Domain(std::size_t id, IndexTask task,
-         std::shared_ptr<GridSpace> grid_space,
+  Domain(std::size_t id, IndexTask task, std::shared_ptr<GridSpace> grid_space,
          std::shared_ptr<CalculationParam> calculation_param,
          std::shared_ptr<EMF> emf, std::unique_ptr<Updator> updator,
          std::barrier<>& barrier, bool master = false)

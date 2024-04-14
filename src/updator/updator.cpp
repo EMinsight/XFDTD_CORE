@@ -1,7 +1,5 @@
 #include "updator/updator.h"
 
-
-
 #include <sstream>
 #include <utility>
 

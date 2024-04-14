@@ -86,8 +86,7 @@ void microstripBranchLineCoupler() {
       "voltage_source",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-15 * dx, -25 * dy, 0},
                                     xfdtd::Vector{6 * dx, 0 * dy, 3 * dz}),
-      xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+      xfdtd::Axis::Direction::ZP, 50, xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto r1{std::make_shared<xfdtd::Resistor>(
       "resistor_1",

@@ -368,18 +368,16 @@ auto NFFFT::processFarField(const Array1D<Real>& theta,
   }
 
   // rename later
-  auto nffft_gather_func =
-      [this](const Array1D<std::complex<Real>>& send_data,
-             Array1D<std::complex<Real>>& recv_data) {
-        if (this->nffftMPIConfig().size() <= 1) {
-          recv_data = send_data;
-          return;
-        }
+  auto nffft_gather_func = [this](const Array1D<std::complex<Real>>& send_data,
+                                  Array1D<std::complex<Real>>& recv_data) {
+    if (this->nffftMPIConfig().size() <= 1) {
+      recv_data = send_data;
+      return;
+    }
 
-        MpiSupport::instance().reduceSum(this->nffftMPIConfig(),
-                                         send_data.data(), recv_data.data(),
-                                         send_data.size());
-      };
+    MpiSupport::instance().reduceSum(this->nffftMPIConfig(), send_data.data(),
+                                     recv_data.data(), send_data.size());
+  };
 
   auto data = xt::zeros_like(node_data);
   nffft_gather_func(node_data, data);

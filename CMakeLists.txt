@@ -19,23 +19,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# option to enable MPI support 
-# commnad: cmake -D XFDTD_CORE_WITH_MPI=ON ${PROJECT_BIUILD_DIR}
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type selected, default to Release")
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+# option to enable MPI support commnad: cmake -D XFDTD_CORE_WITH_MPI=ON
 option(XFDTD_CORE_WITH_MPI "Enable MPI support" OFF)
+# option to enable single precision commnad: cmake -D
+# XFDTD_CORE_SINGLE_PRECISION=ON
+option(XFDTD_CORE_SINGLE_PRECISION "Enable single precision" OFF)
+if(XFDTD_CORE_SINGLE_PRECISION)
+  message(STATUS "XFDTD Core Single precision is enabled")
+endif()
 
-# # add complier flag -fsanitize=address
-# if (XFDTDLib_MAIN_PROJECT)
-#   set(XFDTD_COMPLIER_FLAGS "-fsanitize=address -fsanitize=leak -fsanitize=undefined")
-#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${XFDTD_COMPLIER_FLAGS}")
-#   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${XFDTD_COMPLIER_FLAGS}")
-#   set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${XFDTD_COMPLIER_FLAGS}")
-#   set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} ${XFDTD_COMPLIER_FLAGS}")
-# endif()
+# ##############################################################################
+# DEPENDENCIES
+# ##############################################################################
 
-# include("cmake/FindFFTW.cmake")
 if(WIN32)
   find_package(OpenBLAS REQUIRED)
-  set(BLAS_LIBRARIES ${CMAKE_INSTALL_PREFIX}${OpenBLAS_LIBRARIES})
+  set(BLAS_LIBRARIES ${CMAKE_INSTALL_PREFIX} ${OpenBLAS_LIBRARIES})
 else()
   find_package(BLAS REQUIRED)
   find_package(LAPACK REQUIRED)
@@ -44,8 +48,6 @@ endif()
 find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
 find_package(xtensor-blas REQUIRED)
-# set(FFTW_USE_DOUBLE ON)
-# find_package(xtensor-fftw REQUIRED)
 
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
@@ -53,14 +55,12 @@ set(XFDTD_CORE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 include_directories(
   ${XFDTD_CORE_PUBLIC_INCLUDE_DIR} ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
-  ${FFTW_INCLUDE_DIR} ${xtensor_INCLUDE_DIRS} ${xtensor_blas_INCLUDE_DIRS}
-  ${xtensor_fftw_INCLUDE_DIRS})
+  ${xtensor_INCLUDE_DIRS} ${xtensor_blas_INCLUDE_DIRS})
 
-set(XFDTD_CORE_THIRD_PARTY_LIB ${FFTW_LIBRARIES} ${BLAS_LIBRARIES}
-                               ${LAPACK_LIBRARIES} xtensor)
+set(XFDTD_CORE_THIRD_PARTY_LIB ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} xtensor)
 
 if(XFDTD_CORE_WITH_MPI)
-  message(STATUS "XFDTD MPI support enabled")
+  message(STATUS "XFDTD Core MPI support enabled")
   find_package(MPI REQUIRED)
   add_definitions(-DXFDTD_CORE_WITH_MPI)
   include_directories(${MPI_CXX_INCLUDE_PATH})
@@ -70,27 +70,33 @@ endif()
 
 enable_testing()
 
+# Output directory.
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(examples)
 
 install(
-  EXPORT xfdtd-targets
-  FILE xfdtd-targets.cmake
+  EXPORT xfdtd_core-targets
+  FILE xfdtd_core-targets.cmake
   NAMESPACE xfdtd::
-  DESTINATION ${XFDTD_INSTALL_PREFIX}/lib/cmake/xfdtd)
+  DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/lib/cmake/xfdtd_core)
 
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  cmake/xfdtd-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config.cmake
-  INSTALL_DESTINATION ${XFDTD_INSTALL_PREFIX}/lib/cmake/xfdtd)
+  cmake/xfdtd_core-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/xfdtd_core-config.cmake
+  INSTALL_DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/lib/cmake/xfdtd_core)
 
 write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config-version.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/xfdtd_core-config_version.cmake
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/xfdtd-config-version.cmake
-        DESTINATION ${XFDTD_INSTALL_PREFIX}/lib/cmake/xfdtd)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xfdtd_core-config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/xfdtd_core-config_version.cmake
+        DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/lib/cmake/xfdtd_core)

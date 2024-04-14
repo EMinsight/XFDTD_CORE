@@ -1,6 +1,5 @@
 
 
-
 #include <memory>
 
 #include "xfdtd/boundary/pml.h"
@@ -52,8 +51,7 @@ void microstripLine() {
       "v_s",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector(24 * dx, 0, 0 * dz),
                                     xfdtd::Vector(12 * dx, 0 * dy, 6 * dz)),
-      xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+      xfdtd::Axis::Direction::ZP, 50, xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto v1{std::make_shared<xfdtd::VoltageMonitor>(
       "v1",

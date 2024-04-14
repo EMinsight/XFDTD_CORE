@@ -40,9 +40,9 @@ void dielectricSphereScatter() {
   constexpr std::size_t left_len{static_cast<size_t>((0.3 / dl))};
   constexpr std::size_t remain_len{static_cast<size_t>(left_len - 0.1 / dl)};
   constexpr std::size_t tfsf_start{static_cast<size_t>(15)};
-  auto tfsf{std::make_shared<xfdtd::TFSF3D>(
-      tfsf_start, tfsf_start, tfsf_start, 0, 0, 0,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+  auto tfsf{
+      std::make_shared<xfdtd::TFSF3D>(tfsf_start, tfsf_start, tfsf_start, 0, 0,
+                                      0, xfdtd::Waveform::gaussian(tau, t_0))};
 
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
   auto nffft_fd{std::make_shared<xfdtd::NFFFT>(
@@ -92,7 +92,7 @@ void dielectricSphereScatter() {
   //   s.addMonitor(movie_ex_yz);
   //   s.addMonitor(movie_ex_xy);
   s.addMonitor(point_ex);
-  s.run(4000);
+  s.run(2200);
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,

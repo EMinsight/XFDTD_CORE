@@ -51,9 +51,9 @@ void test() {
   constexpr auto tau{l_min / 6e8};
   constexpr auto t_0{4.5 * tau};
   constexpr std::size_t tfsf_start{static_cast<size_t>(3)};
-  auto tfsf{std::make_shared<xfdtd::TFSF3D>(
-      tfsf_start, tfsf_start, tfsf_start, 0, 0, 0,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+  auto tfsf{
+      std::make_shared<xfdtd::TFSF3D>(tfsf_start, tfsf_start, tfsf_start, 0, 0,
+                                      0, xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(

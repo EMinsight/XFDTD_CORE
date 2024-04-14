@@ -269,16 +269,19 @@ class MpiSupport {
                 int dest, int send_tag, Real* recv_buf, int recv_count,
                 const Block& recv_block, int source, int recv_tag) -> void;
 
-  // auto iSendRecv(const MpiConfig& config, const void* send_buf, int send_count,
+  // auto iSendRecv(const MpiConfig& config, const void* send_buf, int
+  // send_count,
   //                int dest, int send_tag, void* recv_buf, int recv_count,
   //                int source, int recv_tag) -> std::size_t;
 
-  // auto iSendRecv(const MpiConfig& config, const void* send_buf, int send_count,
+  // auto iSendRecv(const MpiConfig& config, const void* send_buf, int
+  // send_count,
   //                const TypeGuard& send_type, int dest, int send_tag,
   //                void* recv_buf, int recv_count, const TypeGuard& recv_type,
   //                int source, int recv_tag) -> std::size_t;
 
-  // auto iSendRecv(const MpiConfig& config, const Real* send_buf, int send_count,
+  // auto iSendRecv(const MpiConfig& config, const Real* send_buf, int
+  // send_count,
   //                int dest, int send_tag, Real* recv_buf, int recv_count,
   //                const Block& recv_block, int source, int recv_tag)
   //     -> std::size_t;

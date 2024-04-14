@@ -99,8 +99,7 @@ void rlcCircuit() {
           xfdtd::Vector{V_SOURCE_O_A, V_SOURCE_O_B, V_SOURCE_O_C},
           xfdtd::Vector{V_SOURCE_L_A, V_SOURCE_L_B, V_SOURCE_L_C}),
       xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(
-          xfdtd::Waveform::cosineModulatedGaussian(tau, t_0, 2e9)))};
+      xfdtd::Waveform::cosineModulatedGaussian(tau, t_0, 2e9))};
 
   auto inductor{std::make_shared<xfdtd::Inductor>(
       "inductor",

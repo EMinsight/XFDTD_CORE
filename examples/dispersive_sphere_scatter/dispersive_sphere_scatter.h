@@ -63,9 +63,9 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
   constexpr auto tau{l_min / 6e8};
   constexpr auto t_0{4.5 * tau};
   constexpr std::size_t tfsf_start{static_cast<size_t>(15)};
-  auto tfsf{std::make_shared<xfdtd::TFSF3D>(
-      tfsf_start, tfsf_start, tfsf_start, 0, 0, 0,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+  auto tfsf{
+      std::make_shared<xfdtd::TFSF3D>(tfsf_start, tfsf_start, tfsf_start, 0, 0,
+                                      0, xfdtd::Waveform::gaussian(tau, t_0))};
 
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
   auto nffft_fd{std::make_shared<xfdtd::NFFFT>(nffft_start, nffft_start,

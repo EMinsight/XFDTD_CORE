@@ -1,4 +1,5 @@
 #include "xfdtd/waveform_source/tfsf_1d.h"
+
 #include <xfdtd/common/index_task.h>
 
 #include "xfdtd/common/constant.h"
@@ -25,8 +26,7 @@ void TFSF1D::init(std::shared_ptr<GridSpace> grid_space,
   // 1);
 }
 
-std::unique_ptr<Corrector> TFSF1D::generateCorrector(
-    const IndexTask &task) {
+std::unique_ptr<Corrector> TFSF1D::generateCorrector(const IndexTask &task) {
   throw std::runtime_error("Not implemented");
 }
 

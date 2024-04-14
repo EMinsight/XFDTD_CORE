@@ -1,16 +1,17 @@
-#include <xfdtd/waveform_source/tfsf.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/waveform_source/tfsf.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <xtensor-blas/xlinalg.hpp>
 
-#include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/common/constant.h"
+#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
-TFSF::TFSF(std::size_t x, std::size_t y, std::size_t z, Real theta,
-           Real phi, Real psi, std::unique_ptr<Waveform> waveform)
+TFSF::TFSF(std::size_t x, std::size_t y, std::size_t z, Real theta, Real phi,
+           Real psi, std::unique_ptr<Waveform> waveform)
     : WaveformSource{std::move(waveform)},
       _x{x},
       _y{y},
@@ -99,9 +100,8 @@ IndexTask TFSF::taskXN() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return makeIndexTask(makeIndexRange(is, is + 1),
-                                makeIndexRange(js, je),
-                                makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(is, is + 1), makeIndexRange(js, je),
+                       makeIndexRange(ks, ke));
 }
 
 IndexTask TFSF::taskXP() const {
@@ -112,9 +112,8 @@ IndexTask TFSF::taskXP() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return makeIndexTask(makeIndexRange(ie, ie + 1),
-                                makeIndexRange(js, je),
-                                makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(ie, ie + 1), makeIndexRange(js, je),
+                       makeIndexRange(ks, ke));
 }
 
 IndexTask TFSF::taskYN() const {
@@ -125,9 +124,8 @@ IndexTask TFSF::taskYN() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return makeIndexTask(makeIndexRange(is, ie),
-                                makeIndexRange(js, js + 1),
-                                makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(js, js + 1),
+                       makeIndexRange(ks, ke));
 }
 
 IndexTask TFSF::taskYP() const {
@@ -138,9 +136,8 @@ IndexTask TFSF::taskYP() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return makeIndexTask(makeIndexRange(is, ie),
-                                makeIndexRange(je, je + 1),
-                                makeIndexRange(ks, ke));
+  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(je, je + 1),
+                       makeIndexRange(ks, ke));
 }
 
 IndexTask TFSF::taskZN() const {
@@ -151,9 +148,8 @@ IndexTask TFSF::taskZN() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return makeIndexTask(makeIndexRange(is, ie),
-                                makeIndexRange(js, je),
-                                makeIndexRange(ks, ks + 1));
+  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(js, je),
+                       makeIndexRange(ks, ks + 1));
 }
 
 IndexTask TFSF::taskZP() const {
@@ -164,9 +160,8 @@ IndexTask TFSF::taskZP() const {
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
 
-  return makeIndexTask(makeIndexRange(is, ie),
-                                makeIndexRange(js, je),
-                                makeIndexRange(ke, ke + 1));
+  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(js, je),
+                       makeIndexRange(ke, ke + 1));
 }
 
 IndexTask TFSF::globalEyTaskXN() const {
@@ -286,9 +281,8 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
                         (std::pow(cosPhi(), 4) + std::pow(sinPhi(), 4)) +
                     std::pow(cosTheta(), 4));
   _auxiliary_size =
-      std::ceil(
-          _ratio_delta *
-          (std::sqrt(pow(size_x, 2) + pow(size_y, 2) + pow(size_z, 2)))) +
+      std::ceil(_ratio_delta *
+                (std::sqrt(pow(size_x, 2) + pow(size_y, 2) + pow(size_z, 2)))) +
       4 + 1;
 
   calculateProjection();
@@ -424,10 +418,10 @@ Real TFSF::cbz() {
 
 static auto intersectionTask(const GridBox& valid_box,
                              const IndexTask& my_task) {
-  auto valid_task = makeTask(
-      makeIndexRange(valid_box.origin().i(), valid_box.end().i()),
-      makeIndexRange(valid_box.origin().j(), valid_box.end().j()),
-      makeIndexRange(valid_box.origin().k(), valid_box.end().k()));
+  auto valid_task =
+      makeTask(makeIndexRange(valid_box.origin().i(), valid_box.end().i()),
+               makeIndexRange(valid_box.origin().j(), valid_box.end().j()),
+               makeIndexRange(valid_box.origin().k(), valid_box.end().k()));
   auto intersection = taskIntersection(my_task, valid_task);
   return intersection;
 }
@@ -443,9 +437,8 @@ IndexTask TFSF::nodeEyTaskXN(const IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(),
-                                      makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeEzTaskXN(const IndexTask& task) const {
@@ -459,9 +452,8 @@ IndexTask TFSF::nodeEzTaskXN(const IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(),
-                                      makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeEyTaskXP(const IndexTask& task) const {
@@ -475,9 +467,8 @@ IndexTask TFSF::nodeEyTaskXP(const IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(),
-                                      makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeEzTaskXP(const IndexTask& task) const {
@@ -491,9 +482,8 @@ IndexTask TFSF::nodeEzTaskXP(const IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(),
-                                      makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0));
+             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeExTaskYN(const IndexTask& task) const {
@@ -507,9 +497,8 @@ IndexTask TFSF::nodeExTaskYN(const IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                                      my_task.yRange(),
-                                      makeIndexRange(1, 0));
+             : makeIndexTask(makeIndexRange(1, 0), my_task.yRange(),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeEzTaskYN(const IndexTask& task) const {
@@ -523,9 +512,8 @@ IndexTask TFSF::nodeEzTaskYN(const IndexTask& task) const {
 
   return intersection_task.has_value()
              ? intersection_task.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                                      my_task.yRange(),
-                                      makeIndexRange(1, 0));
+             : makeIndexTask(makeIndexRange(1, 0), my_task.yRange(),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeExTaskYP(const IndexTask& task) const {
@@ -541,8 +529,8 @@ IndexTask TFSF::nodeExTaskYP(const IndexTask& task) const {
   return intersection_ex.has_value()
              ? intersection_ex.value()
              : makeIndexTask(makeIndexRange(1, 0),
-                                      my_total_global_task_yp.yRange(),
-                                      makeIndexRange(1, 0));
+                             my_total_global_task_yp.yRange(),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeEzTaskYP(const IndexTask& task) const {
@@ -558,8 +546,8 @@ IndexTask TFSF::nodeEzTaskYP(const IndexTask& task) const {
   return intersection_ez.has_value()
              ? intersection_ez.value()
              : makeIndexTask(makeIndexRange(1, 0),
-                                      my_total_global_task_yp.yRange(),
-                                      makeIndexRange(1, 0));
+                             my_total_global_task_yp.yRange(),
+                             makeIndexRange(1, 0));
 }
 
 IndexTask TFSF::nodeExTaskZN(const IndexTask& task) const {
@@ -574,9 +562,8 @@ IndexTask TFSF::nodeExTaskZN(const IndexTask& task) const {
 
   return intersection_ex.has_value()
              ? intersection_ex.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0),
-                                      my_total_global_task_zn.zRange());
+             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
+                             my_total_global_task_zn.zRange());
 }
 
 IndexTask TFSF::nodeEyTaskZN(const IndexTask& task) const {
@@ -591,9 +578,8 @@ IndexTask TFSF::nodeEyTaskZN(const IndexTask& task) const {
 
   return intersection_ey.has_value()
              ? intersection_ey.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0),
-                                      my_total_global_task_zn.zRange());
+             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
+                             my_total_global_task_zn.zRange());
 }
 
 IndexTask TFSF::nodeExTaskZP(const IndexTask& task) const {
@@ -608,9 +594,8 @@ IndexTask TFSF::nodeExTaskZP(const IndexTask& task) const {
 
   return intersection_ex.has_value()
              ? intersection_ex.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0),
-                                      my_total_global_task_zp.zRange());
+             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
+                             my_total_global_task_zp.zRange());
 }
 
 IndexTask TFSF::nodeEyTaskZP(const IndexTask& task) const {
@@ -625,9 +610,8 @@ IndexTask TFSF::nodeEyTaskZP(const IndexTask& task) const {
 
   return intersection_ey.has_value()
              ? intersection_ey.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                                      makeIndexRange(1, 0),
-                                      my_total_global_task_zp.zRange());
+             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
+                             my_total_global_task_zp.zRange());
 }
 
 void TFSF::initTransform() {
@@ -640,10 +624,10 @@ void TFSF::initTransform() {
 
   _k = Vector{sin_theta * cos_phi, sin_theta * sin_phi, cos_theta};
 
-  _rotation_matrix = Array2D<Real>{
-      {-_sin_phi, _cos_theta * _cos_phi, _sin_theta * _cos_phi},
-      {_cos_phi, _cos_theta * _sin_phi, _sin_theta * _sin_phi},
-      {0, -_sin_theta, _cos_theta}};
+  _rotation_matrix =
+      Array2D<Real>{{-_sin_phi, _cos_theta * _cos_phi, _sin_theta * _cos_phi},
+                    {_cos_phi, _cos_theta * _sin_phi, _sin_theta * _sin_phi},
+                    {0, -_sin_theta, _cos_theta}};
 
   _k_e = Vector{sin_psi, cos_psi, 0};
   _transform_e = xt::linalg::dot(_rotation_matrix, _k_e.data());
@@ -659,8 +643,8 @@ void TFSF::calculateProjection() {
     }
     return arr;
   }};
-  auto get_half{[](std::size_t n, Real tfsf_origin, Real inc_point,
-                   Real k, Real ratio_delta) {
+  auto get_half{[](std::size_t n, Real tfsf_origin, Real inc_point, Real k,
+                   Real ratio_delta) {
     Array1D<Real> arr = xt::zeros<Real>({n});
     for (std::size_t i = 0; i < n; ++i) {
       arr(i) = (i + tfsf_origin - inc_point - 0.5) * k * ratio_delta;

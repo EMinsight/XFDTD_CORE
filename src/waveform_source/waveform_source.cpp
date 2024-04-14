@@ -1,5 +1,5 @@
-#include <xfdtd/waveform_source/waveform_source.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/waveform_source/waveform_source.h>
 
 #include <utility>
 

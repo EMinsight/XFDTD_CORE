@@ -1,4 +1,5 @@
 #include <xfdtd/parallel/mpi_config.h>
+
 #include <sstream>
 
 namespace xfdtd {

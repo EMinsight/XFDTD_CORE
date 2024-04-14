@@ -1,10 +1,9 @@
 #ifndef _XFDTD_CORE_BASIC_UPDATOR_H_
 #define _XFDTD_CORE_BASIC_UPDATOR_H_
 
-
+#include <xfdtd/common/index_task.h>
 
 #include "updator/updator.h"
-#include <xfdtd/common/index_task.h>
 
 namespace xfdtd {
 class BasicUpdator : public Updator {

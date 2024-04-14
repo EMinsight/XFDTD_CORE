@@ -54,8 +54,8 @@ void CurrentMonitor::init(
       std::tuple(globalTask().xRange(), globalTask().yRange(),
                  globalTask().zRange()),
       Axis::fromDirectionToXYZ(_direction));
-  auto global_range_c = makeIndexRange(std::get<2>(g_abc).end() - 1,
-                                                std::get<2>(g_abc).end());
+  auto global_range_c =
+      makeIndexRange(std::get<2>(g_abc).end() - 1, std::get<2>(g_abc).end());
   auto global_c_e = global_range_c.end();
   if (global_c_e == 0) {
     throw XFDTDMonitorException("CurrentMonitor::init(): global_c_e is 0");
@@ -79,8 +79,7 @@ void CurrentMonitor::init(
       xfdtd::transform::aBCToXYZ(
           std::tuple(std::get<0>(g_abc), std::get<1>(g_abc), global_range_c),
           Axis::fromDirectionToXYZ(_direction));
-  setGlobalTask(
-      makeIndexTask(global_range_x, global_range_y, global_range_z));
+  setGlobalTask(makeIndexTask(global_range_x, global_range_y, global_range_z));
 
   // correct node task
   const auto node_lower = gridSpacePtr()->box().origin();
@@ -97,12 +96,12 @@ void CurrentMonitor::init(
   auto n_abc = xfdtd::transform::xYZToABC(
       std::tuple(nodeTask().xRange(), nodeTask().yRange(), nodeTask().zRange()),
       Axis::fromDirectionToXYZ(_direction));
-  auto node_range_a = makeIndexRange(std::get<0>(n_abc).start(),
-                                              std::get<0>(n_abc).end());
-  auto node_range_b = makeIndexRange(std::get<1>(n_abc).start(),
-                                              std::get<1>(n_abc).end());
-  auto node_range_c = makeIndexRange(std::get<2>(n_abc).end() - 1,
-                                              std::get<2>(n_abc).end());
+  auto node_range_a =
+      makeIndexRange(std::get<0>(n_abc).start(), std::get<0>(n_abc).end());
+  auto node_range_b =
+      makeIndexRange(std::get<1>(n_abc).start(), std::get<1>(n_abc).end());
+  auto node_range_c =
+      makeIndexRange(std::get<2>(n_abc).end() - 1, std::get<2>(n_abc).end());
 
   if (node_range_c.end() == 0) {
     return;
@@ -110,9 +109,9 @@ void CurrentMonitor::init(
 
   if (node_range_c.end() + global_offset_c != global_c_e) {
     // make it invalid
-    setNodeTask(makeIndexTask(
-        nodeTask().xRange(), nodeTask().yRange(),
-        makeIndexRange(node_range_c.end(), node_range_c.end())));
+    setNodeTask(
+        makeIndexTask(nodeTask().xRange(), nodeTask().yRange(),
+                      makeIndexRange(node_range_c.end(), node_range_c.end())));
     return;
   }
 

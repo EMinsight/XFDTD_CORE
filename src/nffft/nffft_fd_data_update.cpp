@@ -185,10 +185,8 @@ auto FDPlaneData::calculateJ(std::size_t current_time_step) -> void {
     return;
   }
 
-  constexpr Real coff_ja =
-      (Axis::directionPositive<direction>()) ? -1.0 : 1.0;
-  constexpr Real coff_jb =
-      (Axis::directionPositive<direction>()) ? 1.0 : -1.0;
+  constexpr Real coff_ja = (Axis::directionPositive<direction>()) ? -1.0 : 1.0;
+  constexpr Real coff_jb = (Axis::directionPositive<direction>()) ? 1.0 : -1.0;
 
   constexpr auto xyz = Axis::fromDirectionToXYZ<direction>();
 

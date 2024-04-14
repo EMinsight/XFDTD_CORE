@@ -89,20 +89,19 @@ void VoltageMonitor::init(
       std::tuple(globalTask().xRange(), globalTask().yRange(),
                  globalTask().zRange()),
       Axis::fromDirectionToXYZ(_direction));
-  auto global_range_a = makeIndexRange(std::get<0>(g_abc).start(),
-                                                std::get<0>(g_abc).end() + 1);
-  auto global_range_b = makeIndexRange(std::get<1>(g_abc).start(),
-                                                std::get<1>(g_abc).end() + 1);
-  auto global_range_c = makeIndexRange(std::get<2>(g_abc).start(),
-                                                std::get<2>(g_abc).end());
+  auto global_range_a =
+      makeIndexRange(std::get<0>(g_abc).start(), std::get<0>(g_abc).end() + 1);
+  auto global_range_b =
+      makeIndexRange(std::get<1>(g_abc).start(), std::get<1>(g_abc).end() + 1);
+  auto global_range_c =
+      makeIndexRange(std::get<2>(g_abc).start(), std::get<2>(g_abc).end());
   correct_global_abc_range(global_lower_a, global_upper_a, global_range_a,
                            global_lower_b, global_upper_b, global_range_b);
   auto [global_range_x, global_range_y, global_range_z] =
       xfdtd::transform::aBCToXYZ(
           std::tuple(global_range_a, global_range_b, global_range_c),
           Axis::fromDirectionToXYZ(_direction));
-  setGlobalTask(
-      makeIndexTask(global_range_x, global_range_y, global_range_z));
+  setGlobalTask(makeIndexTask(global_range_x, global_range_y, global_range_z));
   if (!globalTask().valid()) {
     throw XFDTDMonitorException(name() + " globalTask is not valid\n" +
                                 globalTask().toString());
@@ -124,11 +123,11 @@ void VoltageMonitor::init(
       std::tuple(nodeTask().xRange(), nodeTask().yRange(), nodeTask().zRange()),
       Axis::fromDirectionToXYZ(_direction));
   auto node_range_a = makeIndexRange(std::get<0>(node_abc).start(),
-                                              std::get<0>(node_abc).end() + 1);
+                                     std::get<0>(node_abc).end() + 1);
   auto node_range_b = makeIndexRange(std::get<1>(node_abc).start(),
-                                              std::get<1>(node_abc).end() + 1);
+                                     std::get<1>(node_abc).end() + 1);
   auto node_range_c = makeIndexRange(std::get<2>(node_abc).start(),
-                                              std::get<2>(node_abc).end());
+                                     std::get<2>(node_abc).end());
 
   correct_node_abc_range(node_lower_a, node_upper_a, node_range_a, node_lower_b,
                          node_upper_b, node_range_b, global_range_c.start(),

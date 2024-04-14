@@ -48,9 +48,7 @@ void cylinderScatter2D() {
 
   auto tfsf_2d{std::make_shared<xfdtd::TFSF2D>(
       50, 50, xfdtd::constant::PI * 0.25,
-      std::make_unique<xfdtd::Waveform>(
-          xfdtd::Waveform::cosineModulatedGaussian(tau, t_0,
-                                                   center_frequency)))};
+      xfdtd::Waveform::cosineModulatedGaussian(tau, t_0, center_frequency))};
 
   auto movie{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(

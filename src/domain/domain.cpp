@@ -1,6 +1,5 @@
 #include "domain/domain.h"
 
-
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/util/fdtd_basic.h>
 

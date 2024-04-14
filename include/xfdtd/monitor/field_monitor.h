@@ -44,7 +44,6 @@ class FieldMonitor : public Monitor {
  private:
   EMF::Field _field;
 
-  MpiSupport::Block _block;
   std::vector<MpiSupport::Block::Profile> _profiles;
   std::vector<MpiSupport::Block> _blocks_mpi;
 };

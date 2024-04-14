@@ -98,8 +98,7 @@ void simpleCircuitX() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_SOURCE_O_C, V_SOURCE_O_A, V_SOURCE_O_B},
           xfdtd::Vector{V_SOURCE_L_C, V_SOURCE_L_A, V_SOURCE_L_B}),
-      xfdtd::Axis::Direction::XP, 0,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::sine(5e8)))};
+      xfdtd::Axis::Direction::XP, 0, xfdtd::Waveform::sine(5e8))};
 
   auto resistor{std::make_shared<xfdtd::Resistor>(
       "r",
@@ -159,8 +158,7 @@ void simpleCircuitY() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_SOURCE_O_B, V_SOURCE_O_C, V_SOURCE_O_A},
           xfdtd::Vector{V_SOURCE_L_B, V_SOURCE_L_C, V_SOURCE_L_A}),
-      xfdtd::Axis::Direction::YP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::sine(5e8)))};
+      xfdtd::Axis::Direction::YP, 50, xfdtd::Waveform::sine(5e8))};
 
   auto resistor{std::make_shared<xfdtd::Resistor>(
       "r",
@@ -220,8 +218,7 @@ void simpleCircuitZ() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_SOURCE_O_A, V_SOURCE_O_B, V_SOURCE_O_C},
           xfdtd::Vector{V_SOURCE_L_A, V_SOURCE_L_B, V_SOURCE_L_C}),
-      xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::sine(5e8)))};
+      xfdtd::Axis::Direction::ZP, 50, xfdtd::Waveform::sine(5e8))};
 
   auto resistor{std::make_shared<xfdtd::Resistor>(
       "r",

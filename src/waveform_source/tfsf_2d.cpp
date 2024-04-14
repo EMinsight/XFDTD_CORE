@@ -1,6 +1,6 @@
 #include <xfdtd/common/constant.h>
-#include <xfdtd/waveform_source/tfsf_2d.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/waveform_source/tfsf_2d.h>
 
 #include <memory>
 
@@ -20,8 +20,7 @@ void TFSF2D::init(std::shared_ptr<GridSpace> grid_space,
               std::move(emf));
 }
 
-std::unique_ptr<Corrector> TFSF2D::generateCorrector(
-    const IndexTask &task) {
+std::unique_ptr<Corrector> TFSF2D::generateCorrector(const IndexTask &task) {
   auto xn_task = nodeEzTaskXN(task);
   auto xp_task = nodeEzTaskXP(task);
   auto yn_task = nodeEzTaskYN(task);

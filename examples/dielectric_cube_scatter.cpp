@@ -2,13 +2,13 @@
 #include <xtensor/xnpy.hpp>
 
 #include "xfdtd/boundary/pml.h"
+#include "xfdtd/common/constant.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/nffft/nffft.h"
 #include "xfdtd/object/object.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
-#include "xfdtd/common/constant.h"
 #include "xfdtd/waveform/waveform.h"
 #include "xfdtd/waveform_source/tfsf_3d.h"
 
@@ -34,7 +34,7 @@ void dielectricCubeScatter() {
   auto t_0{4.5 * tau};
   auto tfsf_3d{std::make_shared<xfdtd::TFSF3D>(
       15, 15, 15, xfdtd::constant::PI * 0.25, xfdtd::constant::PI / 6.0, 0,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+      xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto nffft_fd{std::make_shared<xfdtd::NFFFT>(
       13, 13, 13, xt::xarray<double>{1e9}, "./data/dielectric_cube_scatter")};

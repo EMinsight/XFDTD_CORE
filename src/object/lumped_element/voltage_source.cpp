@@ -1,7 +1,7 @@
+#include <xfdtd/common/index_task.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/object/lumped_element/voltage_source.h>
-#include <xfdtd/common/index_task.h>
 
 #include <cstddef>
 #include <memory>
@@ -54,9 +54,8 @@ void VoltageSource::init(std::shared_ptr<const GridSpace> grid_space,
     return r * na * nb / nc;
   }};
   auto vf{[](Real v, std::size_t nc) { return v / nc; }};
-  auto dx_dy_dz{[](const auto& x, const auto& y,
-                   const auto& z, auto&& x_range, auto&& y_range,
-                   auto&& z_range) {
+  auto dx_dy_dz{[](const auto& x, const auto& y, const auto& z, auto&& x_range,
+                   auto&& y_range, auto&& z_range) {
     return xt::meshgrid(xt::view(x, x_range), xt::view(y, y_range),
                         xt::view(z, z_range));
   }};
@@ -192,11 +191,11 @@ std::unique_ptr<Corrector> VoltageSource::generateCorrector(
 
   auto local_task = makeTask(
       makeRange(intersection->xRange().start() - domain.xRange().start(),
-                         intersection->xRange().end() - domain.xRange().start()),
+                intersection->xRange().end() - domain.xRange().start()),
       makeRange(intersection->yRange().start() - domain.yRange().start(),
-                         intersection->yRange().end() - domain.yRange().start()),
+                intersection->yRange().end() - domain.yRange().start()),
       makeRange(intersection->zRange().start() - domain.zRange().start(),
-                         intersection->zRange().end() - domain.zRange().start()));
+                intersection->zRange().end() - domain.zRange().start()));
 
   return std::make_unique<VoltageSourceCorrector>(
       intersection.value(), local_task, calculationParam(),

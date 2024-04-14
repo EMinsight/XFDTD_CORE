@@ -61,8 +61,7 @@ void quarterWaveTransformer() {
       "voltage_source",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{4e-3, 0 * size, 0},
                                     xfdtd::Vector{1.8e-3, 0.4e-3, 1e-3}),
-      xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+      xfdtd::Axis::Direction::ZP, 50, xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto r{std::make_shared<xfdtd::Resistor>(
       "resistor",
@@ -144,11 +143,11 @@ void quarterWaveTransformer() {
   s.addObject(ground_0);
   s.addObject(v_source);
   s.addObject(r);
-//   s.addObject(abs_object_zp);
-//   s.addObject(abs_object_xn);
-//   s.addObject(abs_object_xp);
-//   s.addObject(abs_object_yp);
-//   s.addObject(abs_object_yn);
+  //   s.addObject(abs_object_zp);
+  //   s.addObject(abs_object_xn);
+  //   s.addObject(abs_object_xp);
+  //   s.addObject(abs_object_yp);
+  //   s.addObject(abs_object_yn);
   s.addMonitor(v1);
   s.addMonitor(v2);
   s.addMonitor(c1);

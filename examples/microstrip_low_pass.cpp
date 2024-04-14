@@ -69,8 +69,7 @@ void microstripLowPass() {
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{14 * dx, 0 * dy, 0 * dz},
                                     xfdtd::Vector{6 * dx, 0 * dy, 3 * dz}),
       xfdtd::Axis::Direction::ZP, 50,
-      std::make_unique<xfdtd::Waveform>(
-          xfdtd::Waveform::cosineModulatedGaussian(tau, t_0, center_f)))};
+      xfdtd::Waveform::cosineModulatedGaussian(tau, t_0, center_f))};
 
   auto r{std::make_shared<xfdtd::Resistor>(
       "resistor",
@@ -138,7 +137,7 @@ void microstripLowPass() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YP));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
-//   s.addMonitor(movie_monitor);
+  //   s.addMonitor(movie_monitor);
 
   s.run(3500);
 

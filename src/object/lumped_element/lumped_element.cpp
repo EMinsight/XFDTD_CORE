@@ -153,8 +153,8 @@ bool LumpedElement::taskContainLumpedElement(
 
 IndexTask LumpedElement::makeIndexTask() const {
   return makeTask(makeRange(_is, _is + nodeCountX()),
-                           makeRange(_js, _js + nodeCountY()),
-                           makeRange(_ks, _ks + nodeCountZ()));
+                  makeRange(_js, _js + nodeCountY()),
+                  makeRange(_ks, _ks + nodeCountZ()));
 }
 
 }  // namespace xfdtd

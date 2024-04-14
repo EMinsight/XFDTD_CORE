@@ -2,8 +2,8 @@
 #define _XFDTD_CORE_WAVEFORM_SOURCE_CORRECTOR_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
-#include <xfdtd/common/type_define.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 
@@ -16,8 +16,7 @@ namespace xfdtd {
 
 class WaveformSourceCorrector : public Corrector {
  public:
-  WaveformSourceCorrector(IndexTask task,
-                          IndexTask local_task,
+  WaveformSourceCorrector(IndexTask task, IndexTask local_task,
                           std::shared_ptr<GridSpace> grid_space,
                           std::shared_ptr<CalculationParam> calculation_param,
                           std::shared_ptr<EMF> emf,

@@ -22,9 +22,8 @@ void Capacitor::init(std::shared_ptr<const GridSpace> grid_space,
   auto cf{
       [](auto c, auto na, auto nb, auto nc) { return c * (nc) / (nc * nb); }};
 
-  auto dx_dy_dz{[](const auto& x, const auto& y,
-                   const auto& z, auto&& x_range, auto&& y_range,
-                   auto&& z_range) {
+  auto dx_dy_dz{[](const auto& x, const auto& y, const auto& z, auto&& x_range,
+                   auto&& y_range, auto&& z_range) {
     return xt::meshgrid(xt::view(x, x_range), xt::view(y, y_range),
                         xt::view(z, z_range));
   }};
@@ -65,8 +64,7 @@ void Capacitor::init(std::shared_ptr<const GridSpace> grid_space,
 
 void Capacitor::correctUpdateCoefficient() {
   auto dt{calculationParamPtr()->timeParam()->dt()};
-  auto func{[this, dt](auto& cece, auto& cecha,
-                       auto& cechb, const auto& eps,
+  auto func{[this, dt](auto& cece, auto& cecha, auto& cechb, const auto& eps,
                        const auto& sigma) {
     auto range_x{rangeX()};
     auto range_y{rangeY()};

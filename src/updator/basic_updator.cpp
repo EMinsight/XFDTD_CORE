@@ -1,7 +1,5 @@
 #include "updator/basic_updator.h"
 
-
-
 #include <memory>
 #include <utility>
 #include <xtensor.hpp>
@@ -27,35 +25,21 @@ BasicUpdator::BasicUpdator(
 template <EMF::Attribute attribute_c, Axis::XYZ xyz_c>
 static auto updateH(Index is, Index ie, Index js, Index je, Index ks, Index ke,
                     const FDTDUpdateCoefficient& fc, EMF& emf) {
-  constexpr auto attribute_a = transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>();
-  constexpr auto attribute_b = transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>();
+  constexpr auto attribute_a =
+      transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>();
+  constexpr auto attribute_b =
+      transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>();
 
-  auto& field_c = emf.field(transform::attributeXYZToField<attribute_c, xyz_c>());
-  const auto& field_a =
-      emf.field(transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>());
-  const auto& field_b =
-      emf.field(transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>());
+  auto& field_c =
+      emf.field(transform::attributeXYZToField<attribute_c, xyz_c>());
+  const auto& field_a = emf.field(
+      transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>());
+  const auto& field_b = emf.field(
+      transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>());
 
   const auto& c_c = fc.coeff<attribute_c, xyz_c>();
   const auto& c_a = fc.coeffDualA<attribute_c, xyz_c>();
   const auto& c_b = fc.coeffDualB<attribute_c, xyz_c>();
-  for (Index i{is}; i < ie; ++i) {
-    for (Index j{js}; j < je; ++j) {
-      for (Index k{ks}; k < ke; ++k) {
-        // field_c(i, j, k) = 
-        auto pre_i_a = i;
-        auto pre_j_a = j;
-        auto pre_k_a = k;
-        auto pre_i_b = i;
-        auto pre_j_b = j;
-        auto pre_k_b = k;
-        auto next_i_a = i;
-        auto next_j_a = j;
-        auto next_k_a = k;
-        auto next_i_b = i;
-      }
-    }
-  }
 }
 
 void BasicUpdator::updateH() {

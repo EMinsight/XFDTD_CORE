@@ -1,6 +1,7 @@
 #include <memory>
 
 #include "xfdtd/boundary/pml.h"
+#include "xfdtd/common/constant.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/monitor/current_monitor.h"
@@ -12,7 +13,6 @@
 #include "xfdtd/object/object.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
-#include "xfdtd/common/constant.h"
 #include "xfdtd/waveform/waveform.h"
 
 void invertedFAntenna() {
@@ -64,8 +64,7 @@ void invertedFAntenna() {
       "v_s",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.787e-3, 0, 24e-3},
                                     xfdtd::Vector{0.787e-3, 0, 2.4e-3}),
-      xfdtd::Axis::Direction::XP, 50,
-      std::make_unique<xfdtd::Waveform>(xfdtd::Waveform::gaussian(tau, t_0)))};
+      xfdtd::Axis::Direction::XP, 50, xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto v1{std::make_shared<xfdtd::VoltageMonitor>(
       "v1",

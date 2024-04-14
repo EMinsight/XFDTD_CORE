@@ -16,9 +16,9 @@ add_subdirectory(simulation)
 add_subdirectory(domain)
 add_subdirectory(parallel)
 
-add_library(xfdtd STATIC ${ALL_OBJECT_FILES})
+add_library(xfdtd_core ${ALL_OBJECT_FILES})
 
-set(XFDTD_LIBS
+set(XFDTD_CORE_LIBS
     xfdtd_coordinate_system
     xfdtd_shape
     xfdtd_grid_space
@@ -38,24 +38,24 @@ set(XFDTD_LIBS
     xfdtd_domain
     xfdtd_parallel)
 
-target_link_libraries(
-  xfdtd PUBLIC ${XFDTD_LIBS} ${XFDTD_CORE_THIRD_PARTY_LIB})
+target_link_libraries(xfdtd_core PUBLIC ${XFDTD_CORE_LIBS} ${XFDTD_CORE_THIRD_PARTY_LIB})
 
 target_include_directories(
-  xfdtd PUBLIC $<BUILD_INTERFACE:${XFDTD_LIB_PUBLIC_INCLUDE_DIR}>
+  xfdtd_core PUBLIC $<BUILD_INTERFACE:${XFDTD_CORE_PUBLIC_INCLUDE_DIR}>
                $<INSTALL_INTERFACE:include/xfdtd>)
 
 target_include_directories(
-  xfdtd PRIVATE $<BUILD_INTERFACE:${XFDTD_LIB_PRIVATE_INCLUDE_DIR}>
+  xfdtd_core PRIVATE $<BUILD_INTERFACE:${XFDTD_CORE_PRIVATE_INCLUDE_DIR}>
                 $<INSTALL_INTERFACE:include>)
 
 install(
-  TARGETS xfdtd ${XFDTD_LIBS}
-  EXPORT xfdtd-targets
-  ARCHIVE DESTINATION ${XFDTD_INSTALL_PREFIX}/lib
-  LIBRARY DESTINATION ${XFDTD_INSTALL_PREFIX}/lib
-  RUNTIME DESTINATION ${XFDTD_INSTALL_PREFIX}/bin
+  TARGETS xfdtd_core ${XFDTD_CORE_LIBS}
+  EXPORT xfdtd_core-targets
+  ARCHIVE DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/lib
+  LIBRARY DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/lib
+  RUNTIME DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/bin
   INCLUDES
-  DESTINATION ${XFDTD_INSTALL_PREFIX}/include)
+  DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/include)
 
-install(DIRECTORY ${XFDTD_LIB_PUBLIC_INCLUDE_DIR}/xfdtd DESTINATION ${XFDTD_INSTALL_PREFIX}/include)
+install(DIRECTORY ${XFDTD_CORE_PUBLIC_INCLUDE_DIR}/xfdtd
+        DESTINATION ${XFDTD_CORE_INSTALL_PREFIX}/include)

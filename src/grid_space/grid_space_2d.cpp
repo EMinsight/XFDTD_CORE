@@ -6,13 +6,12 @@
 #include <utility>
 #include <xtensor.hpp>
 
-#include "xfdtd/grid_space/grid_space.h"
 #include "xfdtd/common/constant.h"
+#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
-GridSpace2D::GridSpace2D(Real based_dx, Real based_dy,
-                         Array1D<Real> e_node_x,
+GridSpace2D::GridSpace2D(Real based_dx, Real based_dy, Array1D<Real> e_node_x,
                          Array1D<Real> e_node_y)
     : GridSpace{based_dx,
                 based_dx,
@@ -23,20 +22,18 @@ GridSpace2D::GridSpace2D(Real based_dx, Real based_dy,
                 {-1 * std::numeric_limits<Real>::infinity(),
                  std::numeric_limits<Real>::infinity()}} {}
 
-GridSpace2D::GridSpace2D(
-    Type type, GridBox global_box, Real based_dx, Real based_dy,
-    Real min_dx, Real min_dy, Array1D<Real> e_node_x,
-    Array1D<Real> e_node_y, Array1D<Real> h_node_x,
-    Array1D<Real> h_node_y, Array1D<Real> e_size_x,
-    Array1D<Real> e_size_y, Array1D<Real> h_size_x,
-    Array1D<Real> h_size_y)
-    : GridSpace(
-          GridSpace::Dimension::TWO, type, global_box, based_dx, based_dy, 1,
-          min_dx, min_dy, 1, std::move(e_node_x), std::move(e_node_y),
-          Array1D<Real>({constant::NEG_INF, constant::INF}),
-          std::move(h_node_x), std::move(h_node_y), Array1D<Real>({0}),
-          std::move(e_size_x), std::move(e_size_y), Array1D<Real>({1}),
-          std::move(h_size_x), std::move(h_size_y), Array1D<Real>({1})) {
+GridSpace2D::GridSpace2D(Type type, GridBox global_box, Real based_dx,
+                         Real based_dy, Real min_dx, Real min_dy,
+                         Array1D<Real> e_node_x, Array1D<Real> e_node_y,
+                         Array1D<Real> h_node_x, Array1D<Real> h_node_y,
+                         Array1D<Real> e_size_x, Array1D<Real> e_size_y,
+                         Array1D<Real> h_size_x, Array1D<Real> h_size_y)
+    : GridSpace(GridSpace::Dimension::TWO, type, global_box, based_dx, based_dy,
+                1, min_dx, min_dy, 1, std::move(e_node_x), std::move(e_node_y),
+                Array1D<Real>({constant::NEG_INF, constant::INF}),
+                std::move(h_node_x), std::move(h_node_y), Array1D<Real>({0}),
+                std::move(e_size_x), std::move(e_size_y), Array1D<Real>({1}),
+                std::move(h_size_x), std::move(h_size_y), Array1D<Real>({1})) {
   _max_x = eNodeX().back();
   _max_y = eNodeY().back();
   _max_z = constant::INF;
@@ -54,9 +51,9 @@ std::unique_ptr<GridSpace> GridSpace2D::subGridSpace(
 
   if (max_i < start_i || max_j < start_j || max_k < start_k) {
     std::stringstream ss;
-    ss << "Invalid sub grid space: start_i=" << start_i << ", start_j=" << start_j
-       << ", start_k=" << start_k << ", max_i=" << max_i << ", max_j=" << max_j
-       << ", max_k=" << max_k;
+    ss << "Invalid sub grid space: start_i=" << start_i
+       << ", start_j=" << start_j << ", start_k=" << start_k
+       << ", max_i=" << max_i << ", max_j=" << max_j << ", max_k=" << max_k;
     throw XFDTDGridSpaceException(ss.str());
   }
 
@@ -68,19 +65,15 @@ std::unique_ptr<GridSpace> GridSpace2D::subGridSpace(
   auto based_dy{basedDy()};
   auto min_dx{minDx()};
   auto min_dy{minDy()};
-  Array1D<Real> e_node_x{
-      xt::view(eNodeX(), xt::range(start_i, end_i + 1))};
-  Array1D<Real> e_node_y{
-      xt::view(eNodeY(), xt::range(start_j, end_j + 1))};
+  Array1D<Real> e_node_x{xt::view(eNodeX(), xt::range(start_i, end_i + 1))};
+  Array1D<Real> e_node_y{xt::view(eNodeY(), xt::range(start_j, end_j + 1))};
 
   Array1D<Real> h_node_x{xt::view(hNodeX(), xt::range(start_i, end_i))};
   Array1D<Real> h_node_y{xt::view(hNodeY(), xt::range(start_j, end_j))};
   Array1D<Real> e_size_x{xt::view(eSizeX(), xt::range(start_i, end_i))};
   Array1D<Real> e_size_y{xt::view(eSizeY(), xt::range(start_j, end_j))};
-  Array1D<Real> h_size_x{
-      xt::view(hSizeX(), xt::range(start_i, end_i + 1))};
-  Array1D<Real> h_size_y{
-      xt::view(hSizeY(), xt::range(start_j, end_j + 1))};
+  Array1D<Real> h_size_x{xt::view(hSizeX(), xt::range(start_i, end_i + 1))};
+  Array1D<Real> h_size_y{xt::view(hSizeY(), xt::range(start_j, end_j + 1))};
 
   auto global_box = GridBox{Grid{start_i, start_j, 0},
                             Grid{end_i - start_i, end_j - start_j, 1}};

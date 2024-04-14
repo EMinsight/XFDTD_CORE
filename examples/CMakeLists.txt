@@ -11,7 +11,7 @@ foreach(xfdtd_example_source ${XFDTD_EXAMPLE_SOURCES})
     add_executable(${xfdtd_example_name} EXCLUDE_FROM_ALL ${xfdtd_example_source})
     set(XFDTD_EXAMPLES_LIST ${XFDTD_EXAMPLES_LIST} ${xfdtd_example_name})
 
-    target_link_libraries(${xfdtd_example_name} xfdtd)
+    target_link_libraries(${xfdtd_example_name} xfdtd_core)
     # Set properties for the target
     set_target_properties(${xfdtd_example_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"

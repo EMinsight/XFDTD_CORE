@@ -5,6 +5,8 @@
 #include <utility>
 #include <xtensor.hpp>
 
+#include "xfdtd/parallel/mpi_support.h"
+
 namespace xfdtd {
 
 FieldMonitor::FieldMonitor(std::unique_ptr<Shape> shape, EMF::Field field,
@@ -136,8 +138,6 @@ auto FieldMonitor::initParallelizedConfig() -> void {
                       &profile_type._type);
   MPI_Type_commit(&profile_type._type);
 
-  _block = MpiSupport::Block::make(p);
-
   mpi_support.gather(monitorMpiConfig(), &p, 1, profile_type, _profiles.data(),
                      1, profile_type, monitorMpiConfig().root());
 
@@ -169,7 +169,7 @@ auto FieldMonitor::gatherData() -> void {
 
     mpi_support.sendRecv(monitorMpiConfig(), data().data(), data().size(),
                          monitorMpiConfig().rank(), 0, recv_buffer.data(), 1,
-                         _block, monitorMpiConfig().rank(), 0);
+                         _blocks_mpi[0], monitorMpiConfig().rank(), 0);
 
     data() = std::move(recv_buffer);
   } else {

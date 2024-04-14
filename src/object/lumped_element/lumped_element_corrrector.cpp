@@ -7,14 +7,15 @@ namespace xfdtd {
 
 void VoltageSourceCorrector::correctE() {
   auto&& coeff_view = xt::view(
-      _coeff_v, xt::range(_local_task.xRange().start(), _local_task.xRange().end()),
+      _coeff_v,
+      xt::range(_local_task.xRange().start(), _local_task.xRange().end()),
       xt::range(_local_task.yRange().start(), _local_task.yRange().end()),
       xt::range(_local_task.zRange().start(), _local_task.zRange().end()));
 
-  auto&& e_view =
-      xt::view(_e_field, xt::range(_task.xRange().start(), _task.xRange().end()),
-               xt::range(_task.yRange().start(), _task.yRange().end()),
-               xt::range(_task.zRange().start(), _task.zRange().end()));
+  auto&& e_view = xt::view(
+      _e_field, xt::range(_task.xRange().start(), _task.xRange().end()),
+      xt::range(_task.yRange().start(), _task.yRange().end()),
+      xt::range(_task.zRange().start(), _task.zRange().end()));
   e_view += coeff_view *
             _waveform(_calculation_param->timeParam()->currentTimeStep());
 }
@@ -23,14 +24,15 @@ void VoltageSourceCorrector::correctH() {}
 
 void CurrentSourceCorrector::correctE() {
   auto&& coeff_view = xt::view(
-      _coeff_i, xt::range(_local_task.xRange().start(), _local_task.xRange().end()),
+      _coeff_i,
+      xt::range(_local_task.xRange().start(), _local_task.xRange().end()),
       xt::range(_local_task.yRange().start(), _local_task.yRange().end()),
       xt::range(_local_task.zRange().start(), _local_task.zRange().end()));
 
-  auto&& e_view =
-      xt::view(_e_field, xt::range(_task.xRange().start(), _task.xRange().end()),
-               xt::range(_task.yRange().start(), _task.yRange().end()),
-               xt::range(_task.zRange().start(), _task.zRange().end()));
+  auto&& e_view = xt::view(
+      _e_field, xt::range(_task.xRange().start(), _task.xRange().end()),
+      xt::range(_task.yRange().start(), _task.yRange().end()),
+      xt::range(_task.zRange().start(), _task.zRange().end()));
   e_view += coeff_view *
             _waveform(_calculation_param->timeParam()->currentTimeStep());
 }
@@ -39,22 +41,26 @@ void CurrentSourceCorrector::correctH() {}
 
 void InductorCorrector::correctE() {
   //   auto&& coeff_ecj = xt::view(
-  //       _cecjc, xt::range(_local_task.xRange().start(), _local_task.xRange().end()),
-  //       xt::range(_local_task.yRange().start(), _local_task.yRange().end()),
-  //       xt::range(_local_task.zRange().start(), _local_task.zRange().end()));
+  //       _cecjc, xt::range(_local_task.xRange().start(),
+  //       _local_task.xRange().end()), xt::range(_local_task.yRange().start(),
+  //       _local_task.yRange().end()), xt::range(_local_task.zRange().start(),
+  //       _local_task.zRange().end()));
   //   auto&& coeff_jce = xt::view(
-  //       _cjcec, xt::range(_local_task.xRange().start(), _local_task.xRange().end()),
-  //       xt::range(_local_task.yRange().start(), _local_task.yRange().end()),
-  //       xt::range(_local_task.zRange().start(), _local_task.zRange().end()));
+  //       _cjcec, xt::range(_local_task.xRange().start(),
+  //       _local_task.xRange().end()), xt::range(_local_task.yRange().start(),
+  //       _local_task.yRange().end()), xt::range(_local_task.zRange().start(),
+  //       _local_task.zRange().end()));
   //   auto&& j_view =
   //       xt::view(_j, xt::range(_local_task.xRange().start(),
   //       _local_task.xRange().end()),
-  //                xt::range(_local_task.yRange().start(), _local_task.yRange().end()),
+  //                xt::range(_local_task.yRange().start(),
+  //                _local_task.yRange().end()),
   //                xt::range(_local_task.zRange().start(),
   //                _local_task.zRange().end()));
 
   //   auto&& e_view =
-  //       xt::view(_e_field, xt::range(_task.xRange().start(), _task.xRange().end()),
+  //       xt::view(_e_field, xt::range(_task.xRange().start(),
+  //       _task.xRange().end()),
   //                xt::range(_task.yRange().start(), _task.yRange().end()),
   //                xt::range(_task.zRange().start(), _task.zRange().end()));
 

@@ -71,20 +71,14 @@ auto FieldTimeMonitor::init(
                                           static_cast<size_t>(offset_k)}});
 
   setGlobalTask(makeIndexTask(
-      makeIndexRange(globalGridBox().origin().i(),
-                              globalGridBox().end().i()),
-      makeIndexRange(globalGridBox().origin().j(),
-                              globalGridBox().end().j()),
-      makeIndexRange(globalGridBox().origin().k(),
-                              globalGridBox().end().k())));
+      makeIndexRange(globalGridBox().origin().i(), globalGridBox().end().i()),
+      makeIndexRange(globalGridBox().origin().j(), globalGridBox().end().j()),
+      makeIndexRange(globalGridBox().origin().k(), globalGridBox().end().k())));
 
-  setNodeTask(
-      makeIndexTask(makeIndexRange(nodeGridBox().origin().i(),
-                                                     nodeGridBox().end().i()),
-                             makeIndexRange(nodeGridBox().origin().j(),
-                                                     nodeGridBox().end().j()),
-                             makeIndexRange(nodeGridBox().origin().k(),
-                                                     nodeGridBox().end().k())));
+  setNodeTask(makeIndexTask(
+      makeIndexRange(nodeGridBox().origin().i(), nodeGridBox().end().i()),
+      makeIndexRange(nodeGridBox().origin().j(), nodeGridBox().end().j()),
+      makeIndexRange(nodeGridBox().origin().k(), nodeGridBox().end().k())));
 }
 
 auto FieldTimeMonitor::update() -> void {

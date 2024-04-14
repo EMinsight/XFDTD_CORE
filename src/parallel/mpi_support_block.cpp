@@ -112,9 +112,11 @@ auto MpiSupport::Block::operator=(Block&& other) noexcept -> Block& {
 MpiSupport::Block::~Block() {
   if (_vec_type != MPI_DATATYPE_NULL) {
     MPI_Type_free(&_vec_type);
+    _vec_type = MPI_DATATYPE_NULL;
   }
   if (_block != MPI_DATATYPE_NULL) {
     MPI_Type_free(&_block);
+    _block = MPI_DATATYPE_NULL;
   }
 }
 

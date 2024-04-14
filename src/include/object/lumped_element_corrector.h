@@ -1,8 +1,8 @@
 #ifndef _XFDTD_CORE_LUMPED_ELEMENT_CORRECTOR_H_
 #define _XFDTD_CORE_LUMPED_ELEMENT_CORRECTOR_H_
 
-#include <xfdtd/common/type_define.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
 
 #include <memory>
 #include <utility>
@@ -42,8 +42,7 @@ class VoltageSourceCorrector : public LumpedElementCorrector {
  public:
   VoltageSourceCorrector(IndexTask task, IndexTask local_task,
                          std::shared_ptr<CalculationParam> calculation_param,
-                         Array3D<Real>& e_field,
-                         const Array3D<Real>& coeff_v,
+                         Array3D<Real>& e_field, const Array3D<Real>& coeff_v,
                          const Array1D<Real>& waveform)
       : LumpedElementCorrector{task, local_task, std::move(calculation_param),
                                e_field},
@@ -72,8 +71,7 @@ class CurrentSourceCorrector : public LumpedElementCorrector {
  public:
   CurrentSourceCorrector(IndexTask task, IndexTask local_task,
                          std::shared_ptr<CalculationParam> calculation_param,
-                         Array3D<Real>& e_field,
-                         const Array3D<Real>& coeff_i,
+                         Array3D<Real>& e_field, const Array3D<Real>& coeff_i,
                          const Array1D<Real>& waveform)
       : LumpedElementCorrector{task, local_task, std::move(calculation_param),
                                e_field},
@@ -104,8 +102,7 @@ class InductorCorrector : public LumpedElementCorrector {
   InductorCorrector(IndexTask task, IndexTask local_task,
                     std::shared_ptr<CalculationParam> calculation_param,
                     Array3D<Real>& e_field, Array3D<Real>& j,
-                    const Array3D<Real>& cecjc,
-                    const Array3D<Real>& cjcec)
+                    const Array3D<Real>& cecjc, const Array3D<Real>& cjcec)
       : LumpedElementCorrector{task, local_task, std::move(calculation_param),
                                e_field},
         _j{j},

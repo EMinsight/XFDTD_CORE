@@ -66,5 +66,4 @@ void PecPlane::correctMaterialSpace(std::size_t index) {
   throw XFDTDObjectException(name() + " PecPlane is not a plane!");
 }
 
-
 }  // namespace xfdtd

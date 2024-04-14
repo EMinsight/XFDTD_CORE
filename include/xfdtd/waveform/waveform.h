@@ -1,8 +1,10 @@
 #ifndef _XFDTD_CORE_WAVEFORM_H_
 #define _XFDTD_CORE_WAVEFORM_H_
 
-#include <functional>
 #include <xfdtd/common/type_define.h>
+
+#include <functional>
+#include <memory>
 
 namespace xfdtd {
 
@@ -20,24 +22,29 @@ class Waveform {
 
   ~Waveform() = default;
 
-  // TODO(franzero): use std::unique_ptr<Waveform> instead of Waveform
-  static Waveform sine(Real frequency, Real amplitude = 1.0);
+  static auto sine(Real frequency, Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform cosine(Real frequency, Real amplitude = 1.0);
+  static auto cosine(Real frequency, Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform square(Real frequency, Real amplitude = 1.0);
+  static auto square(Real frequency, Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform triangle(Real frequency, Real amplitude = 1.0);
+  static auto triangle(Real frequency, Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform sawtooth(Real frequency, Real amplitude = 1.0);
+  static auto sawtooth(Real frequency, Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform gaussian(Real tau, Real t_0, Real amplitude = 1.0);
+  static auto gaussian(Real tau, Real t_0, Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform cosineModulatedGaussian(Real tau, Real t_0,
-                                          Real frequency,
-                                          Real amplitude = 1.0);
+  static auto cosineModulatedGaussian(Real tau, Real t_0, Real frequency,
+                                      Real amplitude = 1.0)
+      -> std::unique_ptr<Waveform>;
 
-  static Waveform step(Real t_0, Real amplitude = 1.0);
+  static auto step(Real t_0, Real amplitude = 1.0) -> std::unique_ptr<Waveform>;
 
   Real operator()(Real t);
 
