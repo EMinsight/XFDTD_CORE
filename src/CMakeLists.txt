@@ -1,25 +1,27 @@
-add_subdirectory(coordinate_system)
-add_subdirectory(shape)
-add_subdirectory(grid_space)
-add_subdirectory(calculation_param)
-add_subdirectory(electromagnetic_field)
-add_subdirectory(material)
-add_subdirectory(object)
-add_subdirectory(updator)
-add_subdirectory(waveform)
-add_subdirectory(waveform_source)
 add_subdirectory(boundary)
+add_subdirectory(calculation_param)
+add_subdirectory(coordinate_system)
+add_subdirectory(corrector)
+add_subdirectory(domain)
+add_subdirectory(electromagnetic_field)
+add_subdirectory(grid_space)
+add_subdirectory(material)
 add_subdirectory(monitor)
 add_subdirectory(network)
 add_subdirectory(nffft)
-add_subdirectory(simulation)
-add_subdirectory(domain)
+add_subdirectory(object)
 add_subdirectory(parallel)
+add_subdirectory(shape)
+add_subdirectory(simulation)
+add_subdirectory(updator)
+add_subdirectory(waveform)
+add_subdirectory(waveform_source)
 
 add_library(xfdtd_core ${ALL_OBJECT_FILES})
 
 set(XFDTD_CORE_LIBS
     xfdtd_coordinate_system
+    xfdtd_corrector
     xfdtd_shape
     xfdtd_grid_space
     xfdtd_calculation_param
@@ -38,11 +40,11 @@ set(XFDTD_CORE_LIBS
     xfdtd_domain
     xfdtd_parallel)
 
-target_link_libraries(xfdtd_core PUBLIC ${XFDTD_CORE_LIBS} ${XFDTD_CORE_THIRD_PARTY_LIB})
+target_link_libraries(xfdtd_core PUBLIC  ${XFDTD_CORE_THIRD_PARTY_LIB} ${XFDTD_CORE_LIBS})
 
 target_include_directories(
   xfdtd_core PUBLIC $<BUILD_INTERFACE:${XFDTD_CORE_PUBLIC_INCLUDE_DIR}>
-               $<INSTALL_INTERFACE:include/xfdtd>)
+               $<INSTALL_INTERFACE:include>)
 
 target_include_directories(
   xfdtd_core PRIVATE $<BUILD_INTERFACE:${XFDTD_CORE_PRIVATE_INCLUDE_DIR}>
