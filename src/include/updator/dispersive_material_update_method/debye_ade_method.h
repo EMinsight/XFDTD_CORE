@@ -23,6 +23,11 @@ class DebyeADEMethod : public LinearDispersiveMaterialUpdateMethod {
 
   ~DebyeADEMethod() override;
 
+  auto clone() const
+      -> std::unique_ptr<LinearDispersiveMaterialUpdateMethod> override {
+    return std::make_unique<DebyeADEMethod>(*this);
+  }
+
   auto init(Real dt) -> void override;
 
   auto correctCoeff(Index i, Index j, Index k, const GridSpace* grid_space,

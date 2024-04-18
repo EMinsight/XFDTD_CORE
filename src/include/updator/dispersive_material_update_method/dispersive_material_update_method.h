@@ -15,6 +15,9 @@ class LinearDispersiveMaterialUpdateMethod {
 
   virtual ~LinearDispersiveMaterialUpdateMethod() = default;
 
+  virtual auto clone() const
+      -> std::unique_ptr<LinearDispersiveMaterialUpdateMethod> = 0;
+
   virtual auto init(Real dt) -> void = 0;
 
   virtual auto correctCoeff(Index i, Index j, Index k,

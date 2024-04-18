@@ -137,87 +137,14 @@ void Object::handleDispersion() {
         "handleDispersion(): Non-uniform grid space is not supported yet"};
   }
 
-  auto mask{_grid_space->getShapeMask(_shape.get())};
-  auto& cexe = _calculation_param->fdtdCoefficient()->cexe();
-  auto& cexhy = _calculation_param->fdtdCoefficient()->cexhy();
-  auto& cexhz = _calculation_param->fdtdCoefficient()->cexhz();
-  auto& ceye = _calculation_param->fdtdCoefficient()->ceye();
-  auto& ceyhz = _calculation_param->fdtdCoefficient()->ceyhz();
-  auto& ceyhx = _calculation_param->fdtdCoefficient()->ceyhx();
-  auto& ceze = _calculation_param->fdtdCoefficient()->ceze();
-  auto& cezhx = _calculation_param->fdtdCoefficient()->cezhx();
-  auto& cezhy = _calculation_param->fdtdCoefficient()->cezhy();
-
-  auto correct_func = [&grid_space = _grid_space, &shape = _shape](
-                          Index is, Index ie, Index js, Index je, Index ks,
-                          Index ke, const auto& value, auto&& arr) {
-    for (auto i{is}; i < ie; ++i) {
-      for (auto j{js}; j < je; ++j) {
-        for (auto k{ks}; k < ke; ++k) {
-          if (!shape->isInside(grid_space->getGridCenterVector({i, j, k}))) {
-            continue;
-          }
-          arr(i, j, k) = value;
-        }
-      }
-    }
-  };
-
   auto nx = _grid_space->sizeX();
   auto ny = _grid_space->sizeY();
   auto nz = _grid_space->sizeZ();
 
-  // if (auto m = dynamic_cast<LinearDispersiveMaterial*>(_material.get());
-  //     m != nullptr) {
-  //   const auto dt = calculationParamPtr()->timeParam()->dt();
-  //   m->updateMethod()->init(dt);
-
-  //   for (Index i{0}; i < nx; ++i) {
-  //     for (Index j{0}; j < ny; ++j) {
-  //       for (Index k{0}; k < nz; ++k) {
-  //         if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k})))
-  //         {
-  //           continue;
-  //         }
-  //         m->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),
-  //                                         calculationParamPtr());
-  //       }
-  //     }
-  //   }
-
-  //   return;
-  // }
-
-  // // Support for ADE-FDTD
-  // if (auto lorentz_medium = dynamic_cast<LorentzMedium*>(_material.get());
-  //     lorentz_medium != nullptr) {
-  //   lorentz_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
-  //                                  emfPtr());
-
-  //   const auto& c2 = lorentz_medium->coeffForADE()._c2;
-  //   const auto& c3 = lorentz_medium->coeffForADE()._c3;
-  //   const auto& dx = _grid_space->basedDx();
-  //   const auto& dy = _grid_space->basedDy();
-  //   const auto& dz = _grid_space->basedDz();
-
-  //   correct_func(0, nx, 0, ny, 0, nz, c2, cexe);
-  //   correct_func(0, nx, 0, ny, 0, nz, -c3 / dz, cexhy);
-  //   correct_func(0, nx, 0, ny, 0, nz, c3 / dy, cexhz);
-  //   correct_func(0, nx, 0, ny, 0, nz, c2, ceye);
-  //   correct_func(0, nx, 0, ny, 0, nz, -c3 / dx, ceyhz);
-  //   correct_func(0, nx, 0, ny, 0, nz, c3 / dz, ceyhx);
-  //   correct_func(0, nx, 0, ny, 0, nz, c2, ceze);
-  //   correct_func(0, nx, 0, ny, 0, nz, -c3 / dy, cezhx);
-  //   correct_func(0, nx, 0, ny, 0, nz, c3 / dx, cezhy);
-  //   return;
-  // }
-
-
-  if (auto debye_medium =
-          dynamic_cast<LinearDispersiveMaterial*>(_material.get());
-      debye_medium != nullptr) {
+  if (auto m = dynamic_cast<LinearDispersiveMaterial*>(_material.get());
+      m != nullptr) {
     const auto dt = calculationParamPtr()->timeParam()->dt();
-    debye_medium->updateMethod()->init(dt);
+    m->updateMethod()->init(dt);
 
     for (Index i{0}; i < nx; ++i) {
       for (Index j{0}; j < ny; ++j) {
@@ -225,32 +152,16 @@ void Object::handleDispersion() {
           if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}))) {
             continue;
           }
-          debye_medium->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),
-                                                     calculationParamPtr());
+          m->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),
+                                          calculationParamPtr());
         }
       }
     }
 
-    // debye_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
-    //  emfPtr());
-
-    // const auto& a = debye_medium->coeffForADE()._a;
-    // const auto& b = debye_medium->coeffForADE()._b;
-    // const auto& dx = _grid_space->basedDx();
-    // const auto& dy = _grid_space->basedDy();
-    // const auto& dz = _grid_space->basedDz();
-
-    // correct_func(0, nx, 0, ny, 0, nz, a, cexe);
-    // correct_func(0, nx, 0, ny, 0, nz, -b / dz, cexhy);
-    // correct_func(0, nx, 0, ny, 0, nz, b / dy, cexhz);
-    // correct_func(0, nx, 0, ny, 0, nz, a, ceye);
-    // correct_func(0, nx, 0, ny, 0, nz, -b / dx, ceyhz);
-    // correct_func(0, nx, 0, ny, 0, nz, b / dz, ceyhx);
-    // correct_func(0, nx, 0, ny, 0, nz, a, ceze);
-    // correct_func(0, nx, 0, ny, 0, nz, -b / dy, cezhx);
-    // correct_func(0, nx, 0, ny, 0, nz, b / dx, cezhy);
     return;
   }
+
+  throw XFDTDObjectException{"handleDispersion(): Unsupported material"};
 }
 
 void Object::initTimeDependentVariable() {}

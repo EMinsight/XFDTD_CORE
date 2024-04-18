@@ -41,7 +41,7 @@ auto LinearDispersiveMaterialUpdator::init(
       continue;
     }
 
-    _update_methods.emplace_back(dispersive_material->updateMethod());
+    _update_methods.emplace_back(dispersive_material->updateMethod()->clone());
     _update_methods.back()->initUpdate(_grid_space.get(), _calculation_param,
                                        _emf, i, task());
     _map[i] = _update_methods.size() - 1;

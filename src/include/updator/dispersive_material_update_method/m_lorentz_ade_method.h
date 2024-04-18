@@ -30,9 +30,14 @@ class MLorentzADEMethod : public LinearDispersiveMaterialUpdateMethod {
 
  public:
   MLorentzADEMethod(Real epsilon_inf,
-                   std::shared_ptr<MLorentzEqDecision> m_lorentz_equation);
+                    std::shared_ptr<MLorentzEqDecision> m_lorentz_equation);
 
   ~MLorentzADEMethod() override = default;
+
+  auto clone() const
+      -> std::unique_ptr<LinearDispersiveMaterialUpdateMethod> override {
+    return std::make_unique<MLorentzADEMethod>(*this);
+  }
 
   auto init(Real dt) -> void override;
 
