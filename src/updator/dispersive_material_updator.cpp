@@ -140,7 +140,7 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
     }
   }
 
-  // updateEEdge();
+  updateEEdge();
 }
 
 auto LinearDispersiveMaterialUpdator::updateEEdge() -> void {
