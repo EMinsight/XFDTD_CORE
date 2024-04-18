@@ -94,6 +94,12 @@ MpiSupport::Block::Block(Block&& other) noexcept
 
 auto MpiSupport::Block::operator=(Block&& other) noexcept -> Block& {
   if (this != &other) {
+    if (_vec_type != MPI_DATATYPE_NULL) {
+      MPI_Type_free(&_vec_type);
+    }
+    if (_block != MPI_DATATYPE_NULL) {
+      MPI_Type_free(&_block);
+    }
     _profile = other._profile;
     _vec_type = other._vec_type;
     _vec_types = std::move(other._vec_types);

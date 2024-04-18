@@ -40,9 +40,9 @@ auto LinearDispersiveMaterial::make(
         emp);
   }
 
-  if constexpr (method == Method::DE) {
-    static_assert(false, "Invalid method");
-  }
+  // if constexpr (method == Method::DE) {
+  //   static_assert(false, "Invalid method");
+  // }
 
   return nullptr;
 }
