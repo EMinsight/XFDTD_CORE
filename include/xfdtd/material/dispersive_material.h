@@ -2,185 +2,157 @@
 #define _XFDTD_CORE_DISPERSIVE_MATERIAL_H_
 
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/common/type_define.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/material/material.h>
 
+#include <complex>
+#include <memory>
+#include <string_view>
+
 namespace xfdtd {
 
-namespace ade {
-struct LorentzCoeff {
-  Array1D<Real> _alpha;
-  Array1D<Real> _xi;
-  Array1D<Real> _gamma;
-
-  Real _c1;
-  Real _c2;
-  Real _c3;
+class XFDTDLinearDispersiveMaterialException : public XFDTDException {
+ public:
+  explicit XFDTDLinearDispersiveMaterialException(const std::string& message)
+      : XFDTDException(message) {}
 };
 
-struct DrudeCoeff {
-  Array1D<Real> _k;
-  Array1D<Real> _beta;
+class LinearDispersiveMaterialEquation;
 
-  Real _a;
-  Real _b;
-};
-
-struct DebyeCoeff {
-  Array1D<Real> _k;
-  Array1D<Real> _beta;
-
-  Real _a;
-  Real _b;
-};
-
-}  // namespace ade
+class LinearDispersiveMaterialUpdateMethod;
 
 class LinearDispersiveMaterial : public Material {
  public:
-  enum class Type { UNKNOW, DEBYE, DRUDE, LORENTZ };
+  enum class Method { ADE, DE };
 
-  explicit LinearDispersiveMaterial(
-      const std::string& name, Type type,
+ public:
+  static auto makeMLorentz(
+      std::string_view name, Real epsilon_inf, Array1D<Real> a_0,
+      Array1D<Real> a_1, Array1D<Real> b_0, Array1D<Real> b_1,
+      Array1D<Real> b_2,
+      ElectroMagneticProperty emp = ElectroMagneticProperty::air())
+      -> std::unique_ptr<LinearDispersiveMaterial>;
+
+ public:
+  LinearDispersiveMaterial(
+      std::string_view name, Real epsilon_inf,
+      std::shared_ptr<LinearDispersiveMaterialEquation> eq,
+      std::unique_ptr<LinearDispersiveMaterialUpdateMethod> update_method,
       ElectroMagneticProperty emp = ElectroMagneticProperty::air());
 
-  LinearDispersiveMaterial(const LinearDispersiveMaterial& other) = default;
-
   LinearDispersiveMaterial(LinearDispersiveMaterial&&) noexcept = default;
-
-  LinearDispersiveMaterial& operator=(const LinearDispersiveMaterial& other) =
-      default;
 
   LinearDispersiveMaterial& operator=(
       LinearDispersiveMaterial&& other) noexcept = default;
 
-  ~LinearDispersiveMaterial() override = default;
+  ~LinearDispersiveMaterial() override;
 
-  Type type() const;
+  auto numPoles() const -> Index;
+
+  auto epsilonInf() const { return _epsilon_inf; }
+
+  virtual std::complex<Real> susceptibility(Real freq, std::size_t p) const;
 
   virtual Array1D<std::complex<Real>> relativePermittivity(
-      const Array1D<Real>& freq) const = 0;
+      const Array1D<Real>& freq) const;
 
-  virtual void calculateCoeff(const GridSpace* grid_space,
-                              const CalculationParam* calculation_param,
-                              const EMF* emf) = 0;
+  auto updateMethod() const
+      -> std::shared_ptr<LinearDispersiveMaterialUpdateMethod> {
+    return _update_method;
+  };
 
-  virtual std::complex<Real> susceptibility(Real freq, std::size_t p) const = 0;
+ protected:
+  auto equationPtr() const { return _eq.get(); }
 
  private:
-  Type _type;
+  template <Method method>
+  static auto make(
+      std::string_view name, Real epsilon_inf,
+      const std::shared_ptr<LinearDispersiveMaterialEquation>& equation,
+      ElectroMagneticProperty emp = ElectroMagneticProperty::air())
+      -> std::unique_ptr<LinearDispersiveMaterial>;
+
+ private:
+  Real _epsilon_inf;
+  std::shared_ptr<LinearDispersiveMaterialEquation> _eq;
+  std::shared_ptr<LinearDispersiveMaterialUpdateMethod> _update_method;
 };
 
-class LorentzMedium : public LinearDispersiveMaterial {
+class MLorentzEqDecision;
+class MLorentzADEMethod;
+
+class MLorentzMaterial : public LinearDispersiveMaterial {
  public:
-  LorentzMedium(const std::string& name, Real eps_inf, Array1D<Real> eps_static,
-                Array1D<Real> omega_p, Array1D<Real> nv);
+  using LinearDispersiveMaterial::LinearDispersiveMaterial;
 
-  LorentzMedium(const LorentzMedium& other) = default;
+  ~MLorentzMaterial() override = default;
 
-  LorentzMedium(LorentzMedium&& other) noexcept = default;
-
-  LorentzMedium& operator=(const LorentzMedium& other) = default;
-
-  LorentzMedium& operator=(LorentzMedium&& other) noexcept = default;
-
-  ~LorentzMedium() override = default;
-
-  auto numberOfPoles() const { return _omega_p.size(); }
-
-  auto epsStatic() const { return _eps_static; }
-
-  auto epsInf() const { return _eps_inf; }
-
-  auto omegaP() const { return _omega_p; }
-
-  auto nv() const { return _nv; }
-
-  const auto& coeffForADE() const { return _coeff_for_ade; }
-
-  Array1D<std::complex<Real>> relativePermittivity(
-      const Array1D<Real>& freq) const override;
-
-  std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
-
-  void calculateCoeff(const GridSpace* grid_space,
-                      const CalculationParam* calculation_param,
-                      const EMF* emf) override;
-
- private:
-  Real _eps_inf;
-  Array1D<Real> _eps_static, _omega_p, _nv;
-  ade::LorentzCoeff _coeff_for_ade;
-
-  void calculateCoeffForADE(const CalculationParam* calculation_param);
+ protected:
+  auto mLorentzEquationPtr() const -> MLorentzEqDecision*;
 };
 
-class DrudeMedium : public LinearDispersiveMaterial {
- public:
-  DrudeMedium(const std::string& name, Real eps_inf, Array1D<Real> omega_p,
-              Array1D<Real> gamma);
+using LorentzMedium = MLorentzMaterial;
 
-  ~DrudeMedium() override = default;
-
-  auto numberOfPoles() const { return _omega_p.size(); }
-
-  auto epsInf() const { return _eps_inf; }
-
-  auto omegaP() const { return _omega_p; }
-
-  auto gamma() const { return _gamma; }
-
-  const auto& coeffForADE() const { return _coeff_for_ade; }
-
-  Array1D<std::complex<Real>> relativePermittivity(
-      const Array1D<Real>& freq) const override;
-
-  std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
-
-  void calculateCoeff(const GridSpace* grid_space,
-                      const CalculationParam* calculation_param,
-                      const EMF* emf) override;
-
- private:
-  Real _eps_inf;
-  Array1D<Real> _omega_p, _gamma;
-  ade::DrudeCoeff _coeff_for_ade;
-
-  void calculateCoeffForADE(const CalculationParam* calculation_param);
-};
+class DebyeEqDecision;
+class DebyeADEMethod;
 
 class DebyeMedium : public LinearDispersiveMaterial {
  public:
-  DebyeMedium(const std::string& name, Real eps_inf, Array1D<Real> eps_static,
-              Array1D<Real> tau);
+  static auto makeDebyeMedium(std::string_view name, Real epsilon_inf,
+                              Array1D<Real> epsilon_static, Array1D<Real> tau)
+      -> std::unique_ptr<DebyeMedium>;
+
+ public:
+  DebyeMedium(std::string_view name, Real epsilon_inf,
+              const std::shared_ptr<DebyeEqDecision>& eq,
+              std::unique_ptr<DebyeADEMethod> update_method,
+              ElectroMagneticProperty emp = ElectroMagneticProperty::air());
+
+  DebyeMedium(DebyeMedium&&) noexcept = default;
+
+  auto operator=(DebyeMedium&&) noexcept -> DebyeMedium& = default;
 
   ~DebyeMedium() override = default;
 
-  auto numberOfPoles() const { return _tau.size(); }
+  auto tau() const -> Array1D<Real>;
 
-  auto tau() const { return _tau; }
-
-  auto epsInf() const { return _eps_inf; }
-
-  const auto& epsStatic() const { return _eps_static; }
-
-  const auto& coeffForADE() const { return _coeff_for_ade; }
-
-  Array1D<std::complex<Real>> relativePermittivity(
-      const Array1D<Real>& freq) const override;
-
-  std::complex<Real> susceptibility(Real freq, std::size_t p) const override;
-
-  void calculateCoeff(const GridSpace* grid_space,
-                      const CalculationParam* calculation_param,
-                      const EMF* emf) override;
+  auto epsilonStatic() const -> Array1D<Real>;
 
  private:
-  Real _eps_inf;
-  Array1D<Real> _eps_static, _tau;
-  ade::DebyeCoeff _coeff_for_ade;
+  DebyeEqDecision* _debye_eq;
+};
+
+class DrudeEqDecision;
+class DrudeADEMethod;
+
+class DrudeMedium : public LinearDispersiveMaterial {
+ public:
+  static auto makeDrudeMedium(std::string_view name, Real eps_inf,
+                              Array1D<Real> omega_p, Array1D<Real> gamma)
+      -> std::unique_ptr<DrudeMedium>;
+
+ public:
+  DrudeMedium(std::string_view name, Real epsilon_inf,
+              const std::shared_ptr<DrudeEqDecision>& eq,
+              std::unique_ptr<DrudeADEMethod> update_method,
+              ElectroMagneticProperty emp = ElectroMagneticProperty::air());
+
+  DrudeMedium(DrudeMedium&&) noexcept = default;
+
+  auto operator=(DrudeMedium&&) noexcept -> DrudeMedium& = default;
+
+  ~DrudeMedium() override = default;
+
+  auto omegaP() const -> Array1D<Real>;
+
+  auto gamma() const -> Array1D<Real>;
+
+ private:
+  DrudeEqDecision* _drude_eq;
 };
 
 }  // namespace xfdtd

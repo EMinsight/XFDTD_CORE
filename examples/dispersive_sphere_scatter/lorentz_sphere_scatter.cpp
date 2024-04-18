@@ -1,6 +1,8 @@
 #include <memory>
 
 #include "dispersive_sphere_scatter.h"
+#include "xfdtd/common/type_define.h"
+#include "xfdtd/material/dispersive_material.h"
 
 int main(int argc, char* argv[]) {
   int id = 0;
@@ -16,11 +18,15 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  testCase(std::make_shared<xfdtd::LorentzMedium>(
-               xfdtd::LorentzMedium{"lorentz_medium",
-                                    2,
-                                    {5},
-                                    {2 * xfdtd::constant::PI * 2e9},
-                                    {xfdtd::constant::PI * 2e9}}),
+  auto omega_p = xfdtd::Array1D<xfdtd::Real>{2 * xfdtd::constant::PI * 2e9};
+  auto gamma = xfdtd::Array1D<xfdtd::Real>{xfdtd::constant::PI * 2e9};
+  auto epsilon_inf = 2;
+  auto epsilon_static = xfdtd::Array1D<xfdtd::Real>{5};
+  auto nv = xfdtd::Array1D<xfdtd::Real>{xfdtd::constant::PI * 2e9};
+
+  testCase(xfdtd::LinearDispersiveMaterial::makeMLorentz(
+               "lorentz_medium", epsilon_inf,
+               (epsilon_static - epsilon_inf) * omega_p * omega_p, {0},
+               omega_p * omega_p, 2 * nv, {1}),
            id);
 }

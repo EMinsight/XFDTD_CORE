@@ -529,7 +529,7 @@ std::unique_ptr<Updator> Simulation::makeUpdator(const IndexTask& task) {
 
   // Contains linear dispersive material
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
-    return std::make_unique<LinearDispersiveMaterialADEUpdator>(
+    return std::make_unique<LinearDispersiveMaterialUpdator>(
         _calculation_param->materialParam()->materialArray(), _grid_space,
         _calculation_param, _emf, task);
   }

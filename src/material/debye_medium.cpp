@@ -1,82 +1,45 @@
 #include <xfdtd/common/constant.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/material/dispersive_material.h>
 
-#include <complex>
+#include <memory>
 #include <utility>
+
+#include "material/dispersive_material_equation.h"
+#include "updator/dispersive_material_update_method/debye_ade_method.h"
 
 namespace xfdtd {
 
-static auto debyeSusceptibility(const auto& eps_inf, const auto& eps_static,
-                                const auto& tau, const auto& freq) {
-  auto&& eps_delta = eps_static - eps_inf;
-  auto&& omega = 2 * constant::PI * freq;
-  return (eps_delta) / (1.0 + constant::II * omega * tau);
+auto DebyeMedium::makeDebyeMedium(std::string_view name, Real epsilon_inf,
+                                  Array1D<Real> epsilon_static,
+                                  Array1D<Real> tau)
+
+    -> std::unique_ptr<DebyeMedium> {
+  auto debye_eq = std::make_shared<DebyeEqDecision>(
+      epsilon_inf, std::move(epsilon_static), std::move(tau));
+
+  auto update_method = std::make_unique<DebyeADEMethod>(epsilon_inf, debye_eq);
+  return std::make_unique<DebyeMedium>(name, epsilon_inf, debye_eq,
+                                       std::move(update_method));
 }
 
-DebyeMedium::DebyeMedium(const std::string& name, double eps_inf,
-                         Array1D<Real> eps_static, Array1D<Real> tau)
-    : LinearDispersiveMaterial{name, Type::DEBYE},
-      _eps_inf{eps_inf},
-      _eps_static{std::move(eps_static)},
-      _tau{std::move(tau)} {}
-
-Array1D<std::complex<double>> DebyeMedium::relativePermittivity(
-    const Array1D<Real>& freq) const {
-  return xt::make_lambda_xfunction(
-      [this](const auto& f) {
-        std::complex<double> sum{0, 0};
-        for (std::size_t p = 0; p < numberOfPoles(); ++p) {
-          sum += susceptibility(f, p);
-        }
-        return _eps_inf + sum;
-      },
-      freq);
-}
-
-std::complex<double> DebyeMedium::susceptibility(double freq,
-                                                 std::size_t p) const {
-  if (numberOfPoles() <= p) {
-    throw std::runtime_error(
-        "DebyeMedium::susceptibility: "
-        "p is out of range");
+DebyeMedium::DebyeMedium(std::string_view name, Real epsilon_inf,
+                         const std::shared_ptr<DebyeEqDecision>& eq,
+                         std::unique_ptr<DebyeADEMethod> update_method,
+                         ElectroMagneticProperty emp)
+    : LinearDispersiveMaterial{name, epsilon_inf, eq, std::move(update_method),
+                               emp},
+      _debye_eq{dynamic_cast<DebyeEqDecision*>(equationPtr())} {
+  if (_debye_eq == nullptr) {
+    throw XFDTDLinearDispersiveMaterialEquationException(
+        "DebyeMedium: invalid equation type");
   }
-  return debyeSusceptibility(_eps_inf, _eps_static(p), _tau(p), freq);
 }
 
-void DebyeMedium::calculateCoeff(const GridSpace* grid_space,
-                                 const CalculationParam* calculation_param,
-                                 const EMF* emf) {
-  const auto& dt = calculation_param->timeParam()->dt();
+auto DebyeMedium::tau() const -> Array1D<Real> { return _debye_eq->tau(); }
 
-  auto ade_k = [&dt](const auto& tau) {
-    return (2 * tau - dt) / (2 * tau + dt);
-  };
-
-  auto ade_beta = [&dt, eps_0 = constant::EPSILON_0](const auto& eps_inf,
-                                                     const auto& eps_static,
-                                                     const auto& tau) {
-    return (2 * eps_0 * (eps_static - eps_inf) * dt) / (2 * tau + dt);
-  };
-
-  auto ade_a = [](const auto& eps_inf, const auto& eps_0, const auto& sum_beta,
-                  const auto& dt, const auto& sigma) {
-    return (2 * eps_0 * eps_inf + sum_beta - dt * sigma) /
-           (2 * eps_0 * eps_inf + sum_beta + dt * sigma);
-  };
-
-  auto ade_b = [](const auto& eps_inf, const auto& eps_0, const auto& sum_beta,
-                  const auto& dt, const auto& sigma) {
-    return (2 * dt) / (2 * eps_0 * eps_inf + sum_beta + dt * sigma);
-  };
-
-  const auto& k = ade_k(_tau);
-  const auto& beta = ade_beta(_eps_inf, _eps_static, _tau);
-  const auto& sum_beta = std::accumulate(beta.begin(), beta.end(), 0.0);
-  const auto& sigma = emProperty().sigmaE();
-  const auto& a = ade_a(_eps_inf, constant::EPSILON_0, sum_beta, dt, sigma);
-  const auto& b = ade_b(_eps_inf, constant::EPSILON_0, sum_beta, dt, sigma);
-
-  _coeff_for_ade = ade::DebyeCoeff{k, beta, a, b};
+auto DebyeMedium::epsilonStatic() const -> Array1D<Real> {
+  return _debye_eq->epsilonStatic();
 }
 
 }  // namespace xfdtd

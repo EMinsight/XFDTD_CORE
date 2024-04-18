@@ -1,15 +1,20 @@
 #ifndef _XFDTD_CORE_UPDATOR_H_
 #define _XFDTD_CORE_UPDATOR_H_
 
+#include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
+#include <xfdtd/grid_space/grid_space.h>
 
 #include <memory>
 
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/grid_space/grid_space.h"
-
 namespace xfdtd {
+
+class XFDTDUpdatorException : public XFDTDException {
+ public:
+  explicit XFDTDUpdatorException(const std::string& message)
+      : XFDTDException(message) {}
+};
 
 class Updator {
  public:

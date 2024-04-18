@@ -86,7 +86,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       10, "movie_ex_yz", (sphere_scatter_dir / "movie_ex_yz").string());
 
   auto simulation =
-      xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}};
+      xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 1}};
   simulation.addObject(domain);
   simulation.addObject(sphere);
   simulation.addWaveformSource(tfsf);
@@ -105,7 +105,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
   simulation.addMonitor(movie_ex_xz);
   simulation.addMonitor(movie_ex_yz);
-  simulation.run(2200);
+  simulation.run(1000);
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,

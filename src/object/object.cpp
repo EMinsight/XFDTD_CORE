@@ -5,10 +5,12 @@
 #include <xfdtd/shape/shape.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <memory>
 #include <utility>
 
 #include "corrector/corrector.h"
+#include "updator/dispersive_material_update_method/dispersive_material_update_method.h"
 
 namespace xfdtd {
 
@@ -165,73 +167,88 @@ void Object::handleDispersion() {
   auto ny = _grid_space->sizeY();
   auto nz = _grid_space->sizeZ();
 
-  // Support for ADE-FDTD
-  if (auto lorentz_medium = dynamic_cast<LorentzMedium*>(_material.get());
-      lorentz_medium != nullptr) {
-    lorentz_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
-                                   emfPtr());
+  // if (auto m = dynamic_cast<LinearDispersiveMaterial*>(_material.get());
+  //     m != nullptr) {
+  //   const auto dt = calculationParamPtr()->timeParam()->dt();
+  //   m->updateMethod()->init(dt);
 
-    const auto& c2 = lorentz_medium->coeffForADE()._c2;
-    const auto& c3 = lorentz_medium->coeffForADE()._c3;
-    const auto& dx = _grid_space->basedDx();
-    const auto& dy = _grid_space->basedDy();
-    const auto& dz = _grid_space->basedDz();
+  //   for (Index i{0}; i < nx; ++i) {
+  //     for (Index j{0}; j < ny; ++j) {
+  //       for (Index k{0}; k < nz; ++k) {
+  //         if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k})))
+  //         {
+  //           continue;
+  //         }
+  //         m->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),
+  //                                         calculationParamPtr());
+  //       }
+  //     }
+  //   }
 
-    correct_func(0, nx, 0, ny, 0, nz, c2, cexe);
-    correct_func(0, nx, 0, ny, 0, nz, -c3 / dz, cexhy);
-    correct_func(0, nx, 0, ny, 0, nz, c3 / dy, cexhz);
-    correct_func(0, nx, 0, ny, 0, nz, c2, ceye);
-    correct_func(0, nx, 0, ny, 0, nz, -c3 / dx, ceyhz);
-    correct_func(0, nx, 0, ny, 0, nz, c3 / dz, ceyhx);
-    correct_func(0, nx, 0, ny, 0, nz, c2, ceze);
-    correct_func(0, nx, 0, ny, 0, nz, -c3 / dy, cezhx);
-    correct_func(0, nx, 0, ny, 0, nz, c3 / dx, cezhy);
-    return;
-  }
+  //   return;
+  // }
 
-  if (auto drude_medium = dynamic_cast<DrudeMedium*>(_material.get());
-      drude_medium != nullptr) {
-    drude_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
-                                 emfPtr());
+  // // Support for ADE-FDTD
+  // if (auto lorentz_medium = dynamic_cast<LorentzMedium*>(_material.get());
+  //     lorentz_medium != nullptr) {
+  //   lorentz_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
+  //                                  emfPtr());
 
-    const auto& a = drude_medium->coeffForADE()._a;
-    const auto& b = drude_medium->coeffForADE()._b;
-    const auto& dx = _grid_space->basedDx();
-    const auto& dy = _grid_space->basedDy();
-    const auto& dz = _grid_space->basedDz();
+  //   const auto& c2 = lorentz_medium->coeffForADE()._c2;
+  //   const auto& c3 = lorentz_medium->coeffForADE()._c3;
+  //   const auto& dx = _grid_space->basedDx();
+  //   const auto& dy = _grid_space->basedDy();
+  //   const auto& dz = _grid_space->basedDz();
 
-    correct_func(0, nx, 0, ny, 0, nz, a, cexe);
-    correct_func(0, nx, 0, ny, 0, nz, -b / dz, cexhy);
-    correct_func(0, nx, 0, ny, 0, nz, b / dy, cexhz);
-    correct_func(0, nx, 0, ny, 0, nz, a, ceye);
-    correct_func(0, nx, 0, ny, 0, nz, -b / dx, ceyhz);
-    correct_func(0, nx, 0, ny, 0, nz, b / dz, ceyhx);
-    correct_func(0, nx, 0, ny, 0, nz, a, ceze);
-    correct_func(0, nx, 0, ny, 0, nz, -b / dy, cezhx);
-    correct_func(0, nx, 0, ny, 0, nz, b / dx, cezhy);
-    return;
-  }
+  //   correct_func(0, nx, 0, ny, 0, nz, c2, cexe);
+  //   correct_func(0, nx, 0, ny, 0, nz, -c3 / dz, cexhy);
+  //   correct_func(0, nx, 0, ny, 0, nz, c3 / dy, cexhz);
+  //   correct_func(0, nx, 0, ny, 0, nz, c2, ceye);
+  //   correct_func(0, nx, 0, ny, 0, nz, -c3 / dx, ceyhz);
+  //   correct_func(0, nx, 0, ny, 0, nz, c3 / dz, ceyhx);
+  //   correct_func(0, nx, 0, ny, 0, nz, c2, ceze);
+  //   correct_func(0, nx, 0, ny, 0, nz, -c3 / dy, cezhx);
+  //   correct_func(0, nx, 0, ny, 0, nz, c3 / dx, cezhy);
+  //   return;
+  // }
 
-  if (auto debye_medium = dynamic_cast<DebyeMedium*>(_material.get());
+
+  if (auto debye_medium =
+          dynamic_cast<LinearDispersiveMaterial*>(_material.get());
       debye_medium != nullptr) {
-    debye_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
-                                 emfPtr());
+    const auto dt = calculationParamPtr()->timeParam()->dt();
+    debye_medium->updateMethod()->init(dt);
 
-    const auto& a = debye_medium->coeffForADE()._a;
-    const auto& b = debye_medium->coeffForADE()._b;
-    const auto& dx = _grid_space->basedDx();
-    const auto& dy = _grid_space->basedDy();
-    const auto& dz = _grid_space->basedDz();
+    for (Index i{0}; i < nx; ++i) {
+      for (Index j{0}; j < ny; ++j) {
+        for (Index k{0}; k < nz; ++k) {
+          if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}))) {
+            continue;
+          }
+          debye_medium->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),
+                                                     calculationParamPtr());
+        }
+      }
+    }
 
-    correct_func(0, nx, 0, ny, 0, nz, a, cexe);
-    correct_func(0, nx, 0, ny, 0, nz, -b / dz, cexhy);
-    correct_func(0, nx, 0, ny, 0, nz, b / dy, cexhz);
-    correct_func(0, nx, 0, ny, 0, nz, a, ceye);
-    correct_func(0, nx, 0, ny, 0, nz, -b / dx, ceyhz);
-    correct_func(0, nx, 0, ny, 0, nz, b / dz, ceyhx);
-    correct_func(0, nx, 0, ny, 0, nz, a, ceze);
-    correct_func(0, nx, 0, ny, 0, nz, -b / dy, cezhx);
-    correct_func(0, nx, 0, ny, 0, nz, b / dx, cezhy);
+    // debye_medium->calculateCoeff(gridSpacePtr(), calculationParamPtr(),
+    //  emfPtr());
+
+    // const auto& a = debye_medium->coeffForADE()._a;
+    // const auto& b = debye_medium->coeffForADE()._b;
+    // const auto& dx = _grid_space->basedDx();
+    // const auto& dy = _grid_space->basedDy();
+    // const auto& dz = _grid_space->basedDz();
+
+    // correct_func(0, nx, 0, ny, 0, nz, a, cexe);
+    // correct_func(0, nx, 0, ny, 0, nz, -b / dz, cexhy);
+    // correct_func(0, nx, 0, ny, 0, nz, b / dy, cexhz);
+    // correct_func(0, nx, 0, ny, 0, nz, a, ceye);
+    // correct_func(0, nx, 0, ny, 0, nz, -b / dx, ceyhz);
+    // correct_func(0, nx, 0, ny, 0, nz, b / dz, ceyhx);
+    // correct_func(0, nx, 0, ny, 0, nz, a, ceze);
+    // correct_func(0, nx, 0, ny, 0, nz, -b / dy, cezhx);
+    // correct_func(0, nx, 0, ny, 0, nz, b / dx, cezhy);
     return;
   }
 }
