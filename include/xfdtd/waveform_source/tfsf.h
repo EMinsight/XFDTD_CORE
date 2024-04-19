@@ -1,15 +1,14 @@
 #ifndef _XFDTD_CORE_TFSF_H_
 #define _XFDTD_CORE_TFSF_H_
 
+#include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/waveform_source/waveform_source.h>
 
 #include <cstddef>
 #include <memory>
-#include <xfdtd/common/type_define.h>
-
-#include "xfdtd/coordinate_system/coordinate_system.h"
-#include <xfdtd/common/index_task.h>
-#include "xfdtd/waveform_source/waveform_source.h"
 
 namespace xfdtd {
 
@@ -188,7 +187,7 @@ class TFSF : public WaveformSource {
   Real _ceihi;
   Real _chiei;
   Real _abc_coff_0, _abc_coff_1;
-  Real _a, _b;
+  Real _a{}, _b{};  // !!!!!!!!! Don't forget to initialize these variables
 
   void initTransform();
 

@@ -66,6 +66,12 @@ MpiConfig::MpiConfig(MpiConfig&& other) noexcept
 auto MpiConfig::operator=(MpiConfig&& other) noexcept -> MpiConfig& {
   if (this != &other) {
     ParallelizedConfig::operator=(std::move(other));
+    if (_cart_comm != MPI_COMM_NULL) {
+      MPI_Comm_free(&_cart_comm);
+    }
+    if (_comm != MPI_COMM_NULL) {
+      MPI_Comm_free(&_comm);
+    }
     _comm = other._comm;
     _cart_comm = other._cart_comm;
     _x_prev = other._x_prev;

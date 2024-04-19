@@ -1,12 +1,11 @@
+#include <xfdtd/common/constant.h>
 #include <xfdtd/common/index_task.h>
+#include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/waveform_source/tfsf.h>
 
 #include <cmath>
 #include <cstdlib>
 #include <xtensor-blas/xlinalg.hpp>
-
-#include "xfdtd/common/constant.h"
-#include "xfdtd/grid_space/grid_space.h"
 
 namespace xfdtd {
 
@@ -295,6 +294,8 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
   _hx_inc = xt::zeros<Real>({_auxiliary_size - 1});
   _hy_inc = xt::zeros<Real>({_auxiliary_size - 1});
   _hz_inc = xt::zeros<Real>({_auxiliary_size - 1});
+  _a = 0;
+  _b = 0;
 
   if (gridSpacePtr()->dimension() == GridSpace::Dimension::ONE) {
     _scaled_dl = gridSpacePtr()->basedDz() / _ratio_delta;
