@@ -1,17 +1,29 @@
 #include <xfdtd/parallel/mpi_config.h>
+#include <xfdtd/parallel/mpi_support.h>
 
+#include <ios>
 #include <sstream>
-
 namespace xfdtd {
+
+inline static auto checkMpiOp(int err) -> void {
+#if defined(XFDTD_CORE_WITH_MPI)
+  if (err != MPI_SUCCESS) {
+    char error_string[MPI_MAX_ERROR_STRING];
+    int length;
+    MPI_Error_string(err, error_string, &length);
+    throw ParallelizedConfigException(error_string);
+  }
+#endif
+}
 
 auto MpiConfig::makeXFDTDComm(int rank, int color, int num_x, int num_y,
                               int num_z, int root) -> MpiConfig {
   MpiConfig mpi_config;
 #if defined(XFDTD_CORE_WITH_MPI)
   int size = 1;
-  MPI_Comm_split(MPI_COMM_WORLD, color, rank, &mpi_config._comm);
-  MPI_Comm_rank(mpi_config._comm, &rank);
-  MPI_Comm_size(mpi_config._comm, &size);
+  checkMpiOp(MPI_Comm_split(MPI_COMM_WORLD, color, rank, &mpi_config._comm));
+  checkMpiOp(MPI_Comm_rank(mpi_config._comm, &rank));
+  checkMpiOp(MPI_Comm_size(mpi_config._comm, &size));
   mpi_config.setId(rank);
   mpi_config.setSize(size);
   mpi_config.setDims(num_x, num_y, num_z);
@@ -27,16 +39,16 @@ auto MpiConfig::makeSub(const MpiConfig& config, int color, int num_x,
 #if defined(XFDTD_CORE_WITH_MPI)
   int rank = 0;
   int size = 1;
-  MPI_Comm new_comm;
-  MPI_Comm_split(config.comm(), color, config.rank(), &new_comm);
+  MPI_Comm new_comm = MPI_COMM_NULL;
+  checkMpiOp(MPI_Comm_split(config.comm(), color, config.rank(), &new_comm));
   if (new_comm == MPI_COMM_NULL) {
     return new_config;
   }
 
   new_config._comm = new_comm;
 
-  MPI_Comm_rank(new_config._comm, &rank);
-  MPI_Comm_size(new_config._comm, &size);
+  checkMpiOp(MPI_Comm_rank(new_config._comm, &rank));
+  checkMpiOp(MPI_Comm_size(new_config._comm, &size));
   new_config.setId(rank);
   new_config.setSize(size);
   new_config.setDims(num_x, num_y, num_z);
@@ -67,10 +79,18 @@ auto MpiConfig::operator=(MpiConfig&& other) noexcept -> MpiConfig& {
   if (this != &other) {
     ParallelizedConfig::operator=(std::move(other));
     if (_cart_comm != MPI_COMM_NULL) {
-      MPI_Comm_free(&_cart_comm);
+      auto err = MPI_Comm_free(&_cart_comm);
+      if (err != MPI_SUCCESS) {
+        std::cerr << "MpiConfig::operator= MPI_Comm_free failed\n";
+        MpiSupport::instance().abort(err);
+      }
     }
     if (_comm != MPI_COMM_NULL) {
-      MPI_Comm_free(&_comm);
+      auto err = MPI_Comm_free(&_comm);
+      if (err != MPI_SUCCESS) {
+        std::cerr << "MpiConfig::operator= MPI_Comm_free failed\n";
+        MpiSupport::instance().abort(err);
+      }
     }
     _comm = other._comm;
     _cart_comm = other._cart_comm;
@@ -90,11 +110,19 @@ auto MpiConfig::operator=(MpiConfig&& other) noexcept -> MpiConfig& {
 
 MpiConfig::~MpiConfig() {
   if (_cart_comm != MPI_COMM_NULL) {
-    MPI_Comm_free(&_cart_comm);
+    auto err = MPI_Comm_free(&_cart_comm);
+    if (err != MPI_SUCCESS) {
+      std::cerr << "MpiConfig::~MpiConfig MPI_Comm_free failed\n";
+      MpiSupport::instance().abort(err);
+    }
   }
 
   if (_comm != MPI_COMM_NULL) {
-    MPI_Comm_free(&_comm);
+    auto err = MPI_Comm_free(&_comm);
+    if (err != MPI_SUCCESS) {
+      std::cerr << "MpiConfig::~MpiConfig MPI_Comm_free failed\n";
+      MpiSupport::instance().abort(err);
+    }
   }
 }
 #else
@@ -109,8 +137,11 @@ auto MpiConfig::createCoord() -> void {
     throw ParallelizedConfigException("Invalid MPI communicator");
   }
 
-  MPI_Cart_create(_comm, ParallelizedConfig::NUM_DIMS, dims(), _periods, 1,
-                  &_cart_comm);
+  auto err = MPI_Cart_create(_comm, ParallelizedConfig::NUM_DIMS, dims(),
+                             _periods, 1, &_cart_comm);
+  if (err != MPI_SUCCESS) {
+    throw ParallelizedConfigException("MPI_Cart_create failed");
+  }
   MPI_Cart_shift(_cart_comm, ParallelizedConfig::DIM_X_INDEX, 1, &_x_prev,
                  &_x_next);
   MPI_Cart_shift(_cart_comm, ParallelizedConfig::DIM_Y_INDEX, 1, &_y_prev,

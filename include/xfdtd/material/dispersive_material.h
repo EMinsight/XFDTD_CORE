@@ -27,15 +27,7 @@ class LinearDispersiveMaterialUpdateMethod;
 
 class LinearDispersiveMaterial : public Material {
  public:
-  enum class Method { ADE, DE };
-
- public:
-  static auto makeMLorentz(
-      std::string_view name, Real epsilon_inf, Array1D<Real> a_0,
-      Array1D<Real> a_1, Array1D<Real> b_0, Array1D<Real> b_1,
-      Array1D<Real> b_2,
-      ElectroMagneticProperty emp = ElectroMagneticProperty::air())
-      -> std::unique_ptr<LinearDispersiveMaterial>;
+  enum class Method { ADE };
 
  public:
   LinearDispersiveMaterial(
@@ -44,7 +36,12 @@ class LinearDispersiveMaterial : public Material {
       std::unique_ptr<LinearDispersiveMaterialUpdateMethod> update_method,
       ElectroMagneticProperty emp = ElectroMagneticProperty::air());
 
+  LinearDispersiveMaterial(const LinearDispersiveMaterial&) = delete;
+
   LinearDispersiveMaterial(LinearDispersiveMaterial&&) noexcept = default;
+
+  auto operator=(const LinearDispersiveMaterial&)
+      -> LinearDispersiveMaterial& = delete;
 
   LinearDispersiveMaterial& operator=(
       LinearDispersiveMaterial&& other) noexcept = default;
@@ -69,14 +66,6 @@ class LinearDispersiveMaterial : public Material {
   auto equationPtr() const { return _eq.get(); }
 
  private:
-  template <Method method>
-  static auto make(
-      std::string_view name, Real epsilon_inf,
-      const std::shared_ptr<LinearDispersiveMaterialEquation>& equation,
-      ElectroMagneticProperty emp = ElectroMagneticProperty::air())
-      -> std::unique_ptr<LinearDispersiveMaterial>;
-
- private:
   Real _epsilon_inf;
   std::shared_ptr<LinearDispersiveMaterialEquation> _eq;
   std::shared_ptr<LinearDispersiveMaterialUpdateMethod> _update_method;
@@ -86,6 +75,14 @@ class MLorentzEqDecision;
 class MLorentzADEMethod;
 
 class MLorentzMaterial : public LinearDispersiveMaterial {
+ public:
+  static auto makeMLorentz(
+      std::string_view name, Real epsilon_inf, Array1D<Real> a_0,
+      Array1D<Real> a_1, Array1D<Real> b_0, Array1D<Real> b_1,
+      Array1D<Real> b_2,
+      ElectroMagneticProperty emp = ElectroMagneticProperty::air())
+      -> std::unique_ptr<MLorentzMaterial>;
+
  public:
   using LinearDispersiveMaterial::LinearDispersiveMaterial;
 

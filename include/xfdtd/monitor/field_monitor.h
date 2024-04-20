@@ -46,6 +46,16 @@ class FieldMonitor : public Monitor {
 
   std::vector<MpiSupport::Block::Profile> _profiles;
   std::vector<MpiSupport::Block> _blocks_mpi;
+
+  /*
+  !!!IMPORTANT!!!: (figured out the reason)
+  Temporary.
+  It is not used in the code. But do not remove it.
+  I try to make a xfdtd_core library that can be used in other projects.
+  It will work while enabling MPI. I try to remove it, but I get an error when
+  MPI is enabled.
+  */
+  const void* _no_meaningful_data{nullptr};
 };
 
 }  // namespace xfdtd

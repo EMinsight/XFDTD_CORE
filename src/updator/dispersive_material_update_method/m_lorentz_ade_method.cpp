@@ -4,6 +4,7 @@
 
 #include "material/dispersive_material_equation.h"
 #include "updator/update_scheme.h"
+#include "updator/updator.h"
 
 namespace xfdtd {
 
@@ -53,8 +54,7 @@ MLorentzADEMethod::MLorentzADEMethod(
     : LinearDispersiveMaterialUpdateMethod{epsilon_inf},
       _m_lorentz_equation{std::move(m_lorentz_equation)} {
   if (_m_lorentz_equation == nullptr) {
-    throw XFDTDLinearDispersiveMaterialEquationException(
-        "MLorentzEqDecision is nullptr.");
+    throw XFDTDUpdatorException("MLorentzEqDecision is nullptr.");
   }
 }
 
@@ -138,8 +138,7 @@ auto MLorentzADEMethod::initUpdate(
     std::shared_ptr<const CalculationParam> calculation_param,
     std::shared_ptr<EMF> emf, Index m_index, const IndexTask& task) -> void {
   if (!task.valid()) {
-    throw XFDTDLinearDispersiveMaterialEquationException(
-        "IndexTask is not valid.");
+    throw XFDTDUpdatorException("IndexTask is not valid.");
   }
 
   checkStabilityCondition(calculation_param->timeParam()->dt());
@@ -178,9 +177,7 @@ auto MLorentzADEMethod::initUpdate(
   auto linear_dispersive_material_prt =
       dynamic_cast<const LinearDispersiveMaterial*>(m_ptr);
   if (linear_dispersive_material_prt == nullptr) {
-    // TODO(franzero):
-    throw XFDTDLinearDispersiveMaterialEquationException(
-        "Material is not LinearDispersiveMaterial.");
+    throw XFDTDUpdatorException("Material is not LinearDispersiveMaterial.");
   }
 
   auto num_p = linear_dispersive_material_prt->numPoles();

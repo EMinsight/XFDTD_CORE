@@ -40,3 +40,6 @@ cmake-build-*
 .cache
 
 tmp/
+
+# Python cache
+__pycache__/

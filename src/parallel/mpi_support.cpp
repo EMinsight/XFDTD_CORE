@@ -15,6 +15,8 @@
 
 namespace xfdtd {
 
+MpiSupport::~MpiSupport() { waitAll(); }
+
 auto MpiSupport::setMpiParallelDim(int nx, int ny, int nz) -> void {
   static bool is_set = false;
   if (is_set) {
@@ -124,69 +126,75 @@ auto MpiSupport::zNext() const -> int { return _config.zNext(); }
 auto MpiSupport::zPrev() const -> int { return _config.zPrev(); }
 
 auto MpiSupport::sendRecvHyXHead(Array3D<Real>& hy) -> void {
-  iSend(config(), hy.data(), 1, _hy_xn_s_block, xPrev(), exchange_hy_x_sr_tag);
-  iRecv(config(), hy.data(), 1, _hy_xn_r_block, xPrev(), exchange_hy_x_rs_tag);
+  iSend(config(), hy.data(), 1, _hy_xn_s_block, xPrev(), EXCHANGE_HY_X_SR_TAG);
+  iRecv(config(), hy.data(), 1, _hy_xn_r_block, xPrev(), EXCHANGE_HY_X_RS_TAG);
 }
 
 auto MpiSupport::recvSendHyXTail(Array3D<Real>& hy) -> void {
-  iRecv(config(), hy.data(), 1, _hy_xp_r_block, xNext(), exchange_hy_x_sr_tag);
-  iSend(config(), hy.data(), 1, _hy_xp_s_block, xNext(), exchange_hy_x_rs_tag);
+  iRecv(config(), hy.data(), 1, _hy_xp_r_block, xNext(), EXCHANGE_HY_X_SR_TAG);
+  iSend(config(), hy.data(), 1, _hy_xp_s_block, xNext(), EXCHANGE_HY_X_RS_TAG);
 }
 
 auto MpiSupport::sendRecvHzXHead(Array3D<Real>& hz) -> void {
-  iSend(config(), hz.data(), 1, _hz_xn_s_block, xPrev(), exchange_hz_x_sr_tag);
-  iRecv(config(), hz.data(), 1, _hz_xn_r_block, xPrev(), exchange_hz_x_rs_tag);
+  iSend(config(), hz.data(), 1, _hz_xn_s_block, xPrev(), EXCHANGE_HZ_X_SR_TAG);
+  iRecv(config(), hz.data(), 1, _hz_xn_r_block, xPrev(), EXCHANGE_HZ_X_RS_TAG);
 }
 
 auto MpiSupport::recvSendHzXTail(Array3D<Real>& hz) -> void {
-  iRecv(config(), hz.data(), 1, _hz_xp_r_block, xNext(), exchange_hz_x_sr_tag);
-  iSend(config(), hz.data(), 1, _hz_xp_s_block, xNext(), exchange_hz_x_rs_tag);
+  iRecv(config(), hz.data(), 1, _hz_xp_r_block, xNext(), EXCHANGE_HZ_X_SR_TAG);
+  iSend(config(), hz.data(), 1, _hz_xp_s_block, xNext(), EXCHANGE_HZ_X_RS_TAG);
 }
 
 auto MpiSupport::sendRecvHzYHead(Array3D<Real>& hz) -> void {
-  iSend(config(), hz.data(), 1, _hz_yn_s_block, yPrev(), exchange_hz_y_sr_tag);
-  iRecv(config(), hz.data(), 1, _hz_yn_r_block, yPrev(), exchange_hz_y_rs_tag);
+  iSend(config(), hz.data(), 1, _hz_yn_s_block, yPrev(), EXCHANGE_HZ_Y_SR_TAG);
+  iRecv(config(), hz.data(), 1, _hz_yn_r_block, yPrev(), EXCHANGE_HZ_Y_RS_TAG);
 }
 
 auto MpiSupport::recvSendHzYTail(Array3D<Real>& hz) -> void {
-  iRecv(config(), hz.data(), 1, _hz_yp_r_block, yNext(), exchange_hz_y_sr_tag);
-  iSend(config(), hz.data(), 1, _hz_yp_s_block, yNext(), exchange_hz_y_rs_tag);
+  iRecv(config(), hz.data(), 1, _hz_yp_r_block, yNext(), EXCHANGE_HZ_Y_SR_TAG);
+  iSend(config(), hz.data(), 1, _hz_yp_s_block, yNext(), EXCHANGE_HZ_Y_RS_TAG);
 }
 
 auto MpiSupport::sendRecvHxYHead(Array3D<Real>& hx) -> void {
-  iSend(config(), hx.data(), 1, _hx_yn_s_block, yPrev(), exchange_hx_y_sr_tag);
-  iRecv(config(), hx.data(), 1, _hx_yn_r_block, yPrev(), exchange_hx_y_rs_tag);
+  iSend(config(), hx.data(), 1, _hx_yn_s_block, yPrev(), EXCHANGE_HX_Y_SR_TAG);
+  iRecv(config(), hx.data(), 1, _hx_yn_r_block, yPrev(), EXCHANGE_HX_Y_RS_TAG);
 }
 
 auto MpiSupport::recvSendHxYTail(Array3D<Real>& hx) -> void {
-  iRecv(config(), hx.data(), 1, _hx_yp_r_block, yNext(), exchange_hx_y_sr_tag);
-  iSend(config(), hx.data(), 1, _hx_yp_s_block, yNext(), exchange_hx_y_rs_tag);
+  iRecv(config(), hx.data(), 1, _hx_yp_r_block, yNext(), EXCHANGE_HX_Y_SR_TAG);
+  iSend(config(), hx.data(), 1, _hx_yp_s_block, yNext(), EXCHANGE_HX_Y_RS_TAG);
 }
 
 auto MpiSupport::sendRecvHxZHead(Array3D<Real>& hx) -> void {
-  iSend(config(), hx.data(), 1, _hx_zn_s_block, zPrev(), exchange_hx_z_sr_tag);
-  iRecv(config(), hx.data(), 1, _hx_zn_r_block, zPrev(), exchange_hx_z_rs_tag);
+  iSend(config(), hx.data(), 1, _hx_zn_s_block, zPrev(), EXCHANGE_HX_Z_SR_TAG);
+  iRecv(config(), hx.data(), 1, _hx_zn_r_block, zPrev(), EXCHANGE_HX_Z_RS_TAG);
 }
 
 auto MpiSupport::recvSendHxZTail(Array3D<Real>& hx) -> void {
-  iRecv(config(), hx.data(), 1, _hx_zp_r_block, zNext(), exchange_hx_z_sr_tag);
-  iSend(config(), hx.data(), 1, _hx_zp_s_block, zNext(), exchange_hx_z_rs_tag);
+  iRecv(config(), hx.data(), 1, _hx_zp_r_block, zNext(), EXCHANGE_HX_Z_SR_TAG);
+  iSend(config(), hx.data(), 1, _hx_zp_s_block, zNext(), EXCHANGE_HX_Z_RS_TAG);
 }
 
 auto MpiSupport::sendRecvHyZHead(Array3D<Real>& hy) -> void {
-  iSend(config(), hy.data(), 1, _hy_zn_s_block, zPrev(), exchange_hy_z_sr_tag);
-  iRecv(config(), hy.data(), 1, _hy_zn_r_block, zPrev(), exchange_hy_z_rs_tag);
+  iSend(config(), hy.data(), 1, _hy_zn_s_block, zPrev(), EXCHANGE_HY_Z_SR_TAG);
+  iRecv(config(), hy.data(), 1, _hy_zn_r_block, zPrev(), EXCHANGE_HY_Z_RS_TAG);
 }
 
 auto MpiSupport::recvSendHyZTail(Array3D<Real>& hy) -> void {
-  iRecv(config(), hy.data(), 1, _hy_zp_r_block, zNext(), exchange_hy_z_sr_tag);
-  iSend(config(), hy.data(), 1, _hy_zp_s_block, zNext(), exchange_hy_z_rs_tag);
+  iRecv(config(), hy.data(), 1, _hy_zp_r_block, zNext(), EXCHANGE_HY_Z_SR_TAG);
+  iSend(config(), hy.data(), 1, _hy_zp_s_block, zNext(), EXCHANGE_HY_Z_RS_TAG);
 }
 
 auto MpiSupport::waitAll() -> void {
 #if defined(XFDTD_CORE_WITH_MPI)
   std::vector<MPI_Status> statuses(_requests.size());
   MPI_Waitall(_requests.size(), _requests.data(), statuses.data());
+  for (const auto& s : statuses) {
+    if (s.MPI_ERROR != MPI_SUCCESS) {
+      std::cerr << "MPI_Waitall failed\n";
+      abort(s.MPI_ERROR);
+    }
+  }
   _requests.clear();
 #endif
 }
@@ -230,7 +238,11 @@ auto MpiSupport::mpiInit(int argc, char** argv) -> void {
 
 MpiSupport::MpiGuard::~MpiGuard() {
 #if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Finalize();
+  auto err = MPI_Finalize();
+  if (err != MPI_SUCCESS) {
+    std::cerr << "MPI_Finalize failed\n";
+    MpiSupport::instance().abort(err);
+  }
 #endif
 }
 

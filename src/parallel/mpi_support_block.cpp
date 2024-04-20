@@ -61,18 +61,36 @@ auto MpiSupport::Block::make(Profile profile) -> Block {
   auto nz = profile._nz;
   auto stride_vec = profile._stride_vec;
   auto stride_elem = profile._stride_elem;
-  MPI_Type_vector(ny, nz, stride_elem, mpi_type::XFDTD_MPI_REAL_TYPE,
-                  &block._vec_type);
-  MPI_Type_commit(&block._vec_type);
+  auto err = MPI_Type_vector(ny, nz, stride_elem, mpi_type::XFDTD_MPI_REAL_TYPE,
+                             &block._vec_type);
+  if (err != MPI_SUCCESS) {
+    throw XFDTDMpiSupportException(
+        "MpiSupport::Block::make MPI_Type_vector failed");
+  }
+  err = MPI_Type_commit(&block._vec_type);
+  if (err != MPI_SUCCESS) {
+    throw XFDTDMpiSupportException(
+        "MpiSupport::Block::make MPI_Type_commit failed");
+  }
+
   block._vec_types = std::vector<MPI_Datatype>(nx, block._vec_type);
   block._block_lens = std::vector<int>(nx, 1);
   block._offsets = std::vector<MPI_Aint>(nx, 0);
   for (int i = 0; i < nx; ++i) {
     block._offsets[i] = sizeof(Real) * i * stride_vec;
   }
-  MPI_Type_create_struct(nx, block._block_lens.data(), block._offsets.data(),
-                         block._vec_types.data(), &block._block);
-  MPI_Type_commit(&block._block);
+  err = MPI_Type_create_struct(nx, block._block_lens.data(),
+                               block._offsets.data(), block._vec_types.data(),
+                               &block._block);
+  if (err != MPI_SUCCESS) {
+    throw XFDTDMpiSupportException(
+        "MpiSupport::Block::make MPI_Type_create_struct failed");
+  }
+  err = MPI_Type_commit(&block._block);
+  if (err != MPI_SUCCESS) {
+    throw XFDTDMpiSupportException(
+        "MpiSupport::Block::make MPI_Type_commit failed");
+  }
 #endif
 
   return block;
@@ -117,11 +135,19 @@ auto MpiSupport::Block::operator=(Block&& other) noexcept -> Block& {
 
 MpiSupport::Block::~Block() {
   if (_vec_type != MPI_DATATYPE_NULL) {
-    MPI_Type_free(&_vec_type);
+    auto err = MPI_Type_free(&_vec_type);
+    if (err != MPI_SUCCESS) {
+      std::cerr << "MpiSupport::Block::~Block MPI_Type_free failed\n";
+      MpiSupport::instance().abort(err);
+    }
     _vec_type = MPI_DATATYPE_NULL;
   }
   if (_block != MPI_DATATYPE_NULL) {
-    MPI_Type_free(&_block);
+    auto err = MPI_Type_free(&_block);
+    if (err != MPI_SUCCESS) {
+      std::cerr << "MpiSupport::Block::~Block MPI_Type_free failed\n";
+      MpiSupport::instance().abort(err);
+    }
     _block = MPI_DATATYPE_NULL;
   }
 }

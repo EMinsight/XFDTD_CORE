@@ -31,6 +31,7 @@ option(XFDTD_CORE_WITH_MPI "Enable MPI support" OFF)
 option(XFDTD_CORE_SINGLE_PRECISION "Enable single precision" OFF)
 if(XFDTD_CORE_SINGLE_PRECISION)
   message(STATUS "XFDTD Core Single precision is enabled")
+  add_definitions(-DXFDTD_CORE_SINGLE_PRECISION)
 endif()
 
 # ##############################################################################
@@ -63,9 +64,7 @@ if(XFDTD_CORE_WITH_MPI)
   message(STATUS "XFDTD Core MPI support enabled")
   find_package(MPI REQUIRED)
   add_definitions(-DXFDTD_CORE_WITH_MPI)
-  include_directories(${MPI_CXX_INCLUDE_PATH})
-  set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB}
-                                 ${MPI_CXX_LIBRARIES})
+  set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB} MPI::MPI_CXX)
 endif()
 
 enable_testing()
@@ -77,7 +76,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(src)
 add_subdirectory(test)
-add_subdirectory(examples)
 
 install(
   EXPORT xfdtd_core-targets

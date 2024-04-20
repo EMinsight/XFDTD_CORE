@@ -92,7 +92,12 @@ class MpiSupport {
     ~TypeGuard() {
 #if defined(XFDTD_CORE_WITH_MPI)
       if (_type != MPI_DATATYPE_NULL) {
-        MPI_Type_free(&_type);
+        auto err = MPI_Type_free(&_type);
+        if (err != MPI_SUCCESS) {
+          std::cerr
+              << "MpiSupport::TypeGuard::~TypeGuard MPI_Type_free failed\n";
+          MpiSupport::instance().abort(err);
+        }
       }
 #endif
     }
@@ -112,20 +117,20 @@ class MpiSupport {
   inline static constexpr int ANY_TAG = -1;
 #endif
 
-  inline static int exchange_hy_x_sr_tag = 0;
-  inline static int exchange_hy_x_rs_tag = 1;
-  inline static int exchange_hz_x_sr_tag = 2;
-  inline static int exchange_hz_x_rs_tag = 3;
+  inline static constexpr int EXCHANGE_HY_X_SR_TAG = 0;
+  inline static constexpr int EXCHANGE_HY_X_RS_TAG = 1;
+  inline static constexpr int EXCHANGE_HZ_X_SR_TAG = 2;
+  inline static constexpr int EXCHANGE_HZ_X_RS_TAG = 3;
 
-  inline static int exchange_hz_y_sr_tag = 4;
-  inline static int exchange_hz_y_rs_tag = 5;
-  inline static int exchange_hx_y_sr_tag = 6;
-  inline static int exchange_hx_y_rs_tag = 7;
+  inline static constexpr int EXCHANGE_HZ_Y_SR_TAG = 4;
+  inline static constexpr int EXCHANGE_HZ_Y_RS_TAG = 5;
+  inline static constexpr int EXCHANGE_HX_Y_SR_TAG = 6;
+  inline static constexpr int EXCHANGE_HX_Y_RS_TAG = 7;
 
-  inline static int exchange_hx_z_sr_tag = 8;
-  inline static int exchange_hx_z_rs_tag = 9;
-  inline static int exchange_hy_z_sr_tag = 10;
-  inline static int exchange_hy_z_rs_tag = 11;
+  inline static constexpr int EXCHANGE_HX_Z_SR_TAG = 8;
+  inline static constexpr int EXCHANGE_HX_Z_RS_TAG = 9;
+  inline static constexpr int EXCHANGE_HY_Z_SR_TAG = 10;
+  inline static constexpr int EXCHANGE_HY_Z_RS_TAG = 11;
 
   static auto instance(int argc = 0, char** argv = nullptr) -> MpiSupport& {
     static MpiSupport instance(argc, argv);
@@ -140,6 +145,8 @@ class MpiSupport {
   auto operator=(MpiSupport const&) -> MpiSupport& = delete;
 
   auto operator=(MpiSupport&&) -> MpiSupport& = delete;
+
+  ~MpiSupport();
 
   auto serializedPrint(std::string_view message) -> void;
 
