@@ -1,21 +1,32 @@
-file(GLOB_RECURSE XFDTD_EXAMPLE_SOURCES "${PROJECT_SOURCE_DIR}/examples/*/*.cpp" "${PROJECT_SOURCE_DIR}/examples/*.cpp")
+cmake_minimum_required(VERSION 3.20)
 
-add_custom_target(build-examples COMMAND ${CMAKE_COMMAND} -E echo "Build all examples")
+project(XFDTD_CORE_EXAMPLES VERSION 0.0.0 LANGUAGES CXX)
 
-set(XFDTD_EXAMPLES_LIST "")
+set(XFDTD_CORE_EXAMPLES_MAIN_PROJECT OFF)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    set(XFDTD_CORE_EXAMPLES_MAIN_PROJECT ON)
+endif()
 
-# make example xxx
-foreach(xfdtd_example_source ${XFDTD_EXAMPLE_SOURCES})
-    get_filename_component(xfdtd_example_file_name ${xfdtd_example_source} NAME)
-    string(REPLACE ".cpp" "" xfdtd_example_name ${xfdtd_example_file_name})
-    add_executable(${xfdtd_example_name} EXCLUDE_FROM_ALL ${xfdtd_example_source})
-    set(XFDTD_EXAMPLES_LIST ${XFDTD_EXAMPLES_LIST} ${xfdtd_example_name})
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+        message(FATAL_ERROR "In-source builds are not allowed")
+endif()
 
-    target_link_libraries(${xfdtd_example_name} xfdtd)
-    # Set properties for the target
-    set_target_properties(${xfdtd_example_name} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
-        COMMAND ${xfdtd_example_name} )
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-    add_dependencies(build-examples ${xfdtd_example_name})
-endforeach()
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+find_package(xfdtd_core REQUIRED)
+
+set(XFDTD_EXAMPLE_LIBRARIES xfdtd::xfdtd_core)
+
+# check for MPI
+if(XFDTD_CORE_WITH_MPI)
+  message(STATUS "XFDTD Core MPI support enabled")
+  find_package(MPI REQUIRED)
+  set(XFDTD_EXAMPLE_LIBRARIES ${XFDTD_EXAMPLE_LIBRARIES} MPI::MPI_CXX)
+endif()
+
+add_subdirectory(src)

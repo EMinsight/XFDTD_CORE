@@ -6,7 +6,7 @@
 
 namespace xfdtd {
 
-Sphere::Sphere(Vector center, double radius)
+Sphere::Sphere(Vector center, Real radius)
     : _center{std::move(center)}, _radius{radius} {
   if (_radius < 0) {
     throw XFDTDShapeInvalidArgumentException{"Sphere radius must be positive"};
@@ -22,7 +22,7 @@ std::string Sphere::toString() const {
          std::to_string(_radius) + ")";
 }
 
-bool Sphere::isInside(double x, double y, double z) const {
+bool Sphere::isInside(Real x, Real y, Real z) const {
   return isInside(Vector{x, y, z});
 }
 
@@ -38,12 +38,12 @@ std::unique_ptr<Cube> Sphere::wrappedCube() const {
 
 Vector Sphere::center() const { return _center; }
 
-double Sphere::radius() const { return _radius; }
+Real Sphere::radius() const { return _radius; }
 
-double Sphere::centerX() const { return _center.x(); }
+Real Sphere::centerX() const { return _center.x(); }
 
-double Sphere::centerY() const { return _center.y(); }
+Real Sphere::centerY() const { return _center.y(); }
 
-double Sphere::centerZ() const { return _center.z(); }
+Real Sphere::centerZ() const { return _center.z(); }
 
 }  // namespace xfdtd

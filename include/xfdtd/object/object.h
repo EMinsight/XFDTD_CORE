@@ -6,7 +6,8 @@
 #include <cstddef>
 #include <memory>
 
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/common/index_task.h>
 #include "xfdtd/calculation_param/calculation_param.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/material/material.h"
@@ -54,7 +55,7 @@ class Object {
   virtual void correctH();
 
   virtual std::unique_ptr<Corrector> generateCorrector(
-      const Divider::Task<std::size_t>& task);
+      const Task<std::size_t>& task);
 
   std::string name() const;
 
@@ -91,6 +92,8 @@ class Object {
 
   GridBox* gridBoxPtr() const;
 
+  GridBox globalGridBox() const;
+
  private:
   std::string _name;
   std::unique_ptr<Shape> _shape;
@@ -101,6 +104,7 @@ class Object {
   std::shared_ptr<EMF> _emf;
 
   std::unique_ptr<GridBox> _grid_box;
+  GridBox _global_grid_box;
 };
 
 inline const auto& Object::material() const { return _material; }

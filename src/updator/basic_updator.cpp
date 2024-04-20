@@ -1,28 +1,58 @@
 #include "updator/basic_updator.h"
 
+#include <memory>
 #include <utility>
 #include <xtensor.hpp>
 
 #include "updator/update_scheme.h"
-#include <xfdtd/divider/divider.h>
 #include "updator/updator.h"
+#include "xfdtd/calculation_param/calculation_param.h"
+#include "xfdtd/common/type_define.h"
+#include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
+#include "xfdtd/util/fdtd_basic.h"
+#include "xfdtd/util/transform.h"
 
 namespace xfdtd {
 
 BasicUpdator::BasicUpdator(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    std::shared_ptr<EMF> emf, IndexTask task)
     : Updator(std::move(grid_space), std::move(calculation_param),
               std::move(emf), task) {}
 
+template <EMF::Attribute attribute_c, Axis::XYZ xyz_c>
+static auto updateH(Index is, Index ie, Index js, Index je, Index ks, Index ke,
+                    const FDTDUpdateCoefficient& fc, EMF& emf) {
+  constexpr auto attribute_a =
+      transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>();
+  constexpr auto attribute_b =
+      transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>();
+
+  auto& field_c =
+      emf.field(transform::attributeXYZToField<attribute_c, xyz_c>());
+  const auto& field_a = emf.field(
+      transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>());
+  const auto& field_b = emf.field(
+      transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>());
+
+  const auto& c_c = fc.coeff<attribute_c, xyz_c>();
+  const auto& c_a = fc.coeffDualA<attribute_c, xyz_c>();
+  const auto& c_b = fc.coeffDualB<attribute_c, xyz_c>();
+}
+
 void BasicUpdator::updateH() {
-  const auto is = task()._x_range[0];
-  const auto ie = task()._x_range[1];
-  const auto js = task()._y_range[0];
-  const auto je = task()._y_range[1];
-  const auto ks = task()._z_range[0];
-  const auto ke = task()._z_range[1];
+  const auto task = this->task();
+  const auto x_range = task.xRange();
+  const auto y_range = task.yRange();
+  const auto z_range = task.zRange();
+  const auto is = basic::GridStructure::hFDTDUpdateXStart(x_range.start());
+  const auto ie = basic::GridStructure::hFDTDUpdateXEnd(x_range.end());
+  const auto js = basic::GridStructure::hFDTDUpdateYStart(y_range.start());
+  const auto je = basic::GridStructure::hFDTDUpdateYEnd(y_range.end());
+  const auto ks = basic::GridStructure::hFDTDUpdateZStart(z_range.start());
+  const auto ke = basic::GridStructure::hFDTDUpdateZEnd(z_range.end());
 
   const auto& chxh{_calculation_param->fdtdCoefficient()->chxh()};
   const auto& chyh{_calculation_param->fdtdCoefficient()->chyh()};
@@ -65,13 +95,13 @@ void BasicUpdator::updateH() {
 BasicUpdatorTEM::BasicUpdatorTEM(
     std::shared_ptr<const GridSpace> grid_space,
     std::shared_ptr<const CalculationParam> calculation_param,
-    std::shared_ptr<EMF> emf, Divider::IndexTask task)
+    std::shared_ptr<EMF> emf, IndexTask task)
     : BasicUpdator(std::move(grid_space), std::move(calculation_param),
                    std::move(emf), task) {}
 
 void BasicUpdatorTEM::updateE() {
-  const auto ks = task()._z_range[0];
-  const auto ke = task()._z_range[1];
+  const auto ks = task().zRange().start();
+  const auto ke = task().zRange().end();
 
   const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
   const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};

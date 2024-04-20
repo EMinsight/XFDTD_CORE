@@ -2,8 +2,8 @@
 #define _XFDTD_CORE_LUMPED_ELEMENT_H_
 
 #include <xfdtd/object/object.h>
+#include <xfdtd/common/type_define.h>
 
-#include <xfdtd/divider/divider.h>
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 
@@ -57,14 +57,20 @@ class LumpedElement : public Object {
 
   std::size_t nodeCountSubAxisB() const;
 
+  std::size_t globalCountMainAxis() const;
+
+  std::size_t globalCountSubAxisA() const;
+
+  std::size_t globalCountSubAxisB() const;
+
  protected:
   std::size_t _is, _ie, _js, _je, _ks, _ke;
 
-  xt::xarray<double>& fieldMainAxis(EMF::Attribute attribute);
+  Array3D<Real>& fieldMainAxis(EMF::Attribute attribute);
 
-  bool taskContainLumpedElement(const Divider::Task<std::size_t>& task) const;
+  bool taskContainLumpedElement(const Task<std::size_t>& task) const;
 
-  Divider::IndexTask makeIndexTask() const;
+  IndexTask makeIndexTask() const;
 
  private:
   Axis::XYZ _xyz;

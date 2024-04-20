@@ -1,6 +1,6 @@
+
 #include <xfdtd/object/lumped_element/lumped_element.h>
 
-#include <xfdtd/divider/divider.h>
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/grid_space/grid_space.h"
 
@@ -94,7 +94,46 @@ std::size_t LumpedElement::nodeCountSubAxisB() const {
   }
 }
 
-xt::xarray<double>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
+std::size_t LumpedElement::globalCountMainAxis() const {
+  switch (xyz()) {
+    case Axis::XYZ::X:
+      return globalGridBox().size().i();
+    case Axis::XYZ::Y:
+      return globalGridBox().size().j();
+    case Axis::XYZ::Z:
+      return globalGridBox().size().k();
+    default:
+      throw std::runtime_error("Invalid xyz");
+  }
+}
+
+std::size_t LumpedElement::globalCountSubAxisA() const {
+  switch (xyz()) {
+    case Axis::XYZ::X:
+      return globalGridBox().size().j() + 1;
+    case Axis::XYZ::Y:
+      return globalGridBox().size().k() + 1;
+    case Axis::XYZ::Z:
+      return globalGridBox().size().i() + 1;
+    default:
+      throw std::runtime_error("Invalid xyz");
+  }
+}
+
+std::size_t LumpedElement::globalCountSubAxisB() const {
+  switch (xyz()) {
+    case Axis::XYZ::X:
+      return globalGridBox().size().k() + 1;
+    case Axis::XYZ::Y:
+      return globalGridBox().size().i() + 1;
+    case Axis::XYZ::Z:
+      return globalGridBox().size().j() + 1;
+    default:
+      throw std::runtime_error("Invalid xyz");
+  }
+}
+
+Array3D<Real>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
   switch (xyz()) {
     case Axis::XYZ::X:
       return emfPtr()->field(attribute, EMF::Component::X);
@@ -108,14 +147,14 @@ xt::xarray<double>& LumpedElement::fieldMainAxis(EMF::Attribute attribute) {
 }
 
 bool LumpedElement::taskContainLumpedElement(
-    const Divider::Task<std::size_t>& task) const {
-  return Divider::intersected(task, makeIndexTask());
+    const Task<std::size_t>& task) const {
+  return intersected(task, makeIndexTask());
 }
 
-Divider::IndexTask LumpedElement::makeIndexTask() const {
-  return Divider::makeTask(Divider::makeRange(_is, _is + nodeCountX()),
-                           Divider::makeRange(_js, _js + nodeCountY()),
-                           Divider::makeRange(_ks, _ks + nodeCountZ()));
+IndexTask LumpedElement::makeIndexTask() const {
+  return makeTask(makeRange(_is, _is + nodeCountX()),
+                  makeRange(_js, _js + nodeCountY()),
+                  makeRange(_ks, _ks + nodeCountZ()));
 }
 
 }  // namespace xfdtd

@@ -7,8 +7,8 @@ namespace xfdtd {
 
 class TFSF3D : public TFSF {
  public:
-  TFSF3D(std::size_t x, std::size_t y, std::size_t z, double theta, double phi,
-         double psi, std::unique_ptr<Waveform> waveform);
+  TFSF3D(std::size_t x, std::size_t y, std::size_t z, Real theta, Real phi,
+         Real psi, std::unique_ptr<Waveform> waveform);
 
   TFSF3D(TFSF3D &&) noexcept = default;
 
@@ -21,7 +21,7 @@ class TFSF3D : public TFSF {
             std::shared_ptr<EMF> emf) override;
 
   std::unique_ptr<Corrector> generateCorrector(
-      const Divider::IndexTask &task) override;
+      const IndexTask &task) override;
 
  private:
 };

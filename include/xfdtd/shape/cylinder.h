@@ -8,7 +8,7 @@ namespace xfdtd {
 
 class Cylinder : public Shape {
  public:
-  Cylinder(Vector center, double radius, double height, Axis axis);
+  Cylinder(Vector center, Real radius, Real height, Axis axis);
 
   Cylinder(const Cylinder &) = default;
 
@@ -26,13 +26,13 @@ class Cylinder : public Shape {
 
   Vector center() const;
 
-  double radius() const;
+  Real radius() const;
 
-  double height() const;
+  Real height() const;
 
   Axis axis() const;
 
-  bool isInside(double x, double y, double z) const override;
+  bool isInside(Real x, Real y, Real z) const override;
 
   bool isInside(const Vector& vector) const override;
 
@@ -40,8 +40,8 @@ class Cylinder : public Shape {
 
  private:
   Vector _center;
-  double _radius;
-  double _height;
+  Real _radius;
+  Real _height;
   Axis _axis;
 };
 

@@ -2,9 +2,9 @@
 #define _XFDTD_CORE_PML_H_
 
 #include <xfdtd/boundary/boundary.h>
+#include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
-
-#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 
@@ -17,12 +17,8 @@ class XFDTDPMLException : public XFDTDBoundaryException {
 class PML : public Boundary {
  public:
   PML(int thickness, Axis::Direction direction, int order = 4,
-      double sigma_ratio = 1, double alpha_min = 0, double alpha_max = 0.05,
-      double kappa_max = 10);
-
-  void init(double dl, double dt, std::size_t start_index, int na, int nb,
-            xt::xarray<double>& ceahb, xt::xarray<double>& cebha,
-            xt::xarray<double>& chaeb, xt::xarray<double>& chbea);
+      Real sigma_ratio = 1, Real alpha_min = 0, Real alpha_max = 0.05,
+      Real kappa_max = 10);
 
   PML(const PML&) = delete;
 
@@ -42,10 +38,6 @@ class PML : public Boundary {
 
   void correctUpdateCoefficient() override;
 
-  void correctE() override;
-
-  void correctH() override;
-
   int thickness() const;
 
   Axis::Direction direction() const;
@@ -56,18 +48,24 @@ class PML : public Boundary {
 
   Axis::XYZ mainAxis() const;
 
-  std::size_t eNodeStartIndexMainAxis() const;
+  std::size_t globalENodeStartIndexMainAxis() const;
 
-  std::size_t hNodeStartIndexMainAxis() const;
+  std::size_t globalHNodeStartIndexMainAxis() const;
+
+  std::size_t nodeENodeStartIndexMainAxis() const;
+
+  std::size_t nodeHNodeStartIndexMainAxis() const;
 
   std::size_t n() const;
 
-  const xt::xarray<double>& eSize() const;
+  std::size_t nodeN() const;
 
-  const xt::xarray<double>& hSize() const;
+  const Array1D<Real>& globalESize() const;
+
+  const Array1D<Real>& globalHSize() const;
 
   std::unique_ptr<Corrector> generateDomainCorrector(
-      const Divider::Task<std::size_t>& task) override;
+      const Task<std::size_t>& task) override;
 
  private:
   int _thickness;
@@ -75,42 +73,48 @@ class PML : public Boundary {
   Axis::Direction _direction;
   Axis::XYZ _main_axis;
   int _order;
-  double _sigma_ratio;
-  double _alpha_min;
-  double _alpha_max;
-  double _kappa_max;
-  std::size_t _e_start_index, _h_start_index;
-  std::size_t _na, _nb;
+  Real _sigma_ratio;
+  Real _alpha_min;
+  Real _alpha_max;
+  Real _kappa_max;
+  std::size_t _global_e_start_index, _global_h_start_index;
+  std::size_t _global_na, _global_nb;
+  IndexTask _pml_global_task_abc;
+  IndexTask _pml_global_task;
+  IndexTask _pml_node_task_abc;
+  IndexTask _pml_node_task;
 
-  xt::xarray<double> _h_size;
-  xt::xarray<double> _e_size;
-  xt::xarray<double> _kappa_e;
-  xt::xarray<double> _kappa_h;
+  std::size_t _node_e_start_index, _node_h_start_index;
 
-  xt::xarray<double> _coeff_a_e;
-  xt::xarray<double> _coeff_b_e;
-  xt::xarray<double> _coeff_a_h;
-  xt::xarray<double> _coeff_b_h;
+  Array1D<Real> _global_h_size;
+  Array1D<Real> _global_e_size;
+  Array1D<Real> _kappa_e;
+  Array1D<Real> _kappa_h;
 
-  xt::xarray<double> _c_ea_psi_hb;
-  xt::xarray<double> _ea_psi_hb;
-  xt::xarray<double> _c_eb_psi_ha;
-  xt::xarray<double> _eb_psi_ha;
+  Array1D<Real> _coeff_a_e;
+  Array1D<Real> _coeff_b_e;
+  Array1D<Real> _coeff_a_h;
+  Array1D<Real> _coeff_b_h;
 
-  xt::xarray<double> _c_ha_psi_eb;
-  xt::xarray<double> _ha_psi_eb;
-  xt::xarray<double> _c_hb_psi_ea;
-  xt::xarray<double> _hb_psi_ea;
+  Array3D<Real> _c_ea_psi_hb;
+  Array3D<Real> _ea_psi_hb;
+  Array3D<Real> _c_eb_psi_ha;
+  Array3D<Real> _eb_psi_ha;
 
-  bool taskContainPML(const Divider::Task<std::size_t>& task) const;
+  Array3D<Real> _c_ha_psi_eb;
+  Array3D<Real> _ha_psi_eb;
+  Array3D<Real> _c_hb_psi_ea;
+  Array3D<Real> _hb_psi_ea;
 
-  xt::xarray<double>& eaF();
+  //   bool taskContainPML(const Task<std::size_t>& task) const;
 
-  xt::xarray<double>& ebF();
+  Array3D<Real>& eaF();
 
-  xt::xarray<double>& haF();
+  Array3D<Real>& ebF();
 
-  xt::xarray<double>& hbF();
+  Array3D<Real>& haF();
+
+  Array3D<Real>& hbF();
 
   void correctCoefficientX();
 
@@ -120,39 +124,39 @@ class PML : public Boundary {
 
   void calRecursiveConvolutionCoeff();
 
-  double calculateSigmaMax(double dl) const;
+  Real calculateSigmaMax(Real dl) const;
 
-  xt::xarray<double> calculateRhoE(std::size_t n,
-                                   const xt::xarray<double>& size) const;
+  Array1D<Real> calculateRhoE(std::size_t n,
+                                   const Array1D<Real>& size) const;
 
-  xt::xarray<double> calculateRhoM(std::size_t n,
-                                   const xt::xarray<double>& size) const;
+  Array1D<Real> calculateRhoM(std::size_t n,
+                                   const Array1D<Real>& size) const;
 
-  xt::xarray<double> calculateSigma(double sigma_max,
-                                    const xt::xarray<double>& rho,
+  Array1D<Real> calculateSigma(Real sigma_max,
+                                    const Array1D<Real>& rho,
                                     std::size_t order) const;
 
-  xt::xarray<double> calculateKappa(double kappa_max,
-                                    const xt::xarray<double>& rho,
+  Array1D<Real> calculateKappa(Real kappa_max,
+                                    const Array1D<Real>& rho,
                                     std::size_t order) const;
 
-  xt::xarray<double> calculateAlpha(double alpha_min, double alpha_max,
-                                    const xt::xarray<double>& rho) const;
+  Array1D<Real> calculateAlpha(Real alpha_min, Real alpha_max,
+                                    const Array1D<Real>& rho) const;
 
-  xt::xarray<double> calculateCoefficientA(const xt::xarray<double>& b,
-                                           const xt::xarray<double>& sigma,
-                                           const xt::xarray<double>& kappa,
-                                           const xt::xarray<double>& alpha,
-                                           const xt::xarray<double>& dl) const;
+  Array1D<Real> calculateCoefficientA(const Array1D<Real>& b,
+                                           const Array1D<Real>& sigma,
+                                           const Array1D<Real>& kappa,
+                                           const Array1D<Real>& alpha,
+                                           const Array1D<Real>& dl) const;
 
-  xt::xarray<double> calculateCoefficientB(const xt::xarray<double>& sigma,
-                                           const xt::xarray<double>& kappa,
-                                           const xt::xarray<double>& alpha,
-                                           double dt, double constant) const;
+  Array1D<Real> calculateCoefficientB(const Array1D<Real>& sigma,
+                                           const Array1D<Real>& kappa,
+                                           const Array1D<Real>& alpha,
+                                           Real dt, Real constant) const;
 
-  xt::xarray<double> calculateCoeffPsi(const xt::xarray<double>& coeff,
-                                       const xt::xarray<double>& kappa,
-                                       const xt::xarray<double>& dl) const;
+  Array1D<Real> calculateCoeffPsi(const Array1D<Real>& coeff,
+                                       const Array1D<Real>& kappa,
+                                       const Array1D<Real>& dl) const;
 };
 
 }  // namespace xfdtd

@@ -1,65 +1,19 @@
 #ifndef _XFDTD_CORE_CALCULATION_PARAM_H_
 #define _XFDTD_CORE_CALCULATION_PARAM_H_
 
+#include <xfdtd/calculation_param/time_param.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
+#include <xfdtd/util/transform.h>
 
 #include <memory>
 #include <vector>
-#include <xtensor/xarray.hpp>
 
 namespace xfdtd {
 
 class GridSpace;
-
-class TimeParam {
- public:
-  static constexpr double DEFAULT_CFL{0.98};
-
-  static double calculateDt(double cfl, double dx, double dy, double dz);
-
-  static double calculateDt(double cfl, double dx, double dy);
-
-  static double calculateDt(double cfl, double dz);
-
-  TimeParam(double dt, std::size_t size, std::size_t start_time_step = 0);
-
-  explicit TimeParam(double cfl = DEFAULT_CFL);
-
-  double dt() const;
-
-  double cfl() const;
-
-  std::size_t startTimeStep() const;
-
-  std::size_t size() const;
-
-  std::size_t endTimeStep() const;
-
-  std::size_t currentTimeStep() const;
-
-  std::size_t remainingTimeStep() const;
-
-  virtual void nextStep();
-
-  virtual void reset();
-
-  void setDt(double dt);
-
-  void setTimeParamRunRange(std::size_t end_time_step,
-                            std::size_t start_time_step = 0);
-
-  xt::xarray<double> eTime() const;
-
-  xt::xarray<double> hTime() const;
-
- private:
-  double _cfl;
-  double _dt{};
-  std::size_t _start_time_step{};
-  std::size_t _size{};
-  std::size_t _current_time_step{};
-};
 
 // forward declare
 class Material;
@@ -82,81 +36,70 @@ class MaterialParam {
     SIGMA_M_Z
   };
 
+ public:
   static Attribute fromPropertyToAttribute(Property property);
 
   static Axis::XYZ fromPropertyToXYZ(Property property);
 
   static Property fromAttributeAndXYZ(Attribute attribute, Axis::XYZ xyz);
 
-  MaterialParam() = default;
+  const Array3D<Real>& epsX() const;
 
-  MaterialParam(const MaterialParam&) = default;
+  const Array3D<Real>& epsY() const;
 
-  MaterialParam(MaterialParam&&) noexcept = default;
+  const Array3D<Real>& epsZ() const;
 
-  MaterialParam& operator=(const MaterialParam&) = default;
+  const Array3D<Real>& muX() const;
 
-  MaterialParam& operator=(MaterialParam&&) noexcept = default;
+  const Array3D<Real>& muY() const;
 
-  ~MaterialParam() = default;
+  const Array3D<Real>& muZ() const;
 
-  const xt::xarray<double>& epsX() const;
+  const Array3D<Real>& sigmaEX() const;
 
-  const xt::xarray<double>& epsY() const;
+  const Array3D<Real>& sigmaEY() const;
 
-  const xt::xarray<double>& epsZ() const;
+  const Array3D<Real>& sigmaEZ() const;
 
-  const xt::xarray<double>& muX() const;
+  const Array3D<Real>& sigmaMX() const;
 
-  const xt::xarray<double>& muY() const;
+  const Array3D<Real>& sigmaMY() const;
 
-  const xt::xarray<double>& muZ() const;
+  const Array3D<Real>& sigmaMZ() const;
 
-  const xt::xarray<double>& sigmaEX() const;
+  const Array3D<Real>& property(Property property) const;
 
-  const xt::xarray<double>& sigmaEY() const;
-
-  const xt::xarray<double>& sigmaEZ() const;
-
-  const xt::xarray<double>& sigmaMX() const;
-
-  const xt::xarray<double>& sigmaMY() const;
-
-  const xt::xarray<double>& sigmaMZ() const;
-
-  const xt::xarray<double>& property(Property property) const;
-
-  const xt::xarray<double>& property(Attribute attribute, Axis::XYZ xyz) const;
+  const Array3D<Real>& property(Attribute attribute, Axis::XYZ xyz) const;
 
   const auto& materialArray() const;
 
-  xt::xarray<double>& epsX();
+  Array3D<Real>& epsX();
 
-  xt::xarray<double>& epsY();
+  Array3D<Real>& epsY();
 
-  xt::xarray<double>& epsZ();
+  Array3D<Real>& epsZ();
 
-  xt::xarray<double>& muX();
+  Array3D<Real>& muX();
 
-  xt::xarray<double>& muY();
+  Array3D<Real>& muY();
 
-  xt::xarray<double>& muZ();
+  Array3D<Real>& muZ();
 
-  xt::xarray<double>& sigmaEX();
+  Array3D<Real>& sigmaEX();
 
-  xt::xarray<double>& sigmaEY();
+  Array3D<Real>& sigmaEY();
 
-  xt::xarray<double>& sigmaEZ();
+  Array3D<Real>& sigmaEZ();
 
-  xt::xarray<double>& sigmaMX();
+  Array3D<Real>& sigmaMX();
 
-  xt::xarray<double>& sigmaMY();
+  Array3D<Real>& sigmaMY();
 
-  xt::xarray<double>& sigmaMZ();
+  Array3D<Real>& sigmaMZ();
 
-  xt::xarray<double>& property(Property property);
+  Array3D<Real>& property(Property property);
 
-  xt::xarray<double>& property(Attribute attribute, Axis::XYZ xyz);
+  Array3D<Real>& property(Attribute attribute, Axis::XYZ xyz);
 
   auto&& materialArray();
 
@@ -165,18 +108,18 @@ class MaterialParam {
   void allocate(std::size_t nx, std::size_t ny, std::size_t nz);
 
  private:
-  xt::xarray<double> _eps_x;
-  xt::xarray<double> _eps_y;
-  xt::xarray<double> _eps_z;
-  xt::xarray<double> _mu_x;
-  xt::xarray<double> _mu_y;
-  xt::xarray<double> _mu_z;
-  xt::xarray<double> _sigma_e_x;
-  xt::xarray<double> _sigma_e_y;
-  xt::xarray<double> _sigma_e_z;
-  xt::xarray<double> _sigma_m_x;
-  xt::xarray<double> _sigma_m_y;
-  xt::xarray<double> _sigma_m_z;
+  Array3D<Real> _eps_x;
+  Array3D<Real> _eps_y;
+  Array3D<Real> _eps_z;
+  Array3D<Real> _mu_x;
+  Array3D<Real> _mu_y;
+  Array3D<Real> _mu_z;
+  Array3D<Real> _sigma_e_x;
+  Array3D<Real> _sigma_e_y;
+  Array3D<Real> _sigma_e_z;
+  Array3D<Real> _sigma_m_x;
+  Array3D<Real> _sigma_m_y;
+  Array3D<Real> _sigma_m_z;
 
   std::vector<std::shared_ptr<Material>> _materials;
 };
@@ -187,111 +130,222 @@ inline auto&& MaterialParam::materialArray() { return _materials; }
 
 class FDTDUpdateCoefficient {
  public:
-  FDTDUpdateCoefficient() = default;
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeff() const -> const Array3D<Real>&;
 
-  FDTDUpdateCoefficient(const FDTDUpdateCoefficient&) = default;
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeff() -> Array3D<Real>&;
 
-  FDTDUpdateCoefficient(FDTDUpdateCoefficient&&) noexcept = default;
+  template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b,
+            Axis::XYZ xyz_b>
+  auto coeff() const -> const Array3D<Real>&;
 
-  FDTDUpdateCoefficient& operator=(const FDTDUpdateCoefficient&) = default;
+  template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b,
+            Axis::XYZ xyz_b>
+  auto coeff() -> Array3D<Real>&;
 
-  FDTDUpdateCoefficient& operator=(FDTDUpdateCoefficient&&) noexcept = default;
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeffDualA() const -> const Array3D<Real>&;
 
-  ~FDTDUpdateCoefficient() = default;
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeffDualA() -> Array3D<Real>&;
 
-  const xt::xarray<double>& cexe() const;
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeffDualB() const -> const Array3D<Real>&;
 
-  const xt::xarray<double>& cexhy() const;
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeffDualB() -> Array3D<Real>&;
 
-  const xt::xarray<double>& cexhz() const;
+  auto save(const std::string& dir) const -> void;
 
-  const xt::xarray<double>& ceye() const;
+ public:
+  const Array3D<Real>& cexe() const;
 
-  const xt::xarray<double>& ceyhz() const;
+  const Array3D<Real>& cexhy() const;
 
-  const xt::xarray<double>& ceyhx() const;
+  const Array3D<Real>& cexhz() const;
 
-  const xt::xarray<double>& ceze() const;
+  const Array3D<Real>& ceye() const;
 
-  const xt::xarray<double>& cezhx() const;
+  const Array3D<Real>& ceyhz() const;
 
-  const xt::xarray<double>& cezhy() const;
+  const Array3D<Real>& ceyhx() const;
 
-  const xt::xarray<double>& chxh() const;
+  const Array3D<Real>& ceze() const;
 
-  const xt::xarray<double>& chxey() const;
+  const Array3D<Real>& cezhx() const;
 
-  const xt::xarray<double>& chxez() const;
+  const Array3D<Real>& cezhy() const;
 
-  const xt::xarray<double>& chyh() const;
+  const Array3D<Real>& chxh() const;
 
-  const xt::xarray<double>& chyez() const;
+  const Array3D<Real>& chxey() const;
 
-  const xt::xarray<double>& chyex() const;
+  const Array3D<Real>& chxez() const;
 
-  const xt::xarray<double>& chzh() const;
+  const Array3D<Real>& chyh() const;
 
-  const xt::xarray<double>& chzex() const;
+  const Array3D<Real>& chyez() const;
 
-  const xt::xarray<double>& chzey() const;
+  const Array3D<Real>& chyex() const;
 
-  xt::xarray<double>& cexe();
+  const Array3D<Real>& chzh() const;
 
-  xt::xarray<double>& cexhy();
+  const Array3D<Real>& chzex() const;
 
-  xt::xarray<double>& cexhz();
+  const Array3D<Real>& chzey() const;
 
-  xt::xarray<double>& ceye();
+  Array3D<Real>& cexe();
 
-  xt::xarray<double>& ceyhz();
+  Array3D<Real>& cexhy();
 
-  xt::xarray<double>& ceyhx();
+  Array3D<Real>& cexhz();
 
-  xt::xarray<double>& ceze();
+  Array3D<Real>& ceye();
 
-  xt::xarray<double>& cezhx();
+  Array3D<Real>& ceyhz();
 
-  xt::xarray<double>& cezhy();
+  Array3D<Real>& ceyhx();
 
-  xt::xarray<double>& chxh();
+  Array3D<Real>& ceze();
 
-  xt::xarray<double>& chxey();
+  Array3D<Real>& cezhx();
 
-  xt::xarray<double>& chxez();
+  Array3D<Real>& cezhy();
 
-  xt::xarray<double>& chyh();
+  Array3D<Real>& chxh();
 
-  xt::xarray<double>& chyez();
+  Array3D<Real>& chxey();
 
-  xt::xarray<double>& chyex();
+  Array3D<Real>& chxez();
 
-  xt::xarray<double>& chzh();
+  Array3D<Real>& chyh();
 
-  xt::xarray<double>& chzex();
+  Array3D<Real>& chyez();
 
-  xt::xarray<double>& chzey();
+  Array3D<Real>& chyex();
+
+  Array3D<Real>& chzh();
+
+  Array3D<Real>& chzex();
+
+  Array3D<Real>& chzey();
 
  private:
-  xt::xarray<double> _cexe;
-  xt::xarray<double> _cexhy;
-  xt::xarray<double> _cexhz;
-  xt::xarray<double> _ceye;
-  xt::xarray<double> _ceyhz;
-  xt::xarray<double> _ceyhx;
-  xt::xarray<double> _ceze;
-  xt::xarray<double> _cezhx;
-  xt::xarray<double> _cezhy;
+  Array3D<Real> _cexe;
+  Array3D<Real> _cexhy;
+  Array3D<Real> _cexhz;
+  Array3D<Real> _ceye;
+  Array3D<Real> _ceyhz;
+  Array3D<Real> _ceyhx;
+  Array3D<Real> _ceze;
+  Array3D<Real> _cezhx;
+  Array3D<Real> _cezhy;
 
-  xt::xarray<double> _chxh;
-  xt::xarray<double> _chxey;
-  xt::xarray<double> _chxez;
-  xt::xarray<double> _chyh;
-  xt::xarray<double> _chyez;
-  xt::xarray<double> _chyex;
-  xt::xarray<double> _chzh;
-  xt::xarray<double> _chzex;
-  xt::xarray<double> _chzey;
+  Array3D<Real> _chxh;
+  Array3D<Real> _chxey;
+  Array3D<Real> _chxez;
+  Array3D<Real> _chyh;
+  Array3D<Real> _chyez;
+  Array3D<Real> _chyex;
+  Array3D<Real> _chzh;
+  Array3D<Real> _chzex;
+  Array3D<Real> _chzey;
 };
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeff() const -> const Array3D<Real>& {
+  constexpr auto f = transform::attributeXYZToField<c, xyz>();
+  switch (f) {
+    case EMF::Field::EX:
+      return cexe();
+    case EMF::Field::EY:
+      return ceye();
+    case EMF::Field::EZ:
+      return ceze();
+    case EMF::Field::HX:
+      return chxh();
+    case EMF::Field::HY:
+      return chyh();
+    case EMF::Field::HZ:
+      return chzh();
+    default:
+      throw XFDTDException{
+          "FDTDUpdateCoefficient::coeff(): Invalid EMF::Field"};
+  }
+}
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeff() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(
+      static_cast<const FDTDUpdateCoefficient*>(this)->coeff<c, xyz>());
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b, Axis::XYZ xyz_b>
+auto FDTDUpdateCoefficient::coeff() const -> const Array3D<Real>& {
+  constexpr auto f = transform::attributeXYZToField<a, xyz_a>();
+  constexpr auto g = transform::attributeXYZToField<b, xyz_b>();
+  if constexpr (f == EMF::Field::EX && g == EMF::Field::HY) {
+    return cexhy();
+  } else if constexpr (f == EMF::Field::EX && g == EMF::Field::HZ) {
+    return cexhz();
+  } else if constexpr (f == EMF::Field::EY && g == EMF::Field::HZ) {
+    return ceyhz();
+  } else if constexpr (f == EMF::Field::EY && g == EMF::Field::HX) {
+    return ceyhx();
+  } else if constexpr (f == EMF::Field::EZ && g == EMF::Field::HX) {
+    return cezhx();
+  } else if constexpr (f == EMF::Field::EZ && g == EMF::Field::HY) {
+    return cezhy();
+  } else if constexpr (f == EMF::Field::HX && g == EMF::Field::EY) {
+    return chxey();
+  } else if constexpr (f == EMF::Field::HX && g == EMF::Field::EZ) {
+    return chxez();
+  } else if constexpr (f == EMF::Field::HY && g == EMF::Field::EZ) {
+    return chyez();
+  } else if constexpr (f == EMF::Field::HY && g == EMF::Field::EX) {
+    return chyex();
+  } else if constexpr (f == EMF::Field::HZ && g == EMF::Field::EX) {
+    return chzex();
+  } else if constexpr (f == EMF::Field::HZ && g == EMF::Field::EY) {
+    return chzey();
+  } else {
+    throw XFDTDException{"FDTDUpdateCoefficient::coeff(): Invalid EMF::Field"};
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b, Axis::XYZ xyz_b>
+auto FDTDUpdateCoefficient::coeff() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(
+      static_cast<const FDTDUpdateCoefficient*>(this)
+          ->coeff<a, xyz_a, b, xyz_b>());
+}
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeffDualA() const -> const Array3D<Real>& {
+  const auto a = EMF::dualAttribute<c>();
+  const auto xyz_a = Axis::tangentialAAxis<xyz>();
+  return coeff<c, xyz, a, xyz_a>();
+}
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeffDualA() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(
+      static_cast<const FDTDUpdateCoefficient*>(this)->coeffDualA<c, xyz>());
+}
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeffDualB() const -> const Array3D<Real>& {
+  const auto a = EMF::dualAttribute<c>();
+  const auto xyz_b = Axis::tangentialBAxis<xyz>();
+  return coeff<c, xyz, a, xyz_b>();
+}
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeffDualB() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(
+      static_cast<const FDTDUpdateCoefficient*>(this)->coeffDualB<c, xyz>());
+}
 
 class XFDTDCalculationParamException : public XFDTDException {
  public:
@@ -302,7 +356,6 @@ class XFDTDCalculationParamException : public XFDTDException {
 
 class CalculationParam {
  public:
-
   CalculationParam();
 
   ~CalculationParam() = default;

@@ -7,7 +7,7 @@ namespace xfdtd {
 
 class Sphere : public Shape {
  public:
-  Sphere(Vector center, double radius);
+  Sphere(Vector center, Real radius);
 
   Sphere(const Sphere &) = default;
 
@@ -23,7 +23,7 @@ class Sphere : public Shape {
 
   std::string toString() const override;
 
-  bool isInside(double x, double y, double z) const override;
+  bool isInside(Real x, Real y, Real z) const override;
 
   bool isInside(const Vector &vector) const override;
 
@@ -31,17 +31,17 @@ class Sphere : public Shape {
 
   Vector center() const;
 
-  double radius() const;
+  Real radius() const;
 
-  double centerX() const;
+  Real centerX() const;
 
-  double centerY() const;
+  Real centerY() const;
 
-  double centerZ() const;
+  Real centerZ() const;
 
  private:
   Vector _center;
-  double _radius;
+  Real _radius;
 };
 
 }  // namespace xfdtd

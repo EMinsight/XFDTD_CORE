@@ -1,6 +1,7 @@
 #ifndef _XFDTD_CORE_GRID_SPACE_GENERATOR_H_
 #define _XFDTD_CORE_GRID_SPACE_GENERATOR_H_
 
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/grid_space/grid_space.h>
 
 #include <memory>
@@ -13,19 +14,25 @@ class Boundary;
 class GridSpaceGenerator {
  public:
   static std::unique_ptr<GridSpace> generateUniformGridSpace(
-      const std::vector<const Shape*>& shapes, double based_dx, double based_dy,
-      double based_dz);
+      const std::vector<const Shape*>& shapes,
+      const std::vector<const Boundary*>& boundaries, Real based_dx,
+      Real based_dy, Real based_dz);
 
  private:
+  static std::unique_ptr<Cube> extendDomain(
+      std::unique_ptr<Cube> domain,
+      const std::vector<const Boundary*>& boundaries, Real based_dx,
+      Real based_dy, Real based_dz);
+
   static std::unique_ptr<GridSpace> generateGridSpace1D(const Cube* domain,
-                                                        double dz);
+                                                        Real dz);
 
   static std::unique_ptr<GridSpace> generateGridSpace2D(const Cube* domain,
-                                                        double dx, double dy);
+                                                        Real dx, Real dy);
 
   static std::unique_ptr<GridSpace> generateGridSpace3D(const Cube* domain,
-                                                        double dx, double dy,
-                                                        double dz);
+                                                        Real dx, Real dy,
+                                                        Real dz);
 
   static GridSpace::Dimension decideDimension(const Shape* shape);
 };

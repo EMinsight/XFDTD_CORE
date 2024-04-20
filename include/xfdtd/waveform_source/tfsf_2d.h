@@ -1,13 +1,13 @@
 #ifndef _XFDTD_CORE_TFSF_2D_H_
 #define _XFDTD_CORE_TFSF_2D_H_
 
-#include "xfdtd/waveform_source/tfsf.h"
+#include <xfdtd/waveform_source/tfsf.h>
 
 namespace xfdtd {
 
 class TFSF2D : public TFSF {
  public:
-  TFSF2D(std::size_t distance_x, std::size_t distance_y, double phi,
+  TFSF2D(std::size_t distance_x, std::size_t distance_y, Real phi,
          std::unique_ptr<Waveform> waveform);
 
   ~TFSF2D() override = default;
@@ -16,8 +16,7 @@ class TFSF2D : public TFSF {
             std::shared_ptr<CalculationParam> calculation_param,
             std::shared_ptr<EMF> emf) override;
 
-  std::unique_ptr<Corrector> generateCorrector(
-      const Divider::IndexTask &task) override;
+  std::unique_ptr<Corrector> generateCorrector(const IndexTask &task) override;
 
  private:
 };

@@ -11,12 +11,12 @@ std::unique_ptr<Cube> Shape::makeWrappedCube(
     throw XFDTDShapeException{"Shape::makeWrappedCube: Shapes are empty"};
   }
 
-  auto min_x = std::numeric_limits<double>::max();
-  auto max_x = std::numeric_limits<double>::min();
-  auto min_y = std::numeric_limits<double>::max();
-  auto max_y = std::numeric_limits<double>::min();
-  auto min_z = std::numeric_limits<double>::max();
-  auto max_z = std::numeric_limits<double>::min();
+  auto min_x = std::numeric_limits<Real>::max();
+  auto max_x = std::numeric_limits<Real>::min();
+  auto min_y = std::numeric_limits<Real>::max();
+  auto max_y = std::numeric_limits<Real>::min();
+  auto min_z = std::numeric_limits<Real>::max();
+  auto max_z = std::numeric_limits<Real>::min();
 
   for (const auto& s : shapes) {
     if (s == nullptr) {

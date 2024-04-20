@@ -1,7 +1,6 @@
 #ifndef _XFDTD_CORE_FIELD_MONITOR_H_
 #define _XFDTD_CORE_FIELD_MONITOR_H_
 
-#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/monitor/monitor.h>
 
@@ -11,7 +10,7 @@ namespace xfdtd {
 
 class FieldMonitor : public Monitor {
  public:
-  FieldMonitor(std::unique_ptr<Shape> shape, Axis::XYZ axis, EMF::Field field,
+  FieldMonitor(std::unique_ptr<Shape> shape, EMF::Field field,
                std::string name = "feild_monitor",
                std::string output_dir_path = "xfdtd_output");
 
@@ -37,9 +36,26 @@ class FieldMonitor : public Monitor {
 
   EMF::Field field() const;
 
+  auto initParallelizedConfig() -> void override;
+
+ protected:
+  auto gatherData() -> void override;
+
  private:
-  Axis::XYZ _axis;
   EMF::Field _field;
+
+  std::vector<MpiSupport::Block::Profile> _profiles;
+  std::vector<MpiSupport::Block> _blocks_mpi;
+
+  /*
+  !!!IMPORTANT!!!: (figured out the reason)
+  Temporary.
+  It is not used in the code. But do not remove it.
+  I try to make a xfdtd_core library that can be used in other projects.
+  It will work while enabling MPI. I try to remove it, but I get an error when
+  MPI is enabled.
+  */
+  const void* _no_meaningful_data{nullptr};
 };
 
 }  // namespace xfdtd

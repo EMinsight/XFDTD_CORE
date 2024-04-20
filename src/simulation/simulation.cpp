@@ -1,9 +1,22 @@
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/boundary/pml.h>
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
+#include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/grid_space/grid_space_generator.h>
+#include <xfdtd/material/dispersive_material.h>
+#include <xfdtd/monitor/monitor.h>
+#include <xfdtd/nffft/nffft.h>
+#include <xfdtd/object/lumped_element/pec_plane.h>
+#include <xfdtd/parallel/mpi_support.h>
+#include <xfdtd/parallel/parallelized_config.h>
 #include <xfdtd/simulation/simulation.h>
+#include <xfdtd/waveform_source/waveform_source.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <tuple>
 #include <utility>
@@ -15,29 +28,28 @@
 #include "updator/basic_updator.h"
 #include "updator/dispersive_material_updator.h"
 #include "updator/updator.h"
-#include "xfdtd/boundary/pml.h"
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/coordinate_system/coordinate_system.h"
-#include "xfdtd/grid_space/grid_space.h"
-#include "xfdtd/material/dispersive_material.h"
-#include "xfdtd/monitor/monitor.h"
-#include "xfdtd/nffft/nffft.h"
-#include "xfdtd/object/lumped_element/pec_plane.h"
-#include "xfdtd/waveform_source/waveform_source.h"
+#include "util/decompose_task.h"
 
 namespace xfdtd {
 
-Simulation::Simulation(double dx, double dy, double dz, double cfl,
-                       int num_thread, Divider::Type divider_type)
+Simulation::Simulation(Real dx, Real dy, Real dz, Real cfl,
+                       ThreadConfig thread_config)
     : _dx{dx},
       _dy{dy},
       _dz{dz},
       _cfl{cfl},
-      _num_thread{num_thread},
-      _barrier(num_thread),
-      _divider_type{divider_type} {}
+      _thread_config{std::move(thread_config)},
+      _barrier(_thread_config.size()) {}
 
 Simulation::~Simulation() = default;
+
+bool Simulation::isRoot() const { return MpiSupport::instance().isRoot(); }
+
+int Simulation::myRank() const { return MpiSupport::instance().rank(); }
+
+int Simulation::numNode() const { return MpiSupport::instance().size(); }
+
+int Simulation::numThread() const { return _thread_config.size(); }
 
 void Simulation::addObject(std::shared_ptr<xfdtd::Object> object) {
   _objects.emplace_back(std::move(object));
@@ -96,18 +108,20 @@ void Simulation::run(std::size_t time_step) {
     m->initTimeDependentVariable();
   }
 
-  struct ThreadGuard {
-    ~ThreadGuard() {
-      for (auto& t : _threads) {
-        if (t.joinable()) {
-          t.join();
-        }
-      }
-    }
+  if (isRoot()) {
+    // global grid space and thread config
+    {
+      std::stringstream ss;
+      ss << "\n";
+      ss << "Global grid space: \n";
+      ss << _global_grid_space->toString();
+      ss << "\n";
 
-    std::vector<std::thread> _threads;
-    std::chrono::high_resolution_clock::time_point _start_time;
-  };
+      ss << "\n";
+      ss << _thread_config.toString() << "\n";
+      std::cout << ss.str() << std::flush;
+    }
+  }
 
   {
     std::vector<std::thread> threads;
@@ -115,12 +129,25 @@ void Simulation::run(std::size_t time_step) {
       threads.emplace_back([&domain = _domains[i]]() { domain->run(); });
     }
 
-    ThreadGuard tg{
+    struct ThreadGuard {
+      ~ThreadGuard() {
+        for (auto& t : _threads) {
+          if (t.joinable()) {
+            t.join();
+          }
+        }
+      }
+
+      std::vector<std::thread> _threads;
+      std::chrono::high_resolution_clock::time_point _start_time;
+    } tg{
         ._threads = std::move(threads),
     };
 
     _domains[0]->run();
   }
+
+  MpiSupport::instance().barrier();
 
   _end_time = std::chrono::high_resolution_clock::now();
   if (isRoot()) {
@@ -135,6 +162,11 @@ void Simulation::run(std::size_t time_step) {
                                                                   _start_time)
                      .count()
               << " s"
+              << " or "
+              << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
+                                                                  _start_time)
+                     .count()
+              << " m."
               << "\n";
   }
 }
@@ -170,7 +202,7 @@ void Simulation::init() {
   generateFDTDUpdateCoefficient();
 
   // init monitor
-  for (const auto& m : _monitors) {
+  for (auto&& m : _monitors) {
     m->init(_grid_space, _calculation_param, _emf);
   }
   for (const auto& n : _networks) {
@@ -181,39 +213,39 @@ void Simulation::init() {
   }
 
   generateDomain();
+
+  for (auto&& m : _monitors) {
+    m->initParallelizedConfig();
+  }
+  for (auto&& n : _nfffts) {
+    n->initParallelizedConfig();
+  }
+
+  MpiSupport::instance().generateSlice(
+      _grid_space->sizeX(), _grid_space->sizeY(), _grid_space->sizeZ());
 }
 
 void Simulation::generateDomain() {
-  if (_num_thread <= 1) {
-    _num_thread = 1;
+  if (std::thread::hardware_concurrency() < numThread()) {
+    std::stringstream ss;
+    ss << "The number of threads is too large : " << numThread() << ". Set to "
+       << std::thread::hardware_concurrency() << "\n";
+    throw XFDTDSimulationException(ss.str());
   }
 
-  if (std::thread::hardware_concurrency() < _num_thread) {
-    std::cout << "The number of threads is too large, set to the maximum "
-                 "number of threads: "
-              << std::thread::hardware_concurrency() << "\n";
-    _num_thread = std::thread::hardware_concurrency();
-  }
+  auto num_thread = numThread();
 
-  Divider::IndexTask problem = Divider::makeTask(
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()));
+  IndexTask problem = makeTask(makeRange<std::size_t>(0, _grid_space->sizeX()),
+                               makeRange<std::size_t>(0, _grid_space->sizeY()),
+                               makeRange<std::size_t>(0, _grid_space->sizeZ()));
 
-  auto tasks = std::vector<Divider::IndexTask>{Divider::makeTask(
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeX()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeY()),
-      Divider::makeRange<std::size_t>(0, _grid_space->sizeZ()))};
+  // auto tasks = std::vector<IndexTask>{
+  //     makeTask(makeRange<std::size_t>(0, _grid_space->sizeX()),
+  //              makeRange<std::size_t>(0, _grid_space->sizeY()),
+  //              makeRange<std::size_t>(0, _grid_space->sizeZ()))};
 
-  try {
-    tasks = Divider::divide(problem, _num_thread, _divider_type);
-  } catch (const XFDTDDividerException& e) {
-    _num_thread = 1;
-  }
-
-  if (_num_thread == 1) {
-    std::cout << "Single thread mode\n";
-  }
+  auto tasks = decomposeTask(problem, _thread_config.numX(),
+                             _thread_config.numY(), _thread_config.numZ());
 
   // Corrector
   /*  IMPORTANT: the corrector can't be parallelized in thread model, the
@@ -263,7 +295,7 @@ void Simulation::generateDomain() {
   for (const auto& t : tasks) {
     auto updator = makeUpdator(t);
 
-    if (master) {
+    if (id == _thread_config.root()) {
       _domains.emplace_back(std::make_unique<Domain>(
           id, t, _grid_space, _calculation_param, _emf, std::move(updator),
           _waveform_sources, std::move(correctors), _monitors, _nfffts,
@@ -272,9 +304,14 @@ void Simulation::generateDomain() {
     } else {
       _domains.emplace_back(
           std::make_unique<Domain>(id, t, _grid_space, _calculation_param, _emf,
-                                   std::move(updator), _barrier, master));
+                                   std::move(updator), _barrier, false));
     }
+
     ++id;
+  }
+
+  if (master) {
+    throw XFDTDSimulationException("Master domain is not created");
   }
 }
 
@@ -284,46 +321,14 @@ void Simulation::generateGridSpace() {
   for (const auto& o : _objects) {
     shapes.emplace_back(o->shape().get());
   }
-
-  _global_grid_space =
-      GridSpaceGenerator::generateUniformGridSpace(shapes, _dx, _dy, _dz);
+  std::vector<const Boundary*> boundaries;
+  boundaries.reserve(_boundaries.size());
   for (const auto& b : _boundaries) {
-    if (auto pml = dynamic_cast<PML*>(b.get()); pml != nullptr) {
-      auto direction = pml->direction();
-      auto num = pml->thickness();
-      auto main_axis = pml->mainAxis();
-
-      auto space_dim = _global_grid_space->dimension();
-      if (space_dim == GridSpace::Dimension::ONE && main_axis != Axis::XYZ::Z) {
-        throw XFDTDSimulationException("PML has to be in Z direction");
-      }
-
-      if (space_dim == GridSpace::Dimension::TWO && main_axis == Axis::XYZ::Z) {
-        throw XFDTDSimulationException("PML has to be in X or Y direction");
-      }
-
-      if (num < 0) {
-        continue;
-      }
-
-      switch (main_axis) {
-        case xfdtd::Axis::XYZ::X: {
-          _global_grid_space->extendGridSpace(direction, num, _dx);
-          break;
-        }
-        case xfdtd::Axis::XYZ::Y: {
-          _global_grid_space->extendGridSpace(direction, num, _dy);
-          break;
-        }
-        case xfdtd::Axis::XYZ::Z: {
-          _global_grid_space->extendGridSpace(direction, num, _dz);
-          break;
-        }
-        default:
-          throw XFDTDSimulationException("Invalid main axis");
-      }
-    }
+    boundaries.emplace_back(b.get());
   }
+
+  _global_grid_space = GridSpaceGenerator::generateUniformGridSpace(
+      shapes, boundaries, _dx, _dy, _dz);
 
   _global_grid_space->correctGridSpace();
 }
@@ -346,55 +351,26 @@ void Simulation::generateEMF() {
 
 void Simulation::globalGridSpaceDecomposition() {
   auto my_mpi_rank = myRank();
-  auto mpi_size = numNode();
-  bool single_node = mpi_size <= 1;
-  auto node_divider_type = Divider::Type::X;
+  // auto mpi_size = numNode();
+  auto divide_nx = MpiSupport::instance().config().numX();
+  auto divide_ny = MpiSupport::instance().config().numY();
+  auto divide_nz = MpiSupport::instance().config().numZ();
 
-  auto global_problem = Divider::makeIndexTask(
-      Divider::makeRange<std::size_t>(0, _global_grid_space->sizeX()),
-      Divider::makeRange<std::size_t>(0, _global_grid_space->sizeY()),
-      Divider::makeRange<std::size_t>(0, _global_grid_space->sizeZ()));
+  auto global_problem =
+      makeIndexTask(makeRange<std::size_t>(0, _global_grid_space->sizeX()),
+                    makeRange<std::size_t>(0, _global_grid_space->sizeY()),
+                    makeRange<std::size_t>(0, _global_grid_space->sizeZ()));
 
-  auto global_task = Divider::divide(global_problem, mpi_size, _divider_type);
+  auto global_task =
+      decomposeTask(global_problem, divide_nx, divide_ny, divide_nz);
   auto my_task = global_task[my_mpi_rank];
 
-  auto overlap_offset =
-      std::tuple<std::size_t, std::size_t, std::size_t>{0, 0, 0};
+  auto overlap_x = (1 <= divide_nx) ? 1 : 0;
+  auto overlap_y = (1 <= divide_ny) ? 1 : 0;
+  auto overlap_z = (1 <= divide_nz) ? 1 : 0;
 
-  switch (node_divider_type) {
-    case Divider::Type::X: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{1, 0, 0};
-      break;
-    }
-    case Divider::Type::Y: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{0, 1, 0};
-      break;
-    }
-    case Divider::Type::Z: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{0, 0, 1};
-      break;
-    }
-    case Divider::Type::XY: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{1, 1, 0};
-      break;
-    }
-    case Divider::Type::XZ: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{1, 0, 1};
-      break;
-    }
-    case Divider::Type::YZ: {
-      overlap_offset =
-          std::tuple<std::size_t, std::size_t, std::size_t>{0, 1, 1};
-      break;
-    }
-    default:
-      throw XFDTDSimulationException("Invalid node divider type");
-  }
+  auto overlap_offset = std::tuple<std::size_t, std::size_t, std::size_t>{
+      overlap_x, overlap_y, overlap_z};
 
   auto x_start = (my_task.xRange().start() == 0)
                      ? 0
@@ -423,9 +399,9 @@ void Simulation::globalGridSpaceDecomposition() {
     calculation node. And (nx) is the overlap with the next calculation
     node. */
   auto my_task_with_overlap =
-      Divider::makeIndexTask(Divider::makeRange<std::size_t>(x_start, x_end),
-                             Divider::makeRange<std::size_t>(y_start, y_end),
-                             Divider::makeRange<std::size_t>(z_start, z_end));
+      makeIndexTask(makeRange<std::size_t>(x_start, x_end),
+                    makeRange<std::size_t>(y_start, y_end),
+                    makeRange<std::size_t>(z_start, z_end));
 
   _grid_space = _global_grid_space->subGridSpace(
       my_task_with_overlap._x_range.start(),
@@ -530,8 +506,7 @@ std::unique_ptr<MaterialParam> Simulation::makeMaterialParam() {
   return material_param;
 }
 
-std::unique_ptr<Updator> Simulation::makeUpdator(
-    const Divider::IndexTask& task) {
+std::unique_ptr<Updator> Simulation::makeUpdator(const IndexTask& task) {
   bool dispersion = false;
   for (const auto& m : _calculation_param->materialParam()->materialArray()) {
     if (m->dispersion()) {
@@ -554,38 +529,9 @@ std::unique_ptr<Updator> Simulation::makeUpdator(
 
   // Contains linear dispersive material
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
-    for (const auto& m : _calculation_param->materialParam()->materialArray()) {
-      if (!m->dispersion()) {
-        continue;
-      }
-
-      auto dispersion_material =
-          std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
-      if (!dispersion_material) {
-        break;
-      }
-
-      if (auto lorentz_material =
-              std::dynamic_pointer_cast<LorentzMedium>(dispersion_material);
-          lorentz_material != nullptr) {
-        return std::make_unique<LorentzADEUpdator>(
-            _grid_space, _calculation_param, _emf, task);
-      }
-
-      if (auto drude_material =
-              std::dynamic_pointer_cast<DrudeMedium>(dispersion_material);
-          drude_material != nullptr) {
-        return std::make_unique<DrudeADEUpdator>(
-            _grid_space, _calculation_param, _emf, task);
-      }
-
-      if (auto debye_material =
-              std::dynamic_pointer_cast<DebyeMedium>(dispersion_material);
-          debye_material != nullptr) {
-        return std::make_unique<DebyeADEUpdator>(
-            _grid_space, _calculation_param, _emf, task);
-      }
-    }
+    return std::make_unique<LinearDispersiveMaterialUpdator>(
+        _calculation_param->materialParam()->materialArray(), _grid_space,
+        _calculation_param, _emf, task);
   }
 
   throw XFDTDSimulationException("don't support this type of updator yet.");

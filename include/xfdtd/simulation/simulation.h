@@ -3,7 +3,7 @@
 
 #include <xfdtd/boundary/boundary.h>
 #include <xfdtd/calculation_param/calculation_param.h>
-#include <xfdtd/divider/divider.h>
+
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
@@ -11,6 +11,7 @@
 #include <xfdtd/network/network.h>
 #include <xfdtd/nffft/nffft.h>
 #include <xfdtd/object/object.h>
+#include <xfdtd/parallel/parallelized_config.h>
 #include <xfdtd/waveform_source/waveform_source.h>
 
 #include <barrier>
@@ -20,12 +21,11 @@
 #include <utility>
 #include <vector>
 
-#include "domain/domain.h"
-
 namespace xfdtd {
 
 // Forward declaration
 class Updator;
+class Domain;
 
 class XFDTDSimulationException : public XFDTDException {
  public:
@@ -36,18 +36,18 @@ class XFDTDSimulationException : public XFDTDException {
 
 class Simulation {
  public:
-  Simulation(double dx, double dy, double dz, double cfl, int num_thread = 1,
-             Divider::Type divider_type = Divider::Type::UNDEFINED);
+  Simulation(Real dx, Real dy, Real dz, Real cfl,
+             ThreadConfig thread_config = ThreadConfig{1, 1, 1});
 
   ~Simulation();
 
-  bool isRoot() const { return true; }
+  bool isRoot() const;
 
-  int myRank() const { return 0; }
+  int myRank() const;
 
-  int numNode() const { return 1; }
+  int numNode() const;
 
-  int numThread() const { return _num_thread; }
+  int numThread() const;
 
   void addObject(std::shared_ptr<xfdtd::Object> object);
 
@@ -72,11 +72,10 @@ class Simulation {
   void init();
 
  private:
-  double _dx, _dy, _dz;
-  double _cfl;
-  int _num_thread;
-  Divider::Type _divider_type;
-  std::barrier<> _barrier;
+  Real _dx, _dy, _dz;
+  Real _cfl;
+  ThreadConfig _thread_config;
+  std::barrier<> _barrier;  // move to thread config
 
   std::vector<std::shared_ptr<xfdtd::Object>> _objects;
   std::vector<std::shared_ptr<WaveformSource>> _waveform_sources;
@@ -117,19 +116,7 @@ class Simulation {
 
   void correctUpdateCoefficient();
 
-  std::unique_ptr<Updator> makeUpdator(const Divider::IndexTask& task);
-
-  void updateE();
-
-  void updateH();
-
-  void correctE();
-
-  void correctH();
-
-  void record();
-
-  void printRunInfo();
+  std::unique_ptr<Updator> makeUpdator(const IndexTask& task);
 };
 
 }  // namespace xfdtd

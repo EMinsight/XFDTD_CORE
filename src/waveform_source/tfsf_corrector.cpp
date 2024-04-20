@@ -7,30 +7,29 @@ namespace xfdtd {
 
 std::string TFSFCorrector::toString() const {
   std::stringstream ss;
-  ss << "Total Field Scattered Field Corrector: ";
-  ss << "Global Task: \n";
-  ss << "XN: "
+  ss << "Total Field Scattered Field Corrector:\n";
+  ss << " XN: "
      << "EY: " << globalEyTaskXN().toString()
      << " EZ: " << globalEzTaskXN().toString() << "\n";
-  ss << "XP: "
+  ss << " XP: "
      << "EY: " << globalEyTaskXP().toString()
      << " EZ: " << globalEzTaskXP().toString() << "\n";
-  ss << "YN: "
+  ss << " YN: "
      << "EZ: " << globalEzTaskYN().toString()
      << " EX: " << globalExTaskYN().toString() << "\n";
-  ss << "YP: "
+  ss << " YP: "
      << "EZ: " << globalEzTaskYP().toString()
      << " EX: " << globalExTaskYP().toString() << "\n";
-  ss << "ZN: "
+  ss << " ZN: "
      << "EX: " << globalExTaskZN().toString()
      << " EY: " << globalEyTaskZN().toString() << "\n";
-  ss << "ZP: "
+  ss << " ZP: "
      << "EX: " << globalExTaskZP().toString()
      << " EY: " << globalEyTaskZP().toString();
   return ss.str();
 }
 
-double TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i() + 1;
   j = j - globalStart().j();
   k = k - globalStart().k();
@@ -41,7 +40,7 @@ double TFSFCorrector::exInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _ex_inc(index) + weight * _ex_inc(index + 1);
 }
 
-double TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i();
   j = j - globalStart().j() + 1;
   k = k - globalStart().k();
@@ -52,7 +51,7 @@ double TFSFCorrector::eyInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _ey_inc(index) + weight * _ey_inc(index + 1);
 }
 
-double TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i();
   j = j - globalStart().j();
   k = k - globalStart().k() + 1;
@@ -63,7 +62,7 @@ double TFSFCorrector::ezInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _ez_inc(index) + weight * _ez_inc(index + 1);
 }
 
-double TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i();
   j = j - globalStart().j() + 1;
   k = k - globalStart().k() + 1;
@@ -74,7 +73,7 @@ double TFSFCorrector::hxInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
 }
 
-double TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i() + 1;
   j = j - globalStart().j();
   k = k - globalStart().k() + 1;
@@ -85,7 +84,7 @@ double TFSFCorrector::hyInc(std::size_t i, std::size_t j, std::size_t k) const {
   return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);
 }
 
-double TFSFCorrector::hzInc(std::size_t i, std::size_t j, std::size_t k) const {
+Real TFSFCorrector::hzInc(std::size_t i, std::size_t j, std::size_t k) const {
   i = i - globalStart().i() + 1;
   j = j - globalStart().j() + 1;
   k = k - globalStart().k();
@@ -695,57 +694,33 @@ void TFSFCorrector::correctHyZP() {
   }
 }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskXN() const {
-  return _global_ey_task_xn;
-}
+IndexTask TFSFCorrector::globalEyTaskXN() const { return _global_ey_task_xn; }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskXN() const {
-  return _global_ez_task_xn;
-}
+IndexTask TFSFCorrector::globalEzTaskXN() const { return _global_ez_task_xn; }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskXP() const {
-  return _global_ey_task_xp;
-}
+IndexTask TFSFCorrector::globalEyTaskXP() const { return _global_ey_task_xp; }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskXP() const {
-  return _global_ez_task_xp;
-}
+IndexTask TFSFCorrector::globalEzTaskXP() const { return _global_ez_task_xp; }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskYN() const {
-  return _global_ez_task_yn;
-}
+IndexTask TFSFCorrector::globalEzTaskYN() const { return _global_ez_task_yn; }
 
-Divider::IndexTask TFSFCorrector::globalExTaskYN() const {
-  return _global_ex_task_yn;
-}
+IndexTask TFSFCorrector::globalExTaskYN() const { return _global_ex_task_yn; }
 
-Divider::IndexTask TFSFCorrector::globalEzTaskYP() const {
-  return _global_ez_task_yp;
-}
+IndexTask TFSFCorrector::globalEzTaskYP() const { return _global_ez_task_yp; }
 
-Divider::IndexTask TFSFCorrector::globalExTaskYP() const {
-  return _global_ex_task_yp;
-}
+IndexTask TFSFCorrector::globalExTaskYP() const { return _global_ex_task_yp; }
 
-Divider::IndexTask TFSFCorrector::globalExTaskZN() const {
-  return _global_ex_task_zn;
-}
+IndexTask TFSFCorrector::globalExTaskZN() const { return _global_ex_task_zn; }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskZN() const {
-  return _global_ey_task_zn;
-}
+IndexTask TFSFCorrector::globalEyTaskZN() const { return _global_ey_task_zn; }
 
-Divider::IndexTask TFSFCorrector::globalExTaskZP() const {
-  return _global_ex_task_zp;
-}
+IndexTask TFSFCorrector::globalExTaskZP() const { return _global_ex_task_zp; }
 
-Divider::IndexTask TFSFCorrector::globalEyTaskZP() const {
-  return _global_ey_task_zp;
-}
+IndexTask TFSFCorrector::globalEyTaskZP() const { return _global_ey_task_zp; }
 
 void TFSF1DCorrector::correctE() {
-  const auto lk = task()._z_range[0];
-  const auto rk = task()._z_range[1];
+  const auto lk = task().zRange().start();
+  const auto rk = task().zRange().end();
 
   auto& ex_zn{emfPtr()->ex()(0, 0, lk)};
   auto hy_i{hyInc(0, 0, lk - 1)};
@@ -757,8 +732,8 @@ void TFSF1DCorrector::correctE() {
 }
 
 void TFSF1DCorrector::correctH() {
-  const auto lk = task()._z_range[0];
-  const auto rk = task()._z_range[1];
+  const auto lk = task().zRange().start();
+  const auto rk = task().zRange().end();
 
   auto& hy_zn{emfPtr()->hy()(0, 0, lk - 1)};
   auto ex_i{exInc(0, 0, lk)};

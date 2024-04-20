@@ -10,7 +10,7 @@
 
 namespace xfdtd {
 
-Cylinder::Cylinder(Vector center, double radius, double height, Axis axis)
+Cylinder::Cylinder(Vector center, Real radius, Real height, Axis axis)
     : _center{std::move(center)},
       _radius{radius},
       _height{height},
@@ -37,19 +37,19 @@ std::string Cylinder::toString() const {
 
 Vector Cylinder::center() const { return _center; }
 
-double Cylinder::radius() const { return _radius; }
+Real Cylinder::radius() const { return _radius; }
 
-double Cylinder::height() const { return _height; }
+Real Cylinder::height() const { return _height; }
 
 Axis Cylinder::axis() const { return _axis; }
 
-bool Cylinder::isInside(double x, double y, double z) const {
+bool Cylinder::isInside(Real x, Real y, Real z) const {
   auto wrapped_cube{wrappedCube()};
   if (!wrapped_cube->isInside(x, y, z)) {
     return false;
   }
 
-  double dis{0};
+  Real dis{0};
   if (_axis == Axis::XYZ::X) {
     dis =
         std::sqrt(std::pow(y - _center.y(), 2) + std::pow(z - _center.z(), 2));

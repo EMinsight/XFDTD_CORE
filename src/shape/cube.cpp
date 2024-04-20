@@ -19,8 +19,8 @@ std::unique_ptr<Shape> Cube::clone() const {
 }
 
 std::string Cube::toString() const {
-  return std::string{"Cube("} + _origin.toString() + ", " + _size.toString() +
-         ")";
+  return std::string{"Cube(origin: "} + _origin.toString() +
+         ", size:" + _size.toString() + " end: " + _end.toString() + ")";
 }
 
 Vector Cube::origin() const { return _origin; }
@@ -31,31 +31,31 @@ Vector Cube::center() const { return _center; }
 
 Vector Cube::end() const { return _end; }
 
-double Cube::originX() const { return _origin.x(); }
+Real Cube::originX() const { return _origin.x(); }
 
-double Cube::originY() const { return _origin.y(); }
+Real Cube::originY() const { return _origin.y(); }
 
-double Cube::originZ() const { return _origin.z(); }
+Real Cube::originZ() const { return _origin.z(); }
 
-double Cube::sizeX() const { return _size.x(); }
+Real Cube::sizeX() const { return _size.x(); }
 
-double Cube::sizeY() const { return _size.y(); }
+Real Cube::sizeY() const { return _size.y(); }
 
-double Cube::sizeZ() const { return _size.z(); }
+Real Cube::sizeZ() const { return _size.z(); }
 
-double Cube::centerX() const { return _center.x(); }
+Real Cube::centerX() const { return _center.x(); }
 
-double Cube::centerY() const { return _center.y(); }
+Real Cube::centerY() const { return _center.y(); }
 
-double Cube::centerZ() const { return _center.z(); }
+Real Cube::centerZ() const { return _center.z(); }
 
-double Cube::endX() const { return _end.x(); }
+Real Cube::endX() const { return _end.x(); }
 
-double Cube::endY() const { return _end.y(); }
+Real Cube::endY() const { return _end.y(); }
 
-double Cube::endZ() const { return _end.z(); }
+Real Cube::endZ() const { return _end.z(); }
 
-bool Cube::isInside(double x, double y, double z) const {
+bool Cube::isInside(Real x, Real y, Real z) const {
   auto x_inside{floatCompare(originX(), x, FloatCompareOperator::LessEqual) &&
                 floatCompare(x, endX(), FloatCompareOperator::LessEqual)};
   auto y_inside{floatCompare(originY(), y, FloatCompareOperator::LessEqual) &&
@@ -76,13 +76,13 @@ std::unique_ptr<Cube> Cube::wrappedCube() const {
 void Cube::updateEnd() {
   _end = _origin + _size;
   if (std::isnan(_end.x())) {
-    _end.setX(std::numeric_limits<double>::infinity());
+    _end.setX(std::numeric_limits<Real>::infinity());
   }
   if (std::isnan(_end.y())) {
-    _end.setY(std::numeric_limits<double>::infinity());
+    _end.setY(std::numeric_limits<Real>::infinity());
   }
   if (std::isnan(_end.z())) {
-    _end.setZ(std::numeric_limits<double>::infinity());
+    _end.setZ(std::numeric_limits<Real>::infinity());
   }
 }
 

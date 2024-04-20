@@ -1,6 +1,6 @@
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/constant.h>
 #include <xfdtd/grid_space/grid_space.h>
-#include <xfdtd/util/constant.h>
 
 #include <xtensor.hpp>
 

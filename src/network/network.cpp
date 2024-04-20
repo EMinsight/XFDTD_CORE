@@ -1,4 +1,5 @@
 #include <xfdtd/network/network.h>
+#include <xfdtd/parallel/mpi_support.h>
 
 #include <exception>
 #include <filesystem>
@@ -11,7 +12,7 @@ namespace xfdtd {
 Network::Network(std::string output_dir) : _output_dir{std::move(output_dir)} {}
 
 Network::Network(std::vector<std::shared_ptr<Port>> ports,
-                 xt::xarray<double> frequencies, std::string output_dir)
+                 Array1D<Real> frequencies, std::string output_dir)
     : _ports{std::move(ports)},
       _frequencies{std::move(frequencies)},
       _output_dir{std::move(output_dir)} {}
@@ -20,7 +21,7 @@ void Network::addPort(std::shared_ptr<Port> port) {
   _ports.emplace_back(std::move(port));
 }
 
-void Network::setFrequencies(xt::xarray<double> frequencies) {
+void Network::setFrequencies(Array1D<Real> frequencies) {
   _frequencies = std::move(frequencies);
 }
 
@@ -46,6 +47,10 @@ void Network::init(
 void Network::output() {
   for (auto& port : _ports) {
     port->calculateSParameters(_frequencies);
+  }
+
+  if (!MpiSupport::instance().isRoot()) {
+    return;
   }
 
   for (std::size_t i{0}; i < _ports.size(); ++i) {

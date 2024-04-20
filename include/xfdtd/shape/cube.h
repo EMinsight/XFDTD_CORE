@@ -36,31 +36,31 @@ class Cube : public Shape {
 
   Vector end() const;
 
-  double originX() const;
+  Real originX() const;
 
-  double originY() const;
+  Real originY() const;
 
-  double originZ() const;
+  Real originZ() const;
 
-  double sizeX() const;
+  Real sizeX() const;
 
-  double sizeY() const;
+  Real sizeY() const;
 
-  double sizeZ() const;
+  Real sizeZ() const;
 
-  double centerX() const;
+  Real centerX() const;
 
-  double centerY() const;
+  Real centerY() const;
 
-  double centerZ() const;
+  Real centerZ() const;
 
-  double endX() const;
+  Real endX() const;
 
-  double endY() const;
+  Real endY() const;
 
-  double endZ() const;
+  Real endZ() const;
 
-  bool isInside(double x, double y, double z) const override;
+  bool isInside(Real x, Real y, Real z) const override;
 
   bool isInside(const Vector& vector) const override;
 

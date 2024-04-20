@@ -9,8 +9,7 @@ namespace xfdtd {
 
 class GridSpace1D : public GridSpace {
  public:
-  GridSpace1D(GridSpaceRegion region, double based_dz,
-              xt::xarray<double> e_node_z);
+  GridSpace1D(Real based_dz, Array1D<Real> e_node_z);
 
   void correctGridSpace() override;
 
@@ -23,17 +22,17 @@ class GridSpace1D : public GridSpace {
   }
 
  protected:
-  std::size_t handleTransformXWithoutCheck(double x) const override {
+  std::size_t handleTransformXWithoutCheck(Real x) const override {
     throw std::runtime_error("handleTransformXWithoutCheck is not implemented");
   }
 
-  std::size_t handleTransformYWithoutCheck(double y) const override {
+  std::size_t handleTransformYWithoutCheck(Real y) const override {
     throw std::runtime_error("handleTransformYWithoutCheck is not implemented");
   }
 
-  std::size_t handleTransformX(double x) const override;
+  std::size_t handleTransformX(Real x) const override;
 
-  std::size_t handleTransformY(double y) const override;
+  std::size_t handleTransformY(Real y) const override;
 };
 
 }  // namespace xfdtd

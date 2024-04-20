@@ -1,7 +1,8 @@
 #ifndef _XFDTD_CORE_LUMPED_ELEMENT_CORRECTOR_H_
 #define _XFDTD_CORE_LUMPED_ELEMENT_CORRECTOR_H_
 
-#include <xfdtd/divider/divider.h>
+#include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
 
 #include <memory>
 #include <utility>
@@ -13,9 +14,9 @@ namespace xfdtd {
 
 class LumpedElementCorrector : public Corrector {
  public:
-  LumpedElementCorrector(Divider::IndexTask task, Divider::IndexTask local_task,
+  LumpedElementCorrector(IndexTask task, IndexTask local_task,
                          std::shared_ptr<CalculationParam> calculation_param,
-                         xt::xarray<double>& e_field)
+                         Array3D<Real>& e_field)
       : _task{task},
         _local_task{local_task},
         _calculation_param{std::move(calculation_param)},
@@ -32,18 +33,17 @@ class LumpedElementCorrector : public Corrector {
   }
 
  protected:
-  Divider::IndexTask _task, _local_task;
+  IndexTask _task, _local_task;
   std::shared_ptr<CalculationParam> _calculation_param;
-  xt::xarray<double>& _e_field;
+  Array3D<Real>& _e_field;
 };
 
 class VoltageSourceCorrector : public LumpedElementCorrector {
  public:
-  VoltageSourceCorrector(Divider::IndexTask task, Divider::IndexTask local_task,
+  VoltageSourceCorrector(IndexTask task, IndexTask local_task,
                          std::shared_ptr<CalculationParam> calculation_param,
-                         xt::xarray<double>& e_field,
-                         const xt::xarray<double>& coeff_v,
-                         const xt::xarray<double>& waveform)
+                         Array3D<Real>& e_field, const Array3D<Real>& coeff_v,
+                         const Array1D<Real>& waveform)
       : LumpedElementCorrector{task, local_task, std::move(calculation_param),
                                e_field},
         _coeff_v{coeff_v},
@@ -63,17 +63,16 @@ class VoltageSourceCorrector : public LumpedElementCorrector {
   }
 
  private:
-  const xt::xarray<double>& _coeff_v;
-  const xt::xarray<double>& _waveform;
+  const Array3D<Real>& _coeff_v;
+  const Array1D<Real>& _waveform;
 };
 
 class CurrentSourceCorrector : public LumpedElementCorrector {
  public:
-  CurrentSourceCorrector(Divider::IndexTask task, Divider::IndexTask local_task,
+  CurrentSourceCorrector(IndexTask task, IndexTask local_task,
                          std::shared_ptr<CalculationParam> calculation_param,
-                         xt::xarray<double>& e_field,
-                         const xt::xarray<double>& coeff_i,
-                         const xt::xarray<double>& waveform)
+                         Array3D<Real>& e_field, const Array3D<Real>& coeff_i,
+                         const Array1D<Real>& waveform)
       : LumpedElementCorrector{task, local_task, std::move(calculation_param),
                                e_field},
         _coeff_i{coeff_i},
@@ -93,18 +92,17 @@ class CurrentSourceCorrector : public LumpedElementCorrector {
   }
 
  private:
-  const xt::xarray<double>& _coeff_i;
-  const xt::xarray<double>& _waveform;
+  const Array3D<Real>& _coeff_i;
+  const Array1D<Real>& _waveform;
 };
 
 class InductorCorrector : public LumpedElementCorrector {
  public:
  public:
-  InductorCorrector(Divider::IndexTask task, Divider::IndexTask local_task,
+  InductorCorrector(IndexTask task, IndexTask local_task,
                     std::shared_ptr<CalculationParam> calculation_param,
-                    xt::xarray<double>& e_field, xt::xarray<double>& j,
-                    const xt::xarray<double>& cecjc,
-                    const xt::xarray<double>& cjcec)
+                    Array3D<Real>& e_field, Array3D<Real>& j,
+                    const Array3D<Real>& cecjc, const Array3D<Real>& cjcec)
       : LumpedElementCorrector{task, local_task, std::move(calculation_param),
                                e_field},
         _j{j},
@@ -123,8 +121,8 @@ class InductorCorrector : public LumpedElementCorrector {
   }
 
  private:
-  xt::xarray<double>& _j;
-  const xt::xarray<double>&_cecjc, &_cjcec;
+  Array3D<Real>& _j;
+  const Array3D<Real>&_cecjc, &_cjcec;
 };
 
 }  // namespace xfdtd

@@ -7,11 +7,11 @@
 namespace xfdtd {
 
 CurrentSource::CurrentSource(std::string name, std::unique_ptr<Cube> cube,
-                             Axis::Direction direction, double resistance,
+                             Axis::Direction direction, Real resistance,
                              std::unique_ptr<Waveform> waveform,
                              std::unique_ptr<Material> material)
     : LumpedElement{std::move(name), std::move(cube),
-                    Axis::formDirectionToXYZ(direction), std::move(material)},
+                    Axis::fromDirectionToXYZ(direction), std::move(material)},
       _direction{direction},
       _resistance{resistance},
       _waveform{std::move(waveform)} {
@@ -32,7 +32,7 @@ std::string CurrentSource::toString() const {
 
 Axis::Direction CurrentSource::direction() const { return _direction; }
 
-double CurrentSource::resistance() const { return _resistance; }
+Real CurrentSource::resistance() const { return _resistance; }
 
 const std::unique_ptr<Waveform> &CurrentSource::waveform() const {
   return _waveform;
@@ -44,25 +44,24 @@ void CurrentSource::init(std::shared_ptr<const GridSpace> grid_space,
   LumpedElement::init(std::move(grid_space), std::move(calculation_param),
                       std::move(emf));
 
-  auto rf{[](double r, std::size_t na, std::size_t nb, std::size_t nc) {
+  auto rf{[](Real r, std::size_t na, std::size_t nb, std::size_t nc) {
     return r * na * nb / nc;
   }};
 
-  auto cf{[](double c, std::size_t na, std::size_t nb, std::size_t nc) {
+  auto cf{[](Real c, std::size_t na, std::size_t nb, std::size_t nc) {
     return c / (na * nb);
   }};
 
-  auto dx_dy_dz{[](const xt::xarray<double> &x, const xt::xarray<double> &y,
-                   const xt::xarray<double> &z, auto &&x_range, auto &&y_range,
-                   auto &&z_range) {
+  auto dx_dy_dz{[](const auto &x, const auto &y, const auto &z, auto &&x_range,
+                   auto &&y_range, auto &&z_range) {
     return xt::meshgrid(xt::view(x, x_range), xt::view(y, y_range),
                         xt::view(z, z_range));
   }};
 
-  _resistance_factor = rf(_resistance, nodeCountSubAxisA(), nodeCountSubAxisB(),
-                          nodeCountMainAxis());
-  _current_amplitude_factor = cf(_waveform->amplitude(), nodeCountSubAxisA(),
-                                 nodeCountSubAxisB(), nodeCountMainAxis());
+  _resistance_factor = rf(_resistance, globalCountSubAxisA(),
+                          globalCountSubAxisB(), globalCountMainAxis());
+  _current_amplitude_factor = cf(_waveform->amplitude(), globalCountSubAxisA(),
+                                 globalCountSubAxisB(), globalCountMainAxis());
 
   auto g{gridSpacePtr()};
 
@@ -111,9 +110,8 @@ void CurrentSource::init(std::shared_ptr<const GridSpace> grid_space,
 
 void CurrentSource::correctUpdateCoefficient() {
   auto dt{calculationParamPtr()->timeParam()->dt()};
-  auto func{[this, dt](xt::xarray<double> &cece, xt::xarray<double> &cecha,
-                       xt::xarray<double> &cechb, const xt::xarray<double> &eps,
-                       const xt::xarray<double> &sigma) {
+  auto func{[this, dt](auto &cece, auto &cecha, auto &cechb, const auto &eps,
+                       const auto &sigma) {
     auto range_x{rangeX()};
     auto range_y{rangeY()};
     auto range_z{rangeZ()};
@@ -167,7 +165,7 @@ void CurrentSource::initTimeDependentVariable() {
 }
 
 void CurrentSource::correctE() {
-  auto func{[this](xt::xarray<double> &e) {
+  auto func{[this](auto &e) {
     auto range_x{rangeX()};
     auto range_y{rangeY()};
     auto range_z{rangeZ()};
@@ -198,25 +196,25 @@ void CurrentSource::correctE() {
 void CurrentSource::correctH() {}
 
 std::unique_ptr<Corrector> CurrentSource::generateCorrector(
-    const Divider::Task<std::size_t> &task) {
+    const Task<std::size_t> &task) {
   if (!taskContainLumpedElement(task)) {
     return nullptr;
   }
 
   auto domain = makeIndexTask();
-  auto intersection = Divider::taskIntersection(task, domain);
+  auto intersection = taskIntersection(task, domain);
 
   if (!intersection.has_value()) {
     return nullptr;
   }
 
-  auto local_task = Divider::makeTask(
-      Divider::makeRange(intersection->_x_range[0] - domain._x_range[0],
-                         intersection->_x_range[1] - domain._x_range[0]),
-      Divider::makeRange(intersection->_y_range[0] - domain._y_range[0],
-                         intersection->_y_range[1] - domain._y_range[0]),
-      Divider::makeRange(intersection->_z_range[0] - domain._z_range[0],
-                         intersection->_z_range[1] - domain._z_range[0]));
+  auto local_task = makeTask(
+      makeRange(intersection->xRange().start() - domain.xRange().start(),
+                intersection->xRange().end() - domain.xRange().start()),
+      makeRange(intersection->yRange().start() - domain.yRange().start(),
+                intersection->yRange().end() - domain.yRange().start()),
+      makeRange(intersection->zRange().start() - domain.zRange().start(),
+                intersection->zRange().end() - domain.zRange().start()));
 
   return std::make_unique<CurrentSourceCorrector>(
       intersection.value(), local_task, calculationParam(),

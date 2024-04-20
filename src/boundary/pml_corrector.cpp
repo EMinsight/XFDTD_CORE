@@ -1,57 +1,81 @@
-#include <boundary/pml_corrector.h>
-#include <boundary/pml_scheme.h>
+#include "boundary/pml_corrector.h"
+
+#include <xfdtd/common/index_task.h>
+
 #include <sstream>
 #include <string>
+
+#include "boundary/pml_scheme.h"
 
 namespace xfdtd {
 
 std::string PMLCorrectorX::toString() const {
   std::stringstream ss;
-  ss << "PMLCorrectorX: pml_e_c_start=" << _pml_e_c_start
-     << ", pml_h_c_start=" << _pml_h_c_start << ", a_s=" << _a_s
-     << ", a_n=" << _a_n << ", b_s=" << _b_s << ", b_n=" << _b_n
-     << ", c_e_s=" << _c_e_s << ", c_e_n=" << _c_e_n << ", c_h_s=" << _c_h_s
-     << ", c_h_n=" << _c_h_n;
+  ss << "PML X:\n";
+  auto e_x_range = makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
+  auto h_x_range = makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
+  auto y_range = makeIndexRange(_a_s, _a_s + _a_n);
+  auto z_range = makeIndexRange(_b_s, _b_s + _b_n);
+  ss << " E: " << e_x_range.toString() << ", " << y_range.toString() << ", "
+     << z_range.toString() << "\n";
+  ss << " H: " << h_x_range.toString() << ", " << y_range.toString() << ", "
+     << z_range.toString();
+  ss << "\n";
+  ss << " PML Global E Start: " << _pml_global_e_start << "\n";
+  ss << " PML Global H Start: " << _pml_global_h_start << "\n";
+  ss << " Offset C: " << _offset_c << "\n";
   return ss.str();
 }
 
 void PMLCorrectorX::correctE() {
-  for (std::size_t i{_c_e_s}; i < _c_e_s + _c_e_n; ++i) {
-    auto ii{i - _pml_e_c_start};
-    for (std::size_t j{_a_s}; j < _a_s + _a_n; ++j) {
-      for (std::size_t k{_b_s}; k < _b_s + _b_n + 1; ++k) {
-        correctPML(_ea(i, j, k), _ea_psi_hb(ii, j, k), _coeff_a_e(ii),
-                   _coeff_b_e(ii), _hb(i, j, k), _hb(i - 1, j, k),
-                   _c_ea_psi_hb(ii, j, k));
+  for (std::size_t node_i{_c_e_s}; node_i < _c_e_s + _c_e_n; ++node_i) {
+    auto i = node_i - _pml_node_e_start;
+    auto global_i = node_i + _offset_c;
+
+    for (std::size_t node_j{_a_s}; node_j < _a_s + _a_n; ++node_j) {
+      for (std::size_t node_k{_b_s}; node_k < _b_s + _b_n + 1; ++node_k) {
+        correctPML(_ea(node_i, node_j, node_k), _ea_psi_hb(i, node_j, node_k),
+                   _coeff_a_e(global_i - _pml_global_e_start),
+                   _coeff_b_e(global_i - _pml_global_e_start),
+                   _hb(node_i, node_j, node_k), _hb(node_i - 1, node_j, node_k),
+                   _c_ea_psi_hb(i, node_j, node_k));
       }
     }
 
-    for (std::size_t j{_a_s}; j < _a_s + _a_n + 1; ++j) {
-      for (std::size_t k{_b_s}; k < _b_s + _b_n; ++k) {
-        correctPML(_eb(i, j, k), _eb_psi_ha(ii, j, k), _coeff_a_e(ii),
-                   _coeff_b_e(ii), _ha(i, j, k), _ha(i - 1, j, k),
-                   _c_eb_psi_ha(ii, j, k));
+    for (std::size_t node_j{_a_s}; node_j < _a_s + _a_n + 1; ++node_j) {
+      for (std::size_t node_k{_b_s}; node_k < _b_s + _b_n; ++node_k) {
+        correctPML(_eb(node_i, node_j, node_k), _eb_psi_ha(i, node_j, node_k),
+                   _coeff_a_e(global_i - _pml_global_e_start),
+                   _coeff_b_e(global_i - _pml_global_e_start),
+                   _ha(node_i, node_j, node_k), _ha(node_i - 1, node_j, node_k),
+                   _c_eb_psi_ha(i, node_j, node_k));
       }
     }
   }
 }
 
 void PMLCorrectorX::correctH() {
-  for (std::size_t i{_c_h_s}; i < _c_h_s + _c_h_n; ++i) {
-    auto ii{i - _pml_h_c_start};
-    for (std::size_t j{_a_s}; j < _a_s + _a_n + 1; ++j) {
-      for (std::size_t k{_b_s}; k < _b_s + _b_n; ++k) {
-        correctPML(_ha(i, j, k), _ha_psi_eb(ii, j, k), _coeff_a_h(ii),
-                   _coeff_b_h(ii), _eb(i + 1, j, k), _eb(i, j, k),
-                   _c_ha_psi_eb(ii, j, k));
+  for (std::size_t node_i{_c_h_s}; node_i < _c_h_s + _c_h_n; ++node_i) {
+    auto i = node_i - _pml_node_h_start;
+    auto global_i = node_i + _offset_c;
+
+    for (std::size_t node_j{_a_s}; node_j < _a_s + _a_n + 1; ++node_j) {
+      for (std::size_t node_k{_b_s}; node_k < _b_s + _b_n; ++node_k) {
+        correctPML(_ha(node_i, node_j, node_k), _ha_psi_eb(i, node_j, node_k),
+                   _coeff_a_h(global_i - _pml_global_h_start),
+                   _coeff_b_h(global_i - _pml_global_h_start),
+                   _eb(node_i + 1, node_j, node_k), _eb(node_i, node_j, node_k),
+                   _c_ha_psi_eb(i, node_j, node_k));
       }
     }
 
-    for (std::size_t j{_a_s}; j < _a_s + _a_n; ++j) {
-      for (std::size_t k{_b_s}; k < _b_s + _b_n + 1; ++k) {
-        correctPML(_hb(i, j, k), _hb_psi_ea(ii, j, k), _coeff_a_h(ii),
-                   _coeff_b_h(ii), _ea(i + 1, j, k), _ea(i, j, k),
-                   _c_hb_psi_ea(ii, j, k));
+    for (std::size_t node_j{_a_s}; node_j < _a_s + _a_n; ++node_j) {
+      for (std::size_t node_k{_b_s}; node_k < _b_s + _b_n + 1; ++node_k) {
+        correctPML(_hb(node_i, node_j, node_k), _hb_psi_ea(i, node_j, node_k),
+                   _coeff_a_h(global_i - _pml_global_h_start),
+                   _coeff_b_h(global_i - _pml_global_h_start),
+                   _ea(node_i + 1, node_j, node_k), _ea(node_i, node_j, node_k),
+                   _c_hb_psi_ea(i, node_j, node_k));
       }
     }
   }
@@ -59,57 +83,77 @@ void PMLCorrectorX::correctH() {
 
 std::string PMLCorrectorY::toString() const {
   std::stringstream ss;
-  ss << "PMLCorrectorY: pml_e_c_start=" << _pml_e_c_start
-     << ", pml_h_c_start=" << _pml_h_c_start << ", a_s=" << _a_s
-     << ", a_n=" << _a_n << ", b_s=" << _b_s << ", b_n=" << _b_n
-     << ", c_e_s=" << _c_e_s << ", c_e_n=" << _c_e_n << ", c_h_s=" << _c_h_s
-     << ", c_h_n=" << _c_h_n;
+  ss << "PML Y:\n";
+  auto e_y_range = makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
+  auto h_y_range = makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
+  auto x_range = makeIndexRange(_b_s, _b_s + _b_n);
+  auto z_range = makeIndexRange(_a_s, _a_s + _a_n);
+  ss << " E: " << x_range.toString() << ", " << e_y_range.toString() << ", "
+     << z_range.toString() << "\n";
+  ss << " H: " << x_range.toString() << ", " << h_y_range.toString() << ", "
+     << z_range.toString() << "\n";
+  ss << " PML Global E Start: " << _pml_global_e_start << "\n";
+  ss << " PML Global H Start: " << _pml_global_h_start << "\n";
+  ss << " Offset C: " << _offset_c << "\n";
+
   return ss.str();
 }
 
 void PMLCorrectorY::correctE() {
-  for (std::size_t i{_b_s}; i < _b_s + _b_n + 1; ++i) {
-    for (std::size_t j{_c_e_s}; j < _c_e_s + _c_e_n; ++j) {
-      auto jj{j - _pml_e_c_start};
-      for (std::size_t k{_a_s}; k < _a_s + _a_n; ++k) {
-        correctPML(_ea(i, j, k), _ea_psi_hb(i, jj, k), _coeff_a_e(jj),
-                   _coeff_b_e(jj), _hb(i, j, k), _hb(i, j - 1, k),
-                   _c_ea_psi_hb(i, jj, k));
+  for (std::size_t node_i{_b_s}; node_i < _b_s + _b_n + 1; ++node_i) {
+    for (std::size_t node_j{_c_e_s}; node_j < _c_e_s + _c_e_n; ++node_j) {
+      auto j = node_j - _pml_node_e_start;
+      auto global_j = node_j + _offset_c;
+      for (std::size_t node_k{_a_s}; node_k < _a_s + _a_n; ++node_k) {
+        correctPML(_ea(node_i, node_j, node_k), _ea_psi_hb(node_i, j, node_k),
+                   _coeff_a_e(global_j - _pml_global_e_start),
+                   _coeff_b_e(global_j - _pml_global_e_start),
+                   _hb(node_i, node_j, node_k), _hb(node_i, node_j - 1, node_k),
+                   _c_ea_psi_hb(node_i, j, node_k));
       }
     }
   }
 
-  for (std::size_t i{_b_s}; i < _b_s + _b_n; ++i) {
-    for (std::size_t j{_c_e_s}; j < _c_e_s + _c_e_n; ++j) {
-      auto jj{j - _pml_e_c_start};
-      for (std::size_t k{_a_s}; k < _a_s + _a_n + 1; ++k) {
-        correctPML(_eb(i, j, k), _eb_psi_ha(i, jj, k), _coeff_a_e(jj),
-                   _coeff_b_e(jj), _ha(i, j, k), _ha(i, j - 1, k),
-                   _c_eb_psi_ha(i, jj, k));
+  for (std::size_t node_i{_b_s}; node_i < _b_s + _b_n; ++node_i) {
+    for (std::size_t node_j{_c_e_s}; node_j < _c_e_s + _c_e_n; ++node_j) {
+      auto j = node_j - _pml_node_e_start;
+      auto global_j = node_j + _offset_c;
+      for (std::size_t node_k{_a_s}; node_k < _a_s + _a_n + 1; ++node_k) {
+        correctPML(_eb(node_i, node_j, node_k), _eb_psi_ha(node_i, j, node_k),
+                   _coeff_a_e(global_j - _pml_global_e_start),
+                   _coeff_b_e(global_j - _pml_global_e_start),
+                   _ha(node_i, node_j, node_k), _ha(node_i, node_j - 1, node_k),
+                   _c_eb_psi_ha(node_i, j, node_k));
       }
     }
   }
 }
 
 void PMLCorrectorY::correctH() {
-  for (std::size_t i{_b_s}; i < _b_s + _b_n; ++i) {
-    for (std::size_t j{_c_h_s}; j < _c_h_s + _c_h_n; ++j) {
-      for (std::size_t k{_a_s}; k < _a_s + _a_n + 1; ++k) {
-        auto jj{j - _pml_h_c_start};
-        correctPML(_ha(i, j, k), _ha_psi_eb(i, jj, k), _coeff_a_h(jj),
-                   _coeff_b_h(jj), _eb(i, j + 1, k), _eb(i, j, k),
-                   _c_ha_psi_eb(i, jj, k));
+  for (std::size_t node_i{_b_s}; node_i < _b_s + _b_n; ++node_i) {
+    for (std::size_t node_j{_c_h_s}; node_j < _c_h_s + _c_h_n; ++node_j) {
+      for (std::size_t node_k{_a_s}; node_k < _a_s + _a_n + 1; ++node_k) {
+        auto j = node_j - _pml_node_h_start;
+        auto global_j = node_j + _offset_c;
+        correctPML(_ha(node_i, node_j, node_k), _ha_psi_eb(node_i, j, node_k),
+                   _coeff_a_h(global_j - _pml_global_h_start),
+                   _coeff_b_h(global_j - _pml_global_h_start),
+                   _eb(node_i, node_j + 1, node_k), _eb(node_i, node_j, node_k),
+                   _c_ha_psi_eb(node_i, j, node_k));
       }
     }
   }
 
-  for (std::size_t i{_b_s}; i < _b_s + _b_n + 1; ++i) {
-    for (std::size_t j{_c_h_s}; j < _c_h_s + _c_h_n; ++j) {
-      for (std::size_t k{_a_s}; k < _a_s + _a_n; ++k) {
-        auto jj{j - _pml_h_c_start};
-        correctPML(_hb(i, j, k), _hb_psi_ea(i, jj, k), _coeff_a_h(jj),
-                   _coeff_b_h(jj), _ea(i, j + 1, k), _ea(i, j, k),
-                   _c_hb_psi_ea(i, jj, k));
+  for (std::size_t node_i{_b_s}; node_i < _b_s + _b_n + 1; ++node_i) {
+    for (std::size_t node_j{_c_h_s}; node_j < _c_h_s + _c_h_n; ++node_j) {
+      for (std::size_t node_k{_a_s}; node_k < _a_s + _a_n; ++node_k) {
+        auto j = node_j - _pml_node_h_start;
+        auto global_j = node_j + _offset_c;
+        correctPML(_hb(node_i, node_j, node_k), _hb_psi_ea(node_i, j, node_k),
+                   _coeff_a_h(global_j - _pml_global_h_start),
+                   _coeff_b_h(global_j - _pml_global_h_start),
+                   _ea(node_i, node_j + 1, node_k), _ea(node_i, node_j, node_k),
+                   _c_hb_psi_ea(node_i, j, node_k));
       }
     }
   }
@@ -117,55 +161,74 @@ void PMLCorrectorY::correctH() {
 
 std::string PMLCorrectorZ::toString() const {
   std::stringstream ss;
-  ss << "PMLCorrectorZ: pml_e_c_start=" << _pml_e_c_start
-     << ", pml_h_c_start=" << _pml_h_c_start << ", a_s=" << _a_s
-     << ", a_n=" << _a_n << ", b_s=" << _b_s << ", b_n=" << _b_n
-     << ", c_e_s=" << _c_e_s << ", c_e_n=" << _c_e_n << ", c_h_s=" << _c_h_s
-     << ", c_h_n=" << _c_h_n;
+  ss << "PML Z:\n";
+  auto e_z_range = makeIndexRange(_c_e_s, _c_e_s + _c_e_n);
+  auto h_z_range = makeIndexRange(_c_h_s, _c_h_s + _c_h_n);
+  auto x_range = makeIndexRange(_a_s, _a_s + _a_n);
+  auto y_range = makeIndexRange(_b_s, _b_s + _b_n);
+  ss << " E: " << x_range.toString() << ", " << y_range.toString() << ", "
+     << e_z_range.toString() << "\n";
+  ss << " H: " << x_range.toString() << ", " << y_range.toString() << ", "
+     << h_z_range.toString() << "\n";
+  ss << " PML Global E Start: " << _pml_global_e_start << "\n";
+  ss << " PML Global H Start: " << _pml_global_h_start << "\n";
+  ss << " Offset C: " << _offset_c << "\n";
   return ss.str();
 }
 
 void PMLCorrectorZ::correctE() {
-  for (std::size_t i{_a_s}; i < _a_s + _a_n; ++i) {
-    for (std::size_t j{_b_s}; j < _b_s + _b_n + 1; ++j) {
-      for (std::size_t k{_c_e_s}; k < _c_e_s + _c_e_n; ++k) {
-        auto kk{k - _pml_e_c_start};
-        correctPML(_ea(i, j, k), _ea_psi_hb(i, j, kk), _coeff_a_e(kk),
-                   _coeff_b_e(kk), _hb(i, j, k), _hb(i, j, k - 1),
-                   _c_ea_psi_hb(i, j, kk));
+  for (std::size_t node_i{_a_s}; node_i < _a_s + _a_n; ++node_i) {
+    for (std::size_t node_j{_b_s}; node_j < _b_s + _b_n + 1; ++node_j) {
+      for (std::size_t node_k{_c_e_s}; node_k < _c_e_s + _c_e_n; ++node_k) {
+        auto k = node_k - _pml_node_e_start;
+        auto global_k = node_k + _offset_c;
+        correctPML(_ea(node_i, node_j, node_k), _ea_psi_hb(node_i, node_j, k),
+                   _coeff_a_e(global_k - _pml_global_e_start),
+                   _coeff_b_e(global_k - _pml_global_e_start),
+                   _hb(node_i, node_j, node_k), _hb(node_i, node_j, node_k - 1),
+                   _c_ea_psi_hb(node_i, node_j, k));
       }
     }
   }
-  for (std::size_t i{_a_s}; i < _a_s + _a_n + 1; ++i) {
-    for (std::size_t j{_b_s}; j < _b_s + _b_n; ++j) {
-      for (std::size_t k{_c_e_s}; k < _c_e_s + _c_e_n; ++k) {
-        auto kk{k - _pml_e_c_start};
-        correctPML(_eb(i, j, k), _eb_psi_ha(i, j, kk), _coeff_a_e(kk),
-                   _coeff_b_e(kk), _ha(i, j, k), _ha(i, j, k - 1),
-                   _c_eb_psi_ha(i, j, kk));
+  for (std::size_t node_i{_a_s}; node_i < _a_s + _a_n + 1; ++node_i) {
+    for (std::size_t node_j{_b_s}; node_j < _b_s + _b_n; ++node_j) {
+      for (std::size_t node_k{_c_e_s}; node_k < _c_e_s + _c_e_n; ++node_k) {
+        auto k = node_k - _pml_node_e_start;
+        auto global_k = node_k + _offset_c;
+        correctPML(_eb(node_i, node_j, node_k), _eb_psi_ha(node_i, node_j, k),
+                   _coeff_a_e(global_k - _pml_global_e_start),
+                   _coeff_b_e(global_k - _pml_global_e_start),
+                   _ha(node_i, node_j, node_k), _ha(node_i, node_j, node_k - 1),
+                   _c_eb_psi_ha(node_i, node_j, k));
       }
     }
   }
 }
 
 void PMLCorrectorZ::correctH() {
-  for (std::size_t i{_a_s}; i < _a_s + _a_n + 1; ++i) {
-    for (std::size_t j{_b_s}; j < _b_s + _b_n; ++j) {
-      for (std::size_t k{_c_h_s}; k < _c_h_s + _c_h_n; ++k) {
-        auto kk{k - _pml_h_c_start};
-        correctPML(_ha(i, j, k), _ha_psi_eb(i, j, kk), _coeff_a_h(kk),
-                   _coeff_b_h(kk), _eb(i, j, k + 1), _eb(i, j, k),
-                   _c_ha_psi_eb(i, j, kk));
+  for (std::size_t node_i{_a_s}; node_i < _a_s + _a_n + 1; ++node_i) {
+    for (std::size_t node_j{_b_s}; node_j < _b_s + _b_n; ++node_j) {
+      for (std::size_t node_k{_c_h_s}; node_k < _c_h_s + _c_h_n; ++node_k) {
+        auto k = node_k - _pml_node_h_start;
+        auto global_k = node_k + _offset_c;
+        correctPML(_ha(node_i, node_j, node_k), _ha_psi_eb(node_i, node_j, k),
+                   _coeff_a_h(global_k - _pml_global_h_start),
+                   _coeff_b_h(global_k - _pml_global_h_start),
+                   _eb(node_i, node_j, node_k + 1), _eb(node_i, node_j, node_k),
+                   _c_ha_psi_eb(node_i, node_j, k));
       }
     }
   }
-  for (std::size_t i{_a_s}; i < _a_s + _a_n; ++i) {
-    for (std::size_t j{_b_s}; j < _b_s + _b_n + 1; ++j) {
-      for (std::size_t k{_c_h_s}; k < _c_h_s + _c_h_n; ++k) {
-        auto kk{k - _pml_h_c_start};
-        correctPML(_hb(i, j, k), _hb_psi_ea(i, j, kk), _coeff_a_h(kk),
-                   _coeff_b_h(kk), _ea(i, j, k + 1), _ea(i, j, k),
-                   _c_hb_psi_ea(i, j, kk));
+  for (std::size_t node_i{_a_s}; node_i < _a_s + _a_n; ++node_i) {
+    for (std::size_t node_j{_b_s}; node_j < _b_s + _b_n + 1; ++node_j) {
+      for (std::size_t node_k{_c_h_s}; node_k < _c_h_s + _c_h_n; ++node_k) {
+        auto k = node_k - _pml_node_h_start;
+        auto global_k = node_k + _offset_c;
+        correctPML(_hb(node_i, node_j, node_k), _hb_psi_ea(node_i, node_j, k),
+                   _coeff_a_h(global_k - _pml_global_h_start),
+                   _coeff_b_h(global_k - _pml_global_h_start),
+                   _ea(node_i, node_j, node_k + 1), _ea(node_i, node_j, node_k),
+                   _c_hb_psi_ea(node_i, node_j, k));
       }
     }
   }

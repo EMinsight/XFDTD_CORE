@@ -1,0 +1,3 @@
+aux_source_directory(. XFDTD_PARALLEL_SRC)
+add_library(xfdtd_parallel OBJECT ${XFDTD_PARALLEL_SRC})
+set(${ALL_OBJECT_FILES} ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:PARALLEL> PARENT_SCOPE)
