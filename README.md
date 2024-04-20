@@ -231,9 +231,9 @@ mpiexec -n ${n} ${your_executable}
 
 ## More Examples
 
-See the `example` folder for more examples.
+See the `examples` folder for more examples.
 
-[Example README](./example/README.md)
+[Example README](./examples/RAEDME.md)
 
 ## Known Issues
 
