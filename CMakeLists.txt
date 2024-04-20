@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
   XFDTD_CORE
-  VERSION 0.0.0
+  VERSION 0.1.0
   LANGUAGES CXX)
 
 set(XFDTD_CORE_MAIN_PROJECT OFF)
