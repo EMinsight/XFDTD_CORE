@@ -28,9 +28,9 @@ class BasicUpdatorTEM : public BasicUpdator {
   void updateE() override;
 
  protected:
-  void updateEEdge() override { throw std::runtime_error("Not implemented"); }
+  void updateEEdge() override;
 
-  void updateHEdge() override { throw std::runtime_error("Not implemented"); }
+  void updateHEdge() override {}
 };
 
 class BasicUpdatorTE : public BasicUpdator {
@@ -67,25 +67,6 @@ class BasicUpdator3D : public BasicUpdator {
   void updateEEdge() override;
 
   void updateHEdge() override {}
-
- private:
-  // void updateExYN();
-
-  // void updateExZN();
-
-  // void updateExCornerYZ();
-
-  // void updateEyZN();
-
-  // void updateEyXN();
-
-  // void updateEyCornerXZ();
-
-  // void updateEzXN();
-
-  // void updateEzYN();
-
-  // void updateEzCornerXY();
 };
 
 }  // namespace xfdtd

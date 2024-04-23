@@ -44,6 +44,8 @@ class DebyeADEMethod : public LinearDispersiveMaterialUpdateMethod {
 
   auto updateEz(Index i, Index j, Index k) -> void override;
 
+  auto updateTEM(Index i, Index j, Index k) -> void override;
+
  private:
   std::shared_ptr<DebyeEqDecision> _debye_eq;
 

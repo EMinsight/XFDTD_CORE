@@ -42,6 +42,8 @@ class DrudeADEMethod : public LinearDispersiveMaterialUpdateMethod {
 
   auto updateEz(Index i, Index j, Index k) -> void override;
 
+  auto updateTEM(Index i, Index j, Index k) -> void override;
+
  private:
   std::shared_ptr<DrudeEqDecision> _drude_eq;
 

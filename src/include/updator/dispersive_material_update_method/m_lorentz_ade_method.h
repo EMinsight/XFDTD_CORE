@@ -55,6 +55,8 @@ class MLorentzADEMethod : public LinearDispersiveMaterialUpdateMethod {
 
   auto updateEz(Index i, Index j, Index k) -> void override;
 
+  auto updateTEM(Index i, Index j, Index k) -> void override;
+
  private:
   std::shared_ptr<MLorentzEqDecision> _m_lorentz_equation;
 

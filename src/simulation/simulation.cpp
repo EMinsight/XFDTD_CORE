@@ -524,12 +524,20 @@ std::unique_ptr<Updator> Simulation::makeUpdator(const IndexTask& task) {
       return std::make_unique<BasicUpdatorTE>(_grid_space, _calculation_param,
                                               _emf, task);
     }
-    throw XFDTDSimulationException("Invalid dimension");
+    if (_grid_space->dimension() == GridSpace::Dimension::ONE) {
+      return std::make_unique<BasicUpdatorTEM>(_grid_space, _calculation_param,
+                                               _emf, task);
+    }
   }
 
   // Contains linear dispersive material
   if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
     return std::make_unique<LinearDispersiveMaterialUpdator>(
+        _calculation_param->materialParam()->materialArray(), _grid_space,
+        _calculation_param, _emf, task);
+  }
+  if (_grid_space->dimension() == GridSpace::Dimension::ONE) {
+    return std::make_unique<LinearDispersiveMaterialUpdator1D>(
         _calculation_param->materialParam()->materialArray(), _grid_space,
         _calculation_param, _emf, task);
   }

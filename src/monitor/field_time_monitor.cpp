@@ -3,6 +3,8 @@
 
 #include <utility>
 
+#include "xfdtd/grid_space/grid_space.h"
+
 namespace xfdtd {
 
 FieldTimeMonitor::FieldTimeMonitor(std::string name, std::unique_ptr<Cube> cube,
@@ -33,21 +35,16 @@ auto FieldTimeMonitor::init(
 
   auto axis = component_to_axis(component);
 
-  if (gridSpacePtr()->dimension() == GridSpace::Dimension::ONE) {
-    throw XFDTDMonitorException(
-        "FieldMonitor cannot be used in 1D simulation(not implemented)");
-  }
-
   // TODO(franzero): temporary way. need to be refactored
   // Example: The box for Hx is. The box for Ex is
   auto offset_i = 0;
   auto offset_j = 0;
   auto offset_k = 0;
   if (nodeGridBox().origin().i() == 0) {
-    offset_i = 1;
+    offset_i = gridSpacePtr()->dimension() == GridSpace::Dimension::ONE ? 0 : 1;
   }
   if (nodeGridBox().origin().j() == 0) {
-    offset_j = 1;
+    offset_j = gridSpacePtr()->dimension() == GridSpace::Dimension::ONE ? 0 : 1;
   }
   if (nodeGridBox().origin().k() == 0) {
     offset_k =

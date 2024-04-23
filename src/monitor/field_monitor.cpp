@@ -20,11 +20,6 @@ void FieldMonitor::init(
     std::shared_ptr<const EMF> emf) {
   defaultInit(grid_space, calculation_param, emf);
 
-  if (gridSpacePtr()->dimension() == GridSpace::Dimension::ONE) {
-    throw XFDTDMonitorException(
-        "FieldMonitor cannot be used in 1D simulation(not implemented)");
-  }
-
   // TODO(franzero): temporary way. need to be refactored
   // Example: The box for Hx is. The box for Ex is
   auto offset_i = 0;
@@ -32,10 +27,10 @@ void FieldMonitor::init(
   auto offset_k = 0;
 
   if (globalGridBox().origin().i() == 0) {
-    offset_i = 1;
+    offset_i = gridSpacePtr()->dimension() == GridSpace::Dimension::ONE ? 0 : 1;
   }
   if (globalGridBox().origin().j() == 0) {
-    offset_j = 1;
+    offset_j = gridSpacePtr()->dimension() == GridSpace::Dimension::ONE ? 0 : 1;
   }
   if (globalGridBox().origin().k() == 0) {
     offset_k =
@@ -53,10 +48,10 @@ void FieldMonitor::init(
   offset_k = 0;
 
   if (nodeGridBox().origin().i() == 0) {
-    offset_i = 1;
+    offset_i = gridSpacePtr()->dimension() == GridSpace::Dimension::ONE ? 0 : 1;
   }
   if (nodeGridBox().origin().j() == 0) {
-    offset_j = 1;
+    offset_j = gridSpacePtr()->dimension() == GridSpace::Dimension::ONE ? 0 : 1;
   }
   if (nodeGridBox().origin().k() == 0) {
     offset_k =

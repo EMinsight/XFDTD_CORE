@@ -285,6 +285,32 @@ auto MLorentzADEMethod::updateEz(Index i, Index j, Index k) -> void {
   e_prev = e_cur;
 }
 
+auto MLorentzADEMethod::updateTEM(Index i, Index j, Index k) -> void {
+  auto& ex = _emf->ex();
+  const auto& cexe = _calculation_param->fdtdCoefficient()->cexe();
+  const auto& cexhy = _calculation_param->fdtdCoefficient()->cexhy();
+  const auto& hy = _emf->hy();
+
+  auto j_sum = calculateJSum(i, j, k, _jx, _jx_prev);
+
+  auto local_i = i - _is;
+  auto local_j = j - _js;
+  auto local_k = k - _ks;
+  const auto e_cur = ex(i, j, k);
+  auto& e_prev = _ex_prev(local_i, local_j, local_k);
+
+  auto& e_next = ex(i, j, k);
+
+  e_next = _coeff_e_e_p * e_prev +
+           eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k), hy(i, j, k),
+                 hy(i, j, k - 1), 0.0, 0.0, 0.0) +
+           _coeff_e_j_sum * j_sum;
+
+  updateJ(i, j, k, e_next, e_cur, e_prev, _jx, _jx_prev);
+
+  e_prev = e_cur;
+}
+
 auto MLorentzADEMethod::calculateJSum(Index i, Index j, Index k,
                                       const Array4D<Real>& j_arr,
                                       const Array4D<Real>& j_prev_arr) -> Real {

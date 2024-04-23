@@ -323,4 +323,92 @@ auto LinearDispersiveMaterialUpdator::updateEEdge() -> void {
   }
 }
 
+LinearDispersiveMaterialUpdator1D::LinearDispersiveMaterialUpdator1D(
+    const std::vector<std::shared_ptr<Material>>& material_arr,
+    std::shared_ptr<const GridSpace> grid_space,
+    std::shared_ptr<const CalculationParam> calculation_param,
+    std::shared_ptr<EMF> emf, IndexTask task)
+    : BasicUpdatorTEM(std::move(grid_space), std::move(calculation_param),
+                      std::move(emf), task) {
+  init(material_arr);
+}
+
+auto LinearDispersiveMaterialUpdator1D::init(
+    const std::vector<std::shared_ptr<Material>>& material_arr) -> void {
+  if (material_arr.empty()) {
+    throw XFDTDLinearDispersiveMaterialException{"Material array is empty"};
+  }
+
+  _map.resize(material_arr.size(), -1);
+
+  for (Index i{0}; i < material_arr.size(); ++i) {
+    const auto& m = material_arr[i];
+    if (!m->dispersion()) {
+      continue;
+    }
+
+    auto dispersive_material =
+        std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
+    if (dispersive_material == nullptr) {
+      continue;
+    }
+
+    _update_methods.emplace_back(dispersive_material->updateMethod()->clone());
+    _update_methods.back()->initUpdate(_grid_space.get(), _calculation_param,
+                                       _emf, i, task());
+    _map[i] = _update_methods.size() - 1;
+  }
+}
+
+auto LinearDispersiveMaterialUpdator1D::updateE() -> void {
+  const auto ks =
+      basic::GridStructure::exFDTDUpdateZStart(task().zRange().start());
+  const auto ke = basic::GridStructure::exFDTDUpdateZEnd(task().zRange().end());
+
+  const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
+  const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
+
+  const auto& hy{_emf->hy()};
+  auto& ex{_emf->ex()};
+
+  for (Index k{ks}; k < ke; ++k) {
+    auto m_index = _grid_space->gridWithMaterial()(0, 0, k)->materialIndex();
+
+    if (m_index == -1 || _map[m_index] == -1) {
+      ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k),
+                          hy(0, 0, k), hy(0, 0, k - 1), 0.0, 0.0, 0.0);
+      continue;
+    }
+
+    _update_methods[_map[m_index]]->updateTEM(0, 0, k);
+  }
+
+  updateEEdge();
+}
+
+auto LinearDispersiveMaterialUpdator1D::updateEEdge() -> void {
+  if (containZNEdge()) {
+    return;
+  }
+
+  const auto ks = task().zRange().start();
+
+  const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
+  const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
+
+  const auto& hy{_emf->hy()};
+  auto& ex{_emf->ex()};
+  auto k = ks;
+
+  auto m_index = _grid_space->gridWithMaterial()(0, 0, k)->materialIndex();
+
+  if (m_index == -1 || _map[m_index] == -1) {
+    ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
+                        hy(0, 0, k - 1), 0.0, 0.0, 0.0);
+    return;
+  }
+
+  _update_methods[_map[m_index]]->updateTEM(0, 0, k);
+}
+
 }  // namespace xfdtd

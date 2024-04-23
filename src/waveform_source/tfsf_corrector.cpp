@@ -719,29 +719,21 @@ IndexTask TFSFCorrector::globalExTaskZP() const { return _global_ex_task_zp; }
 IndexTask TFSFCorrector::globalEyTaskZP() const { return _global_ey_task_zp; }
 
 void TFSF1DCorrector::correctE() {
-  const auto lk = task().zRange().start();
-  const auto rk = task().zRange().end();
+  if (_forward) {
+    correctExZN();
+    return;
+  }
 
-  auto& ex_zn{emfPtr()->ex()(0, 0, lk)};
-  auto hy_i{hyInc(0, 0, lk - 1)};
-  ex_zn += cax() * hy_i;
-
-  auto& ex_zp{emfPtr()->ex()(0, 0, rk)};
-  hy_i = {hyInc(0, 0, rk)};
-  ex_zp -= cax() * hy_i;
+  correctExZP();
 }
 
 void TFSF1DCorrector::correctH() {
-  const auto lk = task().zRange().start();
-  const auto rk = task().zRange().end();
+  if (_forward) {
+    correctHyZN();
+    return;
+  }
 
-  auto& hy_zn{emfPtr()->hy()(0, 0, lk - 1)};
-  auto ex_i{exInc(0, 0, lk)};
-  hy_zn += cbx() * ex_i;
-
-  auto& hy_zp{emfPtr()->hy()(0, 0, rk)};
-  ex_i = exInc(0, 0, rk);
-  hy_zp -= cbx() * ex_i;
+  correctHyZP();
 }
 
 void TFSF2DCorrector::correctE() {

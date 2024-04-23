@@ -201,8 +201,7 @@ class TFSF1DCorrector : public TFSFCorrector {
   TFSF1DCorrector(Grid global_start, std::shared_ptr<GridSpace> grid_space,
                   std::shared_ptr<CalculationParam> calculation_param,
                   std::shared_ptr<EMF> emf, const Array1D<Real>& waveform,
-                  IndexTask zn_task, IndexTask zp_task,
-                  const Array1D<Real>& projection_x_int,
+                  bool forward, const Array1D<Real>& projection_x_int,
                   const Array1D<Real>& projection_y_int,
                   const Array1D<Real>& projection_z_int,
                   const Array1D<Real>& projection_x_half,
@@ -225,9 +224,13 @@ class TFSF1DCorrector : public TFSFCorrector {
                       {},
                       {},
                       {},
+                      makeIndexTask(makeIndexRange(0, 1), makeIndexRange(0, 1),
+                                    makeIndexRange(global_start.k(),
+                                                   global_start.k() + 1)),
                       {},
-                      {},
-                      {},
+                      makeIndexTask(makeIndexRange(0, 1), makeIndexRange(0, 1),
+                                    makeIndexRange(global_start.k(),
+                                                   global_start.k() + 1)),
                       {},
                       projection_x_int,
                       projection_y_int,
@@ -246,9 +249,8 @@ class TFSF1DCorrector : public TFSFCorrector {
                       cay,
                       cby,
                       caz,
-                      cbz} {
-    throw std::runtime_error("Not implemented");
-  };
+                      cbz},
+        _forward{forward} {};
 
   ~TFSF1DCorrector() override = default;
 
@@ -257,6 +259,7 @@ class TFSF1DCorrector : public TFSFCorrector {
   void correctH() override;
 
  private:
+  const bool _forward;
 };
 
 class TFSF2DCorrector : public TFSFCorrector {
