@@ -54,7 +54,7 @@ project(xfdtd_first_example VERSION 0.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(xfdtd_core REQUIRED)Ï
+find_package(xfdtd_core REQUIRED)
 
 set(XFDTD_EXAMPLE_LIBRARIES xfdtd::xfdtd_core)
 
