@@ -193,6 +193,23 @@ auto DebyeADEMethod::updateEz(Index i, Index j, Index k) -> void {
   updateJ(i, j, k, e_next, e_cur, _jz);
 }
 
+auto DebyeADEMethod::updateTEM(Index i, Index j, Index k) -> void {
+  auto& ex{_emf->ex()};
+  const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
+  const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
+  const auto& hy{_emf->hy()};
+
+  auto j_sum = calculateJSum(i, j, k, _jx);
+  const auto e_cur = ex(i, j, k);
+  auto&& e_next = ex(i, j, k);
+
+  e_next = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k), hy(i, j, k),
+                 hy(i, j, k - 1), 0.0, 0.0, 0.0) +
+           _coeff_e_j_sum * j_sum;
+
+  updateJ(i, j, k, e_next, e_cur, _jx);
+}
+
 auto DebyeADEMethod::calculateJSum(Index i, Index j, Index k,
                                    const Array4D<Real>& j_arr) const -> Real {
   Real j_sum{0};

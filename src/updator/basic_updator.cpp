@@ -100,13 +100,14 @@ BasicUpdatorTEM::BasicUpdatorTEM(
                    std::move(emf), task) {}
 
 void BasicUpdatorTEM::updateE() {
-  const auto ks = task().zRange().start();
-  const auto ke = task().zRange().end();
+  const auto ks =
+      basic::GridStructure::exFDTDUpdateZStart(task().zRange().start());
+  const auto ke = basic::GridStructure::exFDTDUpdateZEnd(task().zRange().end());
 
   const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
   const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
 
-  auto& hy{_emf->hy()};
+  const auto& hy{_emf->hy()};
   auto& ex{_emf->ex()};
 
   for (std::size_t k{ks}; k < ke; ++k) {
@@ -115,6 +116,23 @@ void BasicUpdatorTEM::updateE() {
   }
 
   updateEEdge();
+}
+
+auto BasicUpdatorTEM::updateEEdge() -> void {
+  if (containZNEdge()) {
+    return;
+  }
+
+  const auto ks = task().zRange().start();
+
+  const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
+  const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
+
+  const auto& hy{_emf->hy()};
+  auto& ex{_emf->ex()};
+  auto k = ks;
+  ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
+                      hy(0, 0, k - 1), 0.0, 0.0, 0.0);
 }
 
 }  // namespace xfdtd

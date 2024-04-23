@@ -37,6 +37,8 @@ class LinearDispersiveMaterialUpdateMethod {
 
   virtual auto updateEz(Index i, Index j, Index k) -> void = 0;
 
+  virtual auto updateTEM(Index i, Index j, Index k) -> void = 0;
+
  protected:
   Real _epsilon_inf;
   std::shared_ptr<const CalculationParam> _calculation_param;

@@ -29,6 +29,7 @@ target list:
 * rlc_circuit: 3D RLC circuit
 * simple_capacitor: 3D simple capacitor
 * simple_circuit: 3D simple circuit
+* slab_refection_transmission: 1D slab reflection and transmission
 
 ```bash
 cmake -S . -B build
