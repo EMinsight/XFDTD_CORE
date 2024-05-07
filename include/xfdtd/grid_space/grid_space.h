@@ -210,6 +210,8 @@ class GridSpace {
 
   GridBox transformNodeToGlobal(const GridBox& box) const;
 
+  auto eps() const -> Real;
+
  protected:
   GridSpace(Real dx, Real dy, Real dz, Dimension dimension,
             Array1D<Real> e_node_x, Array1D<Real> e_node_y,
@@ -306,7 +308,7 @@ class GridSpace {
 inline auto GridSpace::getShapeMask(const Shape* shape) const {
   Array3D<bool> mask{xt::make_lambda_xfunction(
       [shape, this](auto&& g) {
-        return shape->isInside(getGridCenterVector(*g));
+        return shape->isInside(getGridCenterVector(*g), eps());
       },
       _grid_with_material)};
   return mask;

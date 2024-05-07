@@ -15,6 +15,11 @@
 
 namespace xfdtd {
 
+auto MpiSupport::instance(int argc, char** argv) -> MpiSupport& {
+  static MpiSupport instance(argc, argv);
+  return instance;
+}
+
 MpiSupport::~MpiSupport() { waitAll(); }
 
 auto MpiSupport::setMpiParallelDim(int nx, int ny, int nz) -> void {
@@ -27,7 +32,9 @@ auto MpiSupport::setMpiParallelDim(int nx, int ny, int nz) -> void {
   config_nz = nz;
 }
 
-MpiSupport::MpiSupport(int argc, char** argv) { mpiInit(argc, argv); }
+MpiSupport::MpiSupport(int argc, char** argv) {
+  mpiInit(argc, argv);
+}
 
 auto MpiSupport::abort(int error_code) const -> void {
 #if defined(XFDTD_CORE_WITH_MPI)

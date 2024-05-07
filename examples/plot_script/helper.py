@@ -101,11 +101,11 @@ def plot_pattern_with_constant_phi(theta, pat_theta, pat_phi, max_val, step_size
     return fig, ax
 
 
-def plot2d_gif(sorted_data_files, read_func, process_func, vmin=-25, vmax=5):
+def plot2d_gif(sorted_data_files, read_func, process_func, vmin=-25, vmax=5, cmap='jet'):
     f, ax = plt.subplots()
     data = process_func(read_func(sorted_data_files[0]))
 
-    im = ax.imshow(data, cmap='jet', vmin=vmin, vmax=vmax)
+    im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
     ax.grid(True)
     f.colorbar(im)
 

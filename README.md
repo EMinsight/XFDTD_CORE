@@ -4,7 +4,7 @@ This is a part of the XFDTD project. It contains the core functionality of the X
 
 ## Feature
 
-1. Support 2D and 3D simulation.
+1. Support 1D, 2D and 3D simulation.
 2. Support PML boundary.
 3. Support TFSF source.
 4. Support lumped element.

@@ -132,10 +132,7 @@ class MpiSupport {
   inline static constexpr int EXCHANGE_HY_Z_SR_TAG = 10;
   inline static constexpr int EXCHANGE_HY_Z_RS_TAG = 11;
 
-  static auto instance(int argc = 0, char** argv = nullptr) -> MpiSupport& {
-    static MpiSupport instance(argc, argv);
-    return instance;
-  }
+  static auto instance(int argc = 0, char** argv = nullptr) -> MpiSupport&;
 
  public:
   MpiSupport(MpiSupport const&) = delete;

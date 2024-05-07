@@ -23,9 +23,9 @@ class Sphere : public Shape {
 
   std::string toString() const override;
 
-  bool isInside(Real x, Real y, Real z) const override;
+  bool isInside(Real x, Real y, Real z, Real eps) const override;
 
-  bool isInside(const Vector &vector) const override;
+  bool isInside(const Vector &vector, Real eps) const override;
 
   std::unique_ptr<Cube> wrappedCube() const override;
 

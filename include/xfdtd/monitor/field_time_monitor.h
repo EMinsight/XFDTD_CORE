@@ -36,6 +36,8 @@ class FieldTimeMonitor : public TimeMonitor {
 
  private:
   EMF::Field _field;
+
+  void* _no_meaningful_data{nullptr};
 };
 
 }  // namespace xfdtd

@@ -113,8 +113,13 @@ auto FieldTimeMonitor::initTimeDependentVariable() -> void {
 auto FieldTimeMonitor::initParallelizedConfig() -> void {
   makeMpiSubComm();
   if (valid() && 1 < monitorMpiConfig().size()) {
-    throw XFDTDMonitorException(
-        "XFDTD Field Time Monitor does not support parallelization");
+    // throw XFDTDMonitorException(
+    //     "XFDTD Field Time Monitor does not support parallelization");
+    if (monitorMpiConfig().isRoot()) {
+      std::cout << "Waring: XFDTD Field Time Monitor does not support "
+                   "parallelization. This is only currently running in ag nano "
+                   "sphere\n";
+    }
   }
 }
 

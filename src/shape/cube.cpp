@@ -55,18 +55,21 @@ Real Cube::endY() const { return _end.y(); }
 
 Real Cube::endZ() const { return _end.z(); }
 
-bool Cube::isInside(Real x, Real y, Real z) const {
-  auto x_inside{floatCompare(originX(), x, FloatCompareOperator::LessEqual) &&
-                floatCompare(x, endX(), FloatCompareOperator::LessEqual)};
-  auto y_inside{floatCompare(originY(), y, FloatCompareOperator::LessEqual) &&
-                floatCompare(y, endY(), FloatCompareOperator::LessEqual)};
-  auto z_inside{floatCompare(originZ(), z, FloatCompareOperator::LessEqual) &&
-                floatCompare(z, endZ(), FloatCompareOperator::LessEqual)};
+bool Cube::isInside(Real x, Real y, Real z, Real eps) const {
+  auto x_inside{
+      floatCompare(originX(), x, FloatCompareOperator::LessEqual, eps) &&
+      floatCompare(x, endX(), FloatCompareOperator::LessEqual, eps)};
+  auto y_inside{
+      floatCompare(originY(), y, FloatCompareOperator::LessEqual, eps) &&
+      floatCompare(y, endY(), FloatCompareOperator::LessEqual, eps)};
+  auto z_inside{
+      floatCompare(originZ(), z, FloatCompareOperator::LessEqual, eps) &&
+      floatCompare(z, endZ(), FloatCompareOperator::LessEqual, eps)};
   return x_inside && y_inside && z_inside;
 }
 
-bool Cube::isInside(const Vector& vector) const {
-  return isInside(vector.x(), vector.y(), vector.z());
+bool Cube::isInside(const Vector& vector, Real eps) const {
+  return isInside(vector.x(), vector.y(), vector.z(), eps);
 }
 
 std::unique_ptr<Cube> Cube::wrappedCube() const {
