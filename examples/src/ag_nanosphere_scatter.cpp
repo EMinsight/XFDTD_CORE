@@ -52,12 +52,11 @@ auto agNanoSphereScatter() {
   auto tfsf_3d =
       std::make_shared<xfdtd::TFSF3D>(15, 15, 15, 0, 0, 0, std::move(waveform));
 
-//   auto run_simulation = [&](auto&& material) {
-    auto material = std::move(ag_m_lor);
+  auto run_simulation = [&](auto&& material) {
     const auto path = std::filesystem::path("./data/ag_nano_sphere_scatter_" +
                                             material->name());
 
-    auto au_sphere = std::make_shared<xfdtd::Object>(
+    auto ag_sphere = std::make_shared<xfdtd::Object>(
         "ag_sphere",
         std::make_unique<xfdtd::Sphere>(xfdtd::Vector{0, 0, 0}, radius),
         std::forward<decltype(material)>(material));
@@ -78,7 +77,7 @@ auto agNanoSphereScatter() {
 
     auto s = xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 1}};
     s.addObject(domain);
-    s.addObject(au_sphere);
+    s.addObject(ag_sphere);
     s.addWaveformSource(tfsf_3d);
     s.addMonitor(ex_point_monitor);
     s.addMonitor(ex_movie_xz);
@@ -96,27 +95,27 @@ auto agNanoSphereScatter() {
 
     auto dt = s.calculationParam()->timeParam()->dt();
     auto fft_freq = xt::linspace<double>(0, 1 / (2 * dt), 1000);
-    auto au = std::dynamic_pointer_cast<xfdtd::LinearDispersiveMaterial>(
-        au_sphere->material());
-    auto epsilon = au->relativePermittivity(fft_freq);
-    xt::dump_npy(path / "relative_permittivity.npy",
+    auto ag = std::dynamic_pointer_cast<xfdtd::LinearDispersiveMaterial>(
+        ag_sphere->material());
+    auto epsilon = ag->relativePermittivity(fft_freq);
+    xt::dump_npy((path / "relative_permittivity.npy").string(),
                  xt::stack(xt::xtuple(fft_freq, epsilon)));
 
     auto time = tfsf_3d->waveform()->time();
     auto incident_wave_data = tfsf_3d->waveform()->value();
-    xt::dump_npy(path / "incident_wave.npy",
+    xt::dump_npy((path / "incident_wave.npy").string(),
                  xt::stack(xt::xtuple(time, incident_wave_data)));
-    // ex_point_monitor->output();
-//   };
+    ex_point_monitor->output();
+  };
 
-//   run_simulation(std::move(ag_drude));
+  run_simulation(std::move(ag_drude));
 
-//   xfdtd::MpiSupport::instance().barrier();
-//   if (xfdtd::MpiSupport::instance().isRoot()) {
-//     std::cout << "Next: ";
-//   }
+  xfdtd::MpiSupport::instance().barrier();
+  if (xfdtd::MpiSupport::instance().isRoot()) {
+    std::cout << "Next: ";
+  }
 
-//   run_simulation(std::move(ag_m_lor));
+  run_simulation(std::move(ag_m_lor));
 }
 
 int main() {
