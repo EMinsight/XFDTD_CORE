@@ -2,70 +2,7 @@
 
 #include <cstddef>
 
-#include "xfdtd/coordinate_system/coordinate_system.h"
-
 namespace xfdtd {
-
-EMF::Field EMF::fieldFromAttributeAndComponent(EMF::Attribute a,
-                                               EMF::Component c) {
-  switch (a) {
-    case EMF::Attribute::E:
-      switch (c) {
-        case EMF::Component::X:
-          return EMF::Field::EX;
-        case EMF::Component::Y:
-          return EMF::Field::EY;
-        case EMF::Component::Z:
-          return EMF::Field::EZ;
-        default:
-          throw XFDTDEMFException("Invalid component type");
-      }
-    case EMF::Attribute::H:
-      switch (c) {
-        case EMF::Component::X:
-          return EMF::Field::HX;
-        case EMF::Component::Y:
-          return EMF::Field::HY;
-        case EMF::Component::Z:
-          return EMF::Field::HZ;
-        default:
-          throw XFDTDEMFException("Invalid component type");
-      }
-    default:
-      throw XFDTDEMFException("Invalid attribute type");
-  }
-}
-
-EMF::Component EMF::componentFromField(EMF::Field f) {
-  switch (f) {
-    case EMF::Field::EX:
-    case EMF::Field::HX:
-      return EMF::Component::X;
-    case EMF::Field::EY:
-    case EMF::Field::HY:
-      return EMF::Component::Y;
-    case EMF::Field::EZ:
-    case EMF::Field::HZ:
-      return EMF::Component::Z;
-    default:
-      throw XFDTDEMFException("Invalid field type");
-  }
-}
-
-EMF::Attribute EMF::attributeFromField(EMF::Field f) {
-  switch (f) {
-    case EMF::Field::EX:
-    case EMF::Field::EY:
-    case EMF::Field::EZ:
-      return EMF::Attribute::E;
-    case EMF::Field::HX:
-    case EMF::Field::HY:
-    case EMF::Field::HZ:
-      return EMF::Attribute::H;
-    default:
-      throw XFDTDEMFException("Invalid field type");
-  }
-}
 
 const Array3D<Real>& EMF::ex() const { return _ex; }
 
@@ -99,7 +36,7 @@ const Array3D<Real>& EMF::field(Field f) const {
 }
 
 const Array3D<Real>& EMF::field(Attribute a, Component c) const {
-  return field(EMF::fieldFromAttributeAndComponent(a, c));
+  return field(EMF::attributeComponentToField(a, c));
 }
 
 Array3D<Real>& EMF::ex() { return _ex; }
@@ -134,7 +71,7 @@ Array3D<Real>& EMF::field(Field f) {
 }
 
 Array3D<Real>& EMF::field(Attribute a, Component c) {
-  return field(EMF::fieldFromAttributeAndComponent(a, c));
+  return field(EMF::attributeComponentToField(a, c));
 }
 
 void EMF::allocateEx(std::size_t nx, std::size_t ny, std::size_t nz) {

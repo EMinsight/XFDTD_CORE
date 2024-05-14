@@ -7,11 +7,8 @@
 #include "updator/update_scheme.h"
 #include "updator/updator.h"
 #include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/common/type_define.h"
-#include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/util/fdtd_basic.h"
-#include "xfdtd/util/transform.h"
 
 namespace xfdtd {
 
@@ -21,26 +18,6 @@ BasicUpdator::BasicUpdator(
     std::shared_ptr<EMF> emf, IndexTask task)
     : Updator(std::move(grid_space), std::move(calculation_param),
               std::move(emf), task) {}
-
-template <EMF::Attribute attribute_c, Axis::XYZ xyz_c>
-static auto updateH(Index is, Index ie, Index js, Index je, Index ks, Index ke,
-                    const FDTDUpdateCoefficient& fc, EMF& emf) {
-  constexpr auto attribute_a =
-      transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>();
-  constexpr auto attribute_b =
-      transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>();
-
-  auto& field_c =
-      emf.field(transform::attributeXYZToField<attribute_c, xyz_c>());
-  const auto& field_a = emf.field(
-      transform::attributeXYZToDualTangentialAAxis<attribute_c, xyz_c>());
-  const auto& field_b = emf.field(
-      transform::attributeXYZToDualTangentialBAxis<attribute_c, xyz_c>());
-
-  const auto& c_c = fc.coeff<attribute_c, xyz_c>();
-  const auto& c_a = fc.coeffDualA<attribute_c, xyz_c>();
-  const auto& c_b = fc.coeffDualB<attribute_c, xyz_c>();
-}
 
 void BasicUpdator::updateH() {
   const auto task = this->task();

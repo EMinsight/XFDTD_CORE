@@ -5,7 +5,7 @@
 #include "xfdtd/common/constant.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
-#include "xfdtd/nffft/nffft.h"
+#include "xfdtd/nffft/nffft_frequency_domain.h"
 #include "xfdtd/object/object.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/simulation/simulation.h"
@@ -23,7 +23,7 @@ void dielectricCubeScatter() {
       xfdtd::Material::createAir())};
 
   auto dielectric_cube{std::make_shared<xfdtd::Object>(
-      "dielectric_cube_",
+      "dielectric_cube",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-80e-3, -80e-3, -80e-3},
                                     xfdtd::Vector{160e-3, 160e-3, 160e-3}),
       std::make_unique<xfdtd::Material>(
@@ -36,8 +36,9 @@ void dielectricCubeScatter() {
       15, 15, 15, xfdtd::constant::PI * 0.25, xfdtd::constant::PI / 6.0, 0,
       xfdtd::Waveform::gaussian(tau, t_0))};
 
-  auto nffft_fd{std::make_shared<xfdtd::NFFFT>(
-      13, 13, 13, xt::xarray<double>{1e9}, "./data/dielectric_cube_scatter")};
+  auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
+      13, 13, 13, xt::xarray<double>{1e9},
+      "./data/dielectric_cube_scatter/fd")};
 
   auto s{xfdtd::Simulation{dl, dl, dl, 0.9}};
   s.addObject(domain);

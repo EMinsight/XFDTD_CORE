@@ -28,7 +28,7 @@ auto nanoSphereScatter() -> void {
 
   constexpr double dl = 1e-9;
 
-  constexpr auto size = 150 * dl;
+  constexpr auto size = 120 * dl;
 
   const auto domain_area =
       xfdtd::Cube{xfdtd::Vector{-size / 2, -size / 2, -size / 2},
@@ -83,7 +83,7 @@ auto nanoSphereScatter() -> void {
           xfdtd::EMF::Field::EX, "", ""),
       10, "ex_movie_yz", (path / "movie_yz").string());
 
-  auto s = xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}};
+  auto s = xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 1}};
   s.addObject(domain);
   s.addObject(au_sphere);
   s.addWaveformSource(tfsf_3d);

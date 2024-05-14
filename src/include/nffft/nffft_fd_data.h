@@ -12,8 +12,6 @@ namespace xfdtd {
 
 class FDPlaneData {
  public:
-  enum class SurFaceCurrent { J, M };
-
   enum class Potential { A, F };
 
  public:
@@ -250,58 +248,6 @@ inline auto FDPlaneData::surfaceM() const
     return std::make_tuple(std::ref(_mx_zp), std::ref(_my_zp));
   } else {
     throw XFDTDNFFFTException("Invalid direction");
-  }
-}
-
-template <Axis::XYZ xyz>
-constexpr inline auto FDPlaneData::tangentialHaFieldEnum() -> EMF::Field {
-  if constexpr (xyz == Axis::XYZ::X) {
-    return EMF::Field::HY;
-  } else if constexpr (xyz == Axis::XYZ::Y) {
-    return EMF::Field::HZ;
-  } else if constexpr (xyz == Axis::XYZ::Z) {
-    return EMF::Field::HX;
-  } else {
-    throw XFDTDNFFFTException("Invalid field");
-  }
-}
-
-template <Axis::XYZ xyz>
-constexpr inline auto FDPlaneData::tangentialHbFieldEnum() -> EMF::Field {
-  if constexpr (xyz == Axis::XYZ::X) {
-    return EMF::Field::HZ;
-  } else if constexpr (xyz == Axis::XYZ::Y) {
-    return EMF::Field::HX;
-  } else if constexpr (xyz == Axis::XYZ::Z) {
-    return EMF::Field::HY;
-  } else {
-    throw XFDTDNFFFTException("Invalid field");
-  }
-}
-
-template <Axis::XYZ xyz>
-constexpr inline auto FDPlaneData::tangentialEaFieldEnum() -> EMF::Field {
-  if constexpr (xyz == Axis::XYZ::X) {
-    return EMF::Field::EY;
-  } else if constexpr (xyz == Axis::XYZ::Y) {
-    return EMF::Field::EZ;
-  } else if constexpr (xyz == Axis::XYZ::Z) {
-    return EMF::Field::EX;
-  } else {
-    throw XFDTDNFFFTException("Invalid field");
-  }
-}
-
-template <Axis::XYZ xyz>
-constexpr inline auto FDPlaneData::tangentialEbFieldEnum() -> EMF::Field {
-  if constexpr (xyz == Axis::XYZ::X) {
-    return EMF::Field::EZ;
-  } else if constexpr (xyz == Axis::XYZ::Y) {
-    return EMF::Field::EX;
-  } else if constexpr (xyz == Axis::XYZ::Z) {
-    return EMF::Field::EY;
-  } else {
-    throw XFDTDNFFFTException("Invalid field");
   }
 }
 

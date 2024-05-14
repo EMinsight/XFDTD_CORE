@@ -19,7 +19,7 @@ auto FieldTimeMonitor::init(
   defaultInit(std::move(grid_space), std::move(calculation_param),
               std::move(emf));
 
-  auto component = EMF::componentFromField(field());
+  auto component = EMF::fieldToComponent(field());
   auto component_to_axis = [](const EMF::Component &c) {
     switch (c) {
       case EMF::Component::X:
@@ -95,7 +95,7 @@ auto FieldTimeMonitor::update() -> void {
 }
 
 auto FieldTimeMonitor::initTimeDependentVariable() -> void {
-  auto attribute = EMF::attributeFromField(field());
+  auto attribute = EMF::fieldToAttribute(field());
   switch (attribute) {
     case EMF::Attribute::E:
       setTime(calculationParamPtr()->timeParam()->eTime());

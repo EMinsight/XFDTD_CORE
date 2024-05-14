@@ -153,17 +153,19 @@ class FarFieldData:
     def k(self):
         return 2 * np.pi * self.freq / 3e8
 
-    @property
-    def radiation_power(self):
-        return (8 * np.pi * 120 * np.pi * self.source_power) / self.k ** 2
+    # @property
+    # def radiation_power(self):
+    #     return (8 * np.pi * 120 * np.pi * self.source_power) / self.k ** 2
 
     @property
     def data_tehta(self):
-        return np.abs(120 * np.pi * self.a_theta + self.f_phi) ** 2 / self.radiation_power
+        a = self.k ** 2 / (8 * np.pi * 120 * np.pi)
+        return a * np.abs(120 * np.pi * self.a_theta + self.f_phi) ** 2 / self.source_power
 
     @property
     def data_phi(self):
-        return np.abs(-120 * np.pi * self.a_phi + self.f_theta) ** 2 / self.radiation_power
+        a = self.k ** 2 / (8 * np.pi * 120 * np.pi)
+        return a * np.abs(-120 * np.pi * self.a_phi + self.f_theta) ** 2 / self.source_power
 
     @property
     def data_theta_dB(self):
