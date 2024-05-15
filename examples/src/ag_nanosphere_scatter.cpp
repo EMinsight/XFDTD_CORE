@@ -5,12 +5,15 @@
 
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/calculation_param/calculation_param.h"
+#include "xfdtd/common/constant.h"
 #include "xfdtd/common/type_define.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/dispersive_material.h"
 #include "xfdtd/monitor/field_monitor.h"
 #include "xfdtd/monitor/field_time_monitor.h"
 #include "xfdtd/monitor/movie_monitor.h"
+#include "xfdtd/nffft/nffft_frequency_domain.h"
+#include "xfdtd/nffft/nffft_time_domain.h"
 #include "xfdtd/object/object.h"
 #include "xfdtd/parallel/mpi_support.h"
 #include "xfdtd/shape/cube.h"
@@ -75,12 +78,20 @@ auto agNanoSphereScatter() {
             xfdtd::EMF::Field::EX, "", ""),
         50, "ex_movie_xz", (path / "movie_xz").string());
 
+    auto nffft_fd = std::make_shared<xfdtd::NFFFTFrequencyDomain>(
+        12, 12, 12, xfdtd::Array1D<xfdtd::Real>{800 * 1e12});
+
+    auto nffft_td = std::make_shared<xfdtd::NFFFTTimeDomain>(
+        12, 12, 12, xfdtd::constant::PI, 0);
+
     auto s = xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 1}};
     s.addObject(domain);
     s.addObject(ag_sphere);
     s.addWaveformSource(tfsf_3d);
     s.addMonitor(ex_point_monitor);
-    s.addMonitor(ex_movie_xz);
+    // s.addMonitor(ex_movie_xz);
+    s.addNF2FF(nffft_fd);
+    s.addNF2FF(nffft_td);
     s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::XN));
     s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::XP));
     s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YN));
@@ -89,19 +100,30 @@ auto agNanoSphereScatter() {
     s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
     s.run(15000);
 
+    nffft_td->setOutputDir((path / "td").string());
+    nffft_td->processFarField();
+
+    nffft_fd->setOutputDir((path / "fd").string());
+    nffft_fd->processFarField(
+        xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI,
+                                  360),
+        0, "xz");
+
     if (!s.isRoot()) {
       return;
     }
 
-    auto dt = s.calculationParam()->timeParam()->dt();
-    auto fft_freq = xt::linspace<double>(0, 1 / (2 * dt), 1000);
     auto ag = std::dynamic_pointer_cast<xfdtd::LinearDispersiveMaterial>(
         ag_sphere->material());
-    auto epsilon = ag->relativePermittivity(fft_freq);
-    xt::dump_npy((path / "relative_permittivity.npy").string(),
-                 xt::stack(xt::xtuple(fft_freq, epsilon)));
+    auto epsilon = ag->relativePermittivity(
+        xt::linspace<xfdtd::Real>(10 * 1e12, 1200 * 1e12, 100));
+    xt::dump_npy(
+        (path / "relative_permittivity.npy").string(),
+        xt::stack(xt::xtuple(
+            xt::linspace<xfdtd::Real>(10 * 1e12, 1200 * 1e12, 100), epsilon)));
 
     auto time = tfsf_3d->waveform()->time();
+    xt::dump_npy((path / "time.npy").string(), time);
     auto incident_wave_data = tfsf_3d->waveform()->value();
     xt::dump_npy((path / "incident_wave.npy").string(),
                  xt::stack(xt::xtuple(time, incident_wave_data)));
