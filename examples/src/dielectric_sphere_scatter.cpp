@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <memory>
 #include <xtensor/xnpy.hpp>
+#include <filesystem>
 
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/common/constant.h"
