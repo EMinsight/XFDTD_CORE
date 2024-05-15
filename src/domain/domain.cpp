@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <ios>
+#include <memory>
 #include <mutex>
 #include <ostream>
 #include <sstream>
@@ -41,6 +42,10 @@ Domain::Domain(std::size_t id, IndexTask task,
       _master{master} {}
 
 void Domain::run() {
+  if (isMaster() && MpiSupport::instance().isRoot()) {
+    _start_time = std::chrono::system_clock::now();
+  }
+
   while (!isCalculationDone()) {
     if (isMaster()) {
       for (auto&& ws : _waveform_sources) {
@@ -126,11 +131,25 @@ void Domain::record() {
 
 void Domain::nextStep() {
   if (isMaster() && MpiSupport::instance().isRoot()) {
+    auto current_time = std::chrono::system_clock::now();
     std::stringstream ss;
     ss << "\r"
        << "Progress: " << _calculation_param->timeParam()->currentTimeStep() + 1
-       << "/" << _calculation_param->timeParam()->endTimeStep();
-    std::cout << ss.str() << std::flush;
+       << "/" << _calculation_param->timeParam()->endTimeStep() << ". ";
+    ss << "Elapsed time: "
+       << std::chrono::duration_cast<std::chrono::seconds>(current_time -
+                                                           _start_time)
+              .count()
+       << "s. ";
+    ss << "Estimated remaining time: "
+       << std::chrono::duration_cast<std::chrono::seconds>(
+              (current_time - _start_time) *
+              (_calculation_param->timeParam()->endTimeStep() -
+               _calculation_param->timeParam()->currentTimeStep()) /
+              (_calculation_param->timeParam()->currentTimeStep() + 1))
+              .count()
+       << "s.";
+    std::cerr << ss.str() << std::flush;
   }
 
   if (isMaster()) {
