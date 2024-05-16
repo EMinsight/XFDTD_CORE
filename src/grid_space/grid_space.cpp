@@ -1,12 +1,14 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/grid_space/grid_space.h>
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <utility>
 #include <xtensor.hpp>
 
 #include "util/float_compare.h"
+#include "xfdtd/common/type_define.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
 
@@ -380,7 +382,7 @@ std::size_t GridSpace::handleTransformX(Real x) const {
     throw XFDTDGridSpaceException{"x is smaller than e_node_x.front()"};
   }
 
-  if (x > _e_node_x.back()) {
+  if (!floatCompare(x, _e_node_x.back(), FloatCompareOperator::LessEqual, eps())) {
     throw XFDTDGridSpaceException{"x is bigger than e_node_x.back()" +
                                   std::to_string(x) + " " +
                                   std::to_string(_e_node_x.back())};
@@ -448,6 +450,17 @@ Grid GridSpace::transformNodeToGlobal(const Grid& grid) const {
 GridBox GridSpace::transformNodeToGlobal(const GridBox& grid_box) const {
   auto offset{globalBox().origin()};
   return {offset + grid_box.origin(), grid_box.size()};
+}
+
+auto GridSpace::eps() const -> Real {
+  constexpr auto num = 1000;
+  if (dimension() == Dimension::ONE) {
+    return minDz() / num;
+  }
+  if (dimension() == Dimension::TWO) {
+    return std::min(minDx(), minDy()) / num;
+  }
+  return std::min({minDx(), minDy(), minDz()}) / num;
 }
 
 std::size_t GridSpace::handleTransformY(Real y) const {

@@ -9,10 +9,8 @@
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/parallel/mpi_config.h>
 
-#include <cstddef>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace xfdtd {
 
@@ -22,11 +20,12 @@ class XFDTDNFFFTException : public XFDTDException {
       : XFDTDException(message) {}
 };
 
-class FDPlaneData;
 class NFFFT {
  public:
-  NFFFT(std::size_t distance_x, std::size_t distance_y, std::size_t distance_z,
-        Array1D<Real> frequencies, std::string output_dir);
+  NFFFT(Index distance_x, Index distance_y, Index distance_z);
+
+  NFFFT(Index distance_x, Index distance_y, Index distance_z,
+        std::string_view output_dir);
 
   NFFFT(const NFFFT&) = delete;
 
@@ -36,83 +35,64 @@ class NFFFT {
 
   NFFFT& operator=(NFFFT&&) noexcept = default;
 
-  ~NFFFT();
+  virtual ~NFFFT();
 
-  void init(std::shared_ptr<const GridSpace> grid_space,
-            std::shared_ptr<const CalculationParam> calculation_param,
-            std::shared_ptr<const EMF> emf);
+  virtual auto init(std::shared_ptr<const GridSpace> grid_space,
+                    std::shared_ptr<const CalculationParam> calculation_param,
+                    std::shared_ptr<const EMF> emf) -> void = 0;
 
   auto initParallelizedConfig() -> void;
 
-  void initTimeDependentVariable();
+  virtual auto initTimeDependentVariable() -> void = 0;
 
-  void update();
+  virtual auto update() -> void = 0;
 
-  auto processFarField(const Array1D<Real>& theta, Real phi,
-                       const std::string& sub_dir,
-                       const Vector& origin = Vector{0.0, 0.0, 0.0}) const
-      -> void;
+  auto outputDir() const -> std::string;
 
-  auto processFarField(Real theta, const Array1D<Real>& phi,
-                       const std::string& sub_dir,
-                       const Vector& origin = Vector{0.0, 0.0, 0.0}) const
-      -> void;
+  auto distanceX() const -> Index;
 
-  void outputRadiationPower();
+  auto distanceY() const -> Index;
 
-  void setOutputDir(const std::string& out_dir);
+  auto distanceZ() const -> Index;
 
-  auto distanceX() const -> std::size_t;
+  auto globalBox() const -> GridBox;
 
-  auto distanceY() const -> std::size_t;
+  auto nodeBox() const -> GridBox;
 
-  auto distanceZ() const -> std::size_t;
+  auto globalTaskSurfaceXN() const -> IndexTask;
 
-  auto cube() const -> const Cube&;
+  auto globalTaskSurfaceXP() const -> IndexTask;
 
-  auto globalBox() const -> const GridBox&;
+  auto globalTaskSurfaceYN() const -> IndexTask;
 
-  auto nodeBox() const -> const GridBox&;
+  auto globalTaskSurfaceYP() const -> IndexTask;
 
-  auto globalTaskSurfaceXN() const -> const IndexTask&;
+  auto globalTaskSurfaceZN() const -> IndexTask;
 
-  auto globalTaskSurfaceXP() const -> const IndexTask&;
+  auto globalTaskSurfaceZP() const -> IndexTask;
 
-  auto globalTaskSurfaceYN() const -> const IndexTask&;
+  auto nodeTaskSurfaceXN() const -> IndexTask;
 
-  auto globalTaskSurfaceYP() const -> const IndexTask&;
+  auto nodeTaskSurfaceXP() const -> IndexTask;
 
-  auto globalTaskSurfaceZN() const -> const IndexTask&;
+  auto nodeTaskSurfaceYN() const -> IndexTask;
 
-  auto globalTaskSurfaceZP() const -> const IndexTask&;
+  auto nodeTaskSurfaceYP() const -> IndexTask;
 
-  auto nodeTaskSurfaceXN() const -> const IndexTask&;
+  auto nodeTaskSurfaceZN() const -> IndexTask;
 
-  auto nodeTaskSurfaceXP() const -> const IndexTask&;
-
-  auto nodeTaskSurfaceYN() const -> const IndexTask&;
-
-  auto nodeTaskSurfaceYP() const -> const IndexTask&;
-
-  auto nodeTaskSurfaceZN() const -> const IndexTask&;
-
-  auto nodeTaskSurfaceZP() const -> const IndexTask&;
+  auto nodeTaskSurfaceZP() const -> IndexTask;
 
   auto valid() const -> bool;
 
   auto nffftMPIConfig() const -> const MpiConfig&;
 
+  auto setOutputDir(std::string_view output_dir) -> void;
+
  protected:
-  auto processFarField(const Array1D<Real>& theta,
-                       const Array1D<Real>& phi,
-                       const std::string& sub_dir, const Vector& origin) const
-      -> void;
-
-  const GridSpace* gridSpacePtr() const;
-
-  const CalculationParam* calculationParamPtr() const;
-
-  const EMF* emfPtr() const;
+  auto defaultInit(std::shared_ptr<const GridSpace> grid_space,
+                   std::shared_ptr<const CalculationParam> calculation_param,
+                   std::shared_ptr<const EMF> emf) -> void;
 
   auto setGlobalBox(GridBox box) -> void;
 
@@ -142,18 +122,21 @@ class NFFFT {
 
   auto setNodeTaskSurfaceZP(IndexTask task) -> void;
 
-  auto nffftMPIConfig() -> MpiConfig&;
+  auto gridSpace() const -> std::shared_ptr<const GridSpace>;
+
+  auto calculationParam() const -> std::shared_ptr<const CalculationParam>;
+
+  auto emf() const -> std::shared_ptr<const EMF>;
 
  private:
-  std::size_t _distance_x, _distance_y, _distance_z;
-  Array1D<Real> _frequencies;
+  Index _distance_x, _distance_y, _distance_z;
+
   std::string _output_dir;
 
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const CalculationParam> _calculation_param;
   std::shared_ptr<const EMF> _emf;
 
-  std::unique_ptr<Cube> _cube;
   GridBox _global_box, _node_box;
 
   IndexTask _global_task_surface_xn, _global_task_surface_xp,
@@ -165,15 +148,11 @@ class NFFFT {
 
   MpiConfig _nffft_mpi_config;
 
-  std::vector<FDPlaneData> _fd_plane_data;
-
   auto initGlobal() -> void;
 
   auto initNode() -> void;
 
   auto makeNodeAxisTask(const Axis::Direction& direction) -> IndexTask;
-
-  auto generateSurface() -> void;
 };
 
 }  // namespace xfdtd

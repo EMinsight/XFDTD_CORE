@@ -11,46 +11,28 @@ namespace xfdtd {
 
 class XFDTDCoordinateSystemException : public XFDTDException {
  public:
-  explicit XFDTDCoordinateSystemException(
-      std::string message = "XFDTD CoordinateSystem Exception")
+  explicit XFDTDCoordinateSystemException(std::string message)
       : XFDTDException{std::move(message)} {}
 };
 
 class XFDTDCoordinateSystemVectorException
     : public XFDTDCoordinateSystemException {
  public:
-  explicit XFDTDCoordinateSystemVectorException(
-      std::string message = "XFDTD CoordinateSystem Vector Exception")
+  explicit XFDTDCoordinateSystemVectorException(std::string message)
       : XFDTDCoordinateSystemException{std::move(message)} {}
-};
-
-class XFDTDCoordinateSystemVectorNormalizedException
-    : public XFDTDCoordinateSystemVectorException {
- public:
-  explicit XFDTDCoordinateSystemVectorNormalizedException(
-      std::string message = "XFDTD CoordinateSystem Vector Normalize Exception")
-      : XFDTDCoordinateSystemVectorException{std::move(message)} {}
 };
 
 class XFDTDCoordinateSystemAxisException
     : public XFDTDCoordinateSystemException {
  public:
-  explicit XFDTDCoordinateSystemAxisException(
-      std::string message = "XFDTD CoordinateSystem Axis Exception")
+  explicit XFDTDCoordinateSystemAxisException(std::string message)
       : XFDTDCoordinateSystemException{std::move(message)} {}
 };
 
-class XFDTDCoordinateSystemAxisDirectionException
-    : public XFDTDCoordinateSystemAxisException {
- public:
-  explicit XFDTDCoordinateSystemAxisDirectionException(
-      std::string message = "XFDTD CoordinateSystem Axis Direction Exception")
-      : XFDTDCoordinateSystemAxisException{std::move(message)} {}
-};
-
-using VectorData = xt::xtensor_fixed<Real, xt::xshape<3>>;
-
 class Vector {
+ public:
+  using VectorData = xt::xtensor_fixed<Real, xt::xshape<3>>;
+
  public:
   Vector() = default;
 
@@ -89,6 +71,10 @@ class Vector {
   Real z() const;
 
   Real normL2() const;
+
+  auto dot(const Vector& rhs) const -> Real;
+
+  auto cross(const Vector& rhs) const -> Vector;
 
   void set(Real x, Real y, Real z);
 
@@ -195,7 +181,7 @@ inline constexpr auto Axis::fromDirectionToXYZ() -> Axis::XYZ {
                        direction == Axis::Direction::ZP) {
     return Axis::XYZ::Z;
   } else {
-    throw XFDTDCoordinateSystemAxisDirectionException{
+    throw XFDTDCoordinateSystemAxisException{
         "fromDirectionToXYZ: Invalid Axis::Direction value"};
   }
 }
@@ -259,7 +245,7 @@ inline constexpr auto Axis::directionNegative() -> bool {
                        direction == Axis::Direction::ZP) {
     return false;
   } else {
-    throw XFDTDCoordinateSystemAxisDirectionException{
+    throw XFDTDCoordinateSystemAxisException{
         "directionNegative: Invalid direction value"};
   }
 }
@@ -275,7 +261,7 @@ inline constexpr auto Axis::directionPositive() -> bool {
                        direction == Axis::Direction::ZP) {
     return true;
   } else {
-    throw XFDTDCoordinateSystemAxisDirectionException{
+    throw XFDTDCoordinateSystemAxisException{
         "directionPositive: Invalid direction value"};
   }
 }

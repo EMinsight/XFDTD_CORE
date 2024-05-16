@@ -323,7 +323,7 @@ auto FDTDUpdateCoefficient::coeff() -> Array3D<Real>& {
 
 template <EMF::Attribute c, Axis::XYZ xyz>
 inline auto FDTDUpdateCoefficient::coeffDualA() const -> const Array3D<Real>& {
-  const auto a = EMF::dualAttribute<c>();
+  constexpr auto a = EMF::dualAttribute(c);
   const auto xyz_a = Axis::tangentialAAxis<xyz>();
   return coeff<c, xyz, a, xyz_a>();
 }
@@ -336,7 +336,7 @@ inline auto FDTDUpdateCoefficient::coeffDualA() -> Array3D<Real>& {
 
 template <EMF::Attribute c, Axis::XYZ xyz>
 inline auto FDTDUpdateCoefficient::coeffDualB() const -> const Array3D<Real>& {
-  const auto a = EMF::dualAttribute<c>();
+  constexpr auto a = EMF::dualAttribute(c);
   const auto xyz_b = Axis::tangentialBAxis<xyz>();
   return coeff<c, xyz, a, xyz_b>();
 }

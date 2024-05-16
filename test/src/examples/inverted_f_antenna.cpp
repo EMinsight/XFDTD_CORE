@@ -8,6 +8,7 @@
 #include "xfdtd/monitor/voltage_monitor.h"
 #include "xfdtd/network/network.h"
 #include "xfdtd/network/port.h"
+#include "xfdtd/nffft/nffft_frequency_domain.h"
 #include "xfdtd/object/lumped_element/pec_plane.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
@@ -83,9 +84,9 @@ void invertedFAntenna() {
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1},
       xt::arange<double>(2e7, 10e9, 2e7), "./data/inverted_f_antenna")};
 
-  auto nffft{std::make_shared<xfdtd::NFFFT>(13, 13, 13,
-                                            xt::xarray<double>{2.4e9, 5.8e9},
-                                            "./data/inverted_f_antenna")};
+  auto nffft{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
+      13, 13, 13, xt::xarray<double>{2.4e9, 5.8e9},
+      "./data/inverted_f_antenna")};
 
   auto s{xfdtd::Simulation{dx, dy, dz, 0.9}};
   s.addObject(domain);

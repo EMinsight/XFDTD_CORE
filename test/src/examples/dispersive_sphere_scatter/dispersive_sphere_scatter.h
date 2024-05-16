@@ -8,6 +8,7 @@
 #include <xfdtd/material/material.h>
 #include <xfdtd/monitor/field_monitor.h>
 #include <xfdtd/monitor/movie_monitor.h>
+#include <xfdtd/nffft/nffft_frequency_domain.h>
 #include <xfdtd/object/object.h>
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/shape/cube.h>
@@ -67,9 +68,9 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
                                       0, xfdtd::Waveform::gaussian(tau, t_0))};
 
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
-  auto nffft_fd{std::make_shared<xfdtd::NFFFT>(nffft_start, nffft_start,
-                                               nffft_start, freq,
-                                               (sphere_scatter_dir).string())};
+  auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
+      nffft_start, nffft_start, nffft_start, freq,
+      (sphere_scatter_dir).string())};
 
   auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(

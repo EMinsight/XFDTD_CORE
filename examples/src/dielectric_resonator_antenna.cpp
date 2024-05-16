@@ -11,6 +11,7 @@
 #include "xfdtd/monitor/voltage_monitor.h"
 #include "xfdtd/network/network.h"
 #include "xfdtd/network/port.h"
+#include "xfdtd/nffft/nffft_frequency_domain.h"
 #include "xfdtd/object/lumped_element/pec_plane.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
@@ -85,7 +86,7 @@ void dielectricResonatorAntenna() {
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1},
       xt::linspace(2e9, 6e9, 100), "./data/dielectric_resonator_antenna")};
 
-  auto nffft{std::make_shared<xfdtd::NFFFT>(
+  auto nffft{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
       13, 13, 13, xt::xarray<double>{3.5e9, 4.3e9},
       "./data/dielectric_resonator_antenna")};
 

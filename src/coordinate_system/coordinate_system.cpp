@@ -1,6 +1,5 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
 
-#include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xnorm.hpp>
 
 namespace xfdtd {

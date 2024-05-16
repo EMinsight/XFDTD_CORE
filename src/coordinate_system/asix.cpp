@@ -64,7 +64,7 @@ Axis Axis::fromDirectionToAxis(Axis::Direction direction) {
     case Axis::Direction::ZP:
       return Axis::ZP;
     default:
-      throw XFDTDCoordinateSystemAxisDirectionException{};
+      throw XFDTDCoordinateSystemAxisException{"Invalid direction value"};
   }
 }
 
@@ -80,7 +80,7 @@ auto Axis::fromDirectionToXYZ(Axis::Direction direction) -> Axis::XYZ {
     case Axis::Direction::ZP:
       return Axis::XYZ::Z;
     default:
-      throw XFDTDCoordinateSystemAxisDirectionException{};
+      throw XFDTDCoordinateSystemAxisException{"Invalid direction value"};
   }
 }
 
@@ -155,7 +155,7 @@ bool Axis::directionNegative(Axis::Direction direction) {
     case Axis::Direction::ZP:
       return false;
     default:
-      throw XFDTDCoordinateSystemAxisDirectionException{};
+      throw XFDTDCoordinateSystemAxisException{"Invalid direction value"};
   }
 }
 
@@ -170,7 +170,7 @@ bool Axis::directionPositive(Axis::Direction direction) {
     case Axis::Direction::ZP:
       return true;
     default:
-      throw XFDTDCoordinateSystemAxisDirectionException{};
+      throw XFDTDCoordinateSystemAxisException{"Invalid direction value"};
   }
 }
 
@@ -189,7 +189,7 @@ auto Axis::toString(Axis::Direction direction) -> std::string {
     case Axis::Direction::ZP:
       return "ZP";
     default:
-      throw XFDTDCoordinateSystemAxisDirectionException{};
+      throw XFDTDCoordinateSystemAxisException{"Invalid direction value"};
   }
 }
 
@@ -202,7 +202,7 @@ auto Axis::toString(Axis::XYZ xyz) -> std::string {
     case Axis::XYZ::Z:
       return "Z";
     default:
-      throw XFDTDCoordinateSystemAxisException{};
+      throw XFDTDCoordinateSystemAxisException{"Invalid XYZ value"};
   }
 }
 

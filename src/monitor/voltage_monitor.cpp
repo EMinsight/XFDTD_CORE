@@ -236,8 +236,8 @@ void VoltageMonitor::update() {
 
 void VoltageMonitor::initTimeDependentVariable() {
   setTime(calculationParamPtr()->timeParam()->eTime());
-  _node_data = xt::empty_like(time());
-  data() = xt::empty_like(time());
+  _node_data = xt::zeros_like(time());
+  data() = xt::zeros_like(time());
 }
 
 void VoltageMonitor::initParallelizedConfig() { makeMpiSubComm(); }
@@ -254,7 +254,7 @@ void VoltageMonitor::gatherData() {
 
   auto& mpi_support = MpiSupport::instance();
 
-  data() = xt::empty_like(_node_data);
+  data() = xt::zeros_like(_node_data);
 
   mpi_support.reduceSum(monitorMpiConfig(), _node_data.data(), data().data(),
                         data().size());

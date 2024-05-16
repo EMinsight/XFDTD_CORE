@@ -30,6 +30,15 @@ auto slabRefectionTransmission() {
           xfdtd::Vector{xfdtd::constant::INF, xfdtd::constant::INF, 300 * dl}),
       xfdtd::Material::createAir());
 
+  constexpr auto ne = 1e17;
+  constexpr auto e = 1.6e-19;
+  constexpr auto m_e = 9.1e-31;
+
+  auto omega_p = xfdtd::Array1D<xfdtd::Real>{std::sqrt(ne*e*e/m_e/xfdtd::constant::EPSILON_0)};
+  auto epsilon_inf = 1;
+  auto epsilon_static = xfdtd::Array1D<xfdtd::Real>{5};
+  auto nv = xfdtd::Array1D<xfdtd::Real>{1e10};
+
   auto slab = std::make_shared<xfdtd::Object>(
       "slab",
       std::make_unique<xfdtd::Cube>(

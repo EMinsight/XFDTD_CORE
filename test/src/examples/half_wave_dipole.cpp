@@ -9,7 +9,7 @@
 #include "xfdtd/monitor/voltage_monitor.h"
 #include "xfdtd/network/network.h"
 #include "xfdtd/network/port.h"
-#include "xfdtd/nffft/nffft.h"
+#include "xfdtd/nffft/nffft_frequency_domain.h"
 #include "xfdtd/object/lumped_element/voltage_source.h"
 #include "xfdtd/object/object.h"
 #include "xfdtd/object/thin_wire.h"
@@ -59,7 +59,7 @@ void halfWaveDipole() {
       std::vector<std::shared_ptr<xfdtd::Port>>{port},
       xt::arange<double>(2e7, 2e10, 2e7), "./data/half_wave_dipole")};
 
-  auto nffft_fd{std::make_shared<xfdtd::NFFFT>(
+  auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
       13, 13, 13, xt::xarray<double>{7e9}, "./data/half_wave_dipole")};
 
   auto s{xfdtd::Simulation{dl, dl, dl, 0.9}};

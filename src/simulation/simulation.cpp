@@ -151,6 +151,8 @@ void Simulation::run(std::size_t time_step) {
 
   _end_time = std::chrono::high_resolution_clock::now();
   if (isRoot()) {
+    std::cerr << "\n" << std::flush;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     std::cout << "\n"
               << "Elapsed time: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -166,7 +168,12 @@ void Simulation::run(std::size_t time_step) {
               << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
                                                                   _start_time)
                      .count()
-              << " m."
+              << " m"
+              << " or "
+              << std::chrono::duration_cast<std::chrono::hours>(_end_time -
+                                                                _start_time)
+                     .count()
+              << " h."
               << "\n";
   }
 }

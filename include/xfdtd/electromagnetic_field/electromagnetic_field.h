@@ -1,9 +1,9 @@
 #ifndef _XFDTD_CORE_ELECTROMAGNETIC_FIELD_H_
 #define _XFDTD_CORE_ELECTROMAGNETIC_FIELD_H_
 
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/exception/exception.h>
-#include <xfdtd/common/type_define.h>
 
 #include <utility>
 
@@ -11,7 +11,7 @@ namespace xfdtd {
 
 class XFDTDEMFException : public XFDTDException {
  public:
-  explicit XFDTDEMFException(std::string message = "XFDTD EMF Exception")
+  explicit XFDTDEMFException(std::string message)
       : XFDTDException(std::move(message)) {}
 };
 
@@ -24,16 +24,33 @@ class EMF {
   enum class Field { EX, EY, EZ, EM, HX, HY, HZ, HM };
 
  public:
-  template <EMF::Attribute a>
-  static constexpr auto dualAttribute() -> Attribute;
+  static constexpr auto componentToString(Component c) -> std::string;
+
+  static constexpr auto attributeToString(Attribute a) -> std::string;
+
+  static constexpr auto fieldToString(Field f) -> std::string;
+
+  static constexpr auto attributeComponentToField(Attribute a, Component c)
+      -> Field;
+
+  static constexpr auto fieldToComponent(Field f) -> Component;
+
+  static constexpr auto fieldToAttribute(Field f) -> Attribute;
+
+  static constexpr auto dualAttribute(Attribute a) -> Attribute;
+
+  static constexpr auto xYZToComponent(Axis::XYZ xyz) -> Component;
+
+  static constexpr auto componentToXYZ(Component c) -> Axis::XYZ;
 
  public:
-  static Field fieldFromAttributeAndComponent(Attribute a, Component c);
+  template <Field f>
+  auto field() const -> const Array3D<Real>&;
 
-  static Component componentFromField(Field f);
+  template <Field f>
+  auto field() -> Array3D<Real>&;
 
-  static Attribute attributeFromField(Field f);
-
+ public:
   const Array3D<Real>& ex() const;
 
   const Array3D<Real>& ey() const;
@@ -83,77 +100,201 @@ class EMF {
   Array3D<Real> _hx, _hy, _hz;
 };
 
-template <EMF::Attribute a>
-inline constexpr auto EMF::dualAttribute() -> EMF::Attribute {
-  if constexpr (a == EMF::Attribute::E) {
-    return EMF::Attribute::H;
-  } else if constexpr (a == EMF::Attribute::H) {
-    return EMF::Attribute::E;
-  } else {
-    throw XFDTDEMFException{"dualAttribute(): Invalid EMF::Attribute"};
+inline constexpr auto EMF::componentToString(Component c) -> std::string {
+  // is it possible to use switch case here?
+  if (c == Component::X) {
+    return "X";
   }
+  if (c == Component::Y) {
+    return "Y";
+  }
+  if (c == Component::Z) {
+    return "Z";
+  }
+  if (c == Component::Magnitude) {
+    return "Magnitude";
+  }
+
+  return "Invalid Component";
 }
 
-template <EMF::Field f>
-inline constexpr auto fieldToAttribute() -> EMF::Attribute {
-  if constexpr (f == EMF::Field::EX || f == EMF::Field::EY ||
-                f == EMF::Field::EZ) {
-    return EMF::Attribute::E;
-  } else if constexpr (f == EMF::Field::HX || f == EMF::Field::HY ||
-                       f == EMF::Field::HZ) {
-    return EMF::Attribute::H;
-  } else {
-    throw XFDTDEMFException{"fieldToAttribute(): Invalid EMF::Field"};
+inline constexpr auto EMF::attributeToString(Attribute a) -> std::string {
+  if (a == Attribute::E) {
+    return "E";
   }
+  if (a == Attribute::H) {
+    return "H";
+  }
+
+  return "Invalid Attribute";
 }
 
-template <EMF::Field f>
-inline constexpr auto fieldToComponent() -> EMF::Component {
-  if constexpr (f == EMF::Field::EX || f == EMF::Field::HX) {
-    return EMF::Component::X;
-  } else if constexpr (f == EMF::Field::EY || f == EMF::Field::HY) {
-    return EMF::Component::Y;
-  } else if constexpr (f == EMF::Field::EZ || f == EMF::Field::HZ) {
-    return EMF::Component::Z;
-  } else if constexpr (f == EMF::Field::EM || f == EMF::Field::HM) {
-    return EMF::Component::Magnitude;
-  } else {
-    throw XFDTDEMFException{"fieldToComponent(): Invalid EMF::Field"};
+inline constexpr auto EMF::fieldToString(Field f) -> std::string {
+  if (f == Field::EX) {
+    return "Ex";
   }
+  if (f == Field::EY) {
+    return "Ey";
+  }
+  if (f == Field::EZ) {
+    return "Ez";
+  }
+  if (f == Field::EM) {
+    return "Em";
+  }
+  if (f == Field::HX) {
+    return "Hx";
+  }
+  if (f == Field::HY) {
+    return "Hy";
+  }
+  if (f == Field::HZ) {
+    return "Hz";
+  }
+  if (f == Field::HM) {
+    return "Hm";
+  }
+
+  return "Invalid Field";
 }
 
-template <EMF::Attribute a, EMF::Component c>
-inline constexpr auto attributeComponentToField() -> EMF::Field {
-  if constexpr (a == EMF::Attribute::E) {
-    if constexpr (c == EMF::Component::X) {
+inline constexpr auto EMF::attributeComponentToField(EMF::Attribute a,
+                                                     EMF::Component c)
+    -> EMF::Field {
+  if (a == EMF::Attribute::E) {
+    if (c == EMF::Component::X) {
       return EMF::Field::EX;
-    } else if constexpr (c == EMF::Component::Y) {
+    }
+    if (c == EMF::Component::Y) {
       return EMF::Field::EY;
-    } else if constexpr (c == EMF::Component::Z) {
+    }
+    if (c == EMF::Component::Z) {
       return EMF::Field::EZ;
-    } else if constexpr (c == EMF::Component::Magnitude) {
+    }
+    if (c == EMF::Component::Magnitude) {
       return EMF::Field::EM;
-    } else {
-      throw XFDTDEMFException{
-          "attributeComponentToField(): Invalid EMF::Component"};
     }
-  } else if constexpr (a == EMF::Attribute::H) {
-    if constexpr (c == EMF::Component::X) {
-      return EMF::Field::HX;
-    } else if constexpr (c == EMF::Component::Y) {
-      return EMF::Field::HY;
-    } else if constexpr (c == EMF::Component::Z) {
-      return EMF::Field::HZ;
-    } else if constexpr (c == EMF::Component::Magnitude) {
-      return EMF::Field::HM;
-    } else {
-      throw XFDTDEMFException{
-          "attributeComponentToField(): Invalid EMF::Component"};
-    }
-  } else {
-    throw XFDTDEMFException{
-        "attributeComponentToField(): Invalid EMF::Attribute"};
   }
+
+  if (a == EMF::Attribute::H) {
+    if (c == EMF::Component::X) {
+      return EMF::Field::HX;
+    }
+    if (c == EMF::Component::Y) {
+      return EMF::Field::HY;
+    }
+    if (c == EMF::Component::Z) {
+      return EMF::Field::HZ;
+    }
+    if (c == EMF::Component::Magnitude) {
+      return EMF::Field::HM;
+    }
+  }
+
+  throw XFDTDEMFException("Invalid Attribute or Component");
+}
+
+inline constexpr EMF::Component EMF::fieldToComponent(EMF::Field f) {
+  if (f == EMF::Field::EX || f == EMF::Field::HX) {
+    return EMF::Component::X;
+  }
+  if (f == EMF::Field::EY || f == EMF::Field::HY) {
+    return EMF::Component::Y;
+  }
+  if (f == EMF::Field::EZ || f == EMF::Field::HZ) {
+    return EMF::Component::Z;
+  }
+  if (f == EMF::Field::EM || f == EMF::Field::HM) {
+    return EMF::Component::Magnitude;
+  }
+
+  throw XFDTDEMFException("Invalid Field");
+}
+
+constexpr EMF::Attribute EMF::fieldToAttribute(EMF::Field f) {
+  if (f == EMF::Field::EX || f == EMF::Field::EY || f == EMF::Field::EZ ||
+      f == EMF::Field::EM) {
+    return EMF::Attribute::E;
+  }
+  if (f == EMF::Field::HX || f == EMF::Field::HY || f == EMF::Field::HZ ||
+      f == EMF::Field::HM) {
+    return EMF::Attribute::H;
+  }
+
+  throw XFDTDEMFException("Invalid Field");
+}
+
+inline constexpr auto EMF::dualAttribute(EMF::Attribute a) -> EMF::Attribute {
+  if (a == EMF::Attribute::E) {
+    return EMF::Attribute::H;
+  }
+  if (a == EMF::Attribute::H) {
+    return EMF::Attribute::E;
+  }
+
+  throw XFDTDEMFException("Invalid Attribute");
+}
+
+inline constexpr auto EMF::xYZToComponent(Axis::XYZ xyz) -> EMF::Component {
+  if (xyz == Axis::XYZ::X) {
+    return EMF::Component::X;
+  }
+  if (xyz == Axis::XYZ::Y) {
+    return EMF::Component::Y;
+  }
+  if (xyz == Axis::XYZ::Z) {
+    return EMF::Component::Z;
+  }
+
+  throw XFDTDEMFException("xYZToComponent(): Invalid Axis::XYZ");
+}
+
+inline constexpr auto EMF::componentToXYZ(EMF::Component c) -> Axis::XYZ {
+  if (c == EMF::Component::X) {
+    return Axis::XYZ::X;
+  }
+  if (c == EMF::Component::Y) {
+    return Axis::XYZ::Y;
+  }
+  if (c == EMF::Component::Z) {
+    return Axis::XYZ::Z;
+  }
+
+  throw XFDTDEMFException("componentToXYZ(): Invalid EMF::Component");
+}
+
+template <EMF::Field f>
+inline auto EMF::field() const -> const Array3D<Real>& {
+  // static assertion to check if the function is called with valid template
+  // parameter
+  static_assert(
+      []() {
+        return f == EMF::Field::EX || f == EMF::Field::EY ||
+               f == EMF::Field::EZ || f == EMF::Field::HX ||
+               f == EMF::Field::HY || f == EMF::Field::HZ;
+      }(),
+      "EMF::field(): Invalid EMF::Field");
+
+  if constexpr (f == EMF::Field::EX) {
+    return _ex;
+  } else if constexpr (f == EMF::Field::EY) {
+    return _ey;
+  } else if constexpr (f == EMF::Field::EZ) {
+    return _ez;
+  } else if constexpr (f == EMF::Field::HX) {
+    return _hx;
+  } else if constexpr (f == EMF::Field::HY) {
+    return _hy;
+  } else if constexpr (f == EMF::Field::HZ) {
+    return _hz;
+  } else {
+    throw XFDTDEMFException{"field(): Invalid EMF::Field"};
+  }
+}
+
+template <EMF::Field f>
+inline auto EMF::field() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(static_cast<const EMF*>(this)->field<f>());
 }
 
 }  // namespace xfdtd

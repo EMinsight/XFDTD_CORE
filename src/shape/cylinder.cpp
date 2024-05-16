@@ -43,9 +43,9 @@ Real Cylinder::height() const { return _height; }
 
 Axis Cylinder::axis() const { return _axis; }
 
-bool Cylinder::isInside(Real x, Real y, Real z) const {
+bool Cylinder::isInside(Real x, Real y, Real z, Real eps) const {
   auto wrapped_cube{wrappedCube()};
-  if (!wrapped_cube->isInside(x, y, z)) {
+  if (!wrapped_cube->isInside(x, y, z, eps)) {
     return false;
   }
 
@@ -66,8 +66,8 @@ bool Cylinder::isInside(Real x, Real y, Real z) const {
   return floatCompare(dis, radius(), FloatCompareOperator::LessEqual);
 }
 
-bool Cylinder::isInside(const Vector& vector) const {
-  return isInside(vector.x(), vector.y(), vector.z());
+bool Cylinder::isInside(const Vector& vector, Real eps) const {
+  return isInside(vector.x(), vector.y(), vector.z(), eps);
 }
 
 std::unique_ptr<Cube> Cylinder::wrappedCube() const {

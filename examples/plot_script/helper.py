@@ -101,11 +101,11 @@ def plot_pattern_with_constant_phi(theta, pat_theta, pat_phi, max_val, step_size
     return fig, ax
 
 
-def plot2d_gif(sorted_data_files, read_func, process_func, vmin=-25, vmax=5):
+def plot2d_gif(sorted_data_files, read_func, process_func, vmin=-25, vmax=5, cmap='jet'):
     f, ax = plt.subplots()
     data = process_func(read_func(sorted_data_files[0]))
 
-    im = ax.imshow(data, cmap='jet', vmin=vmin, vmax=vmax)
+    im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
     ax.grid(True)
     f.colorbar(im)
 
@@ -153,17 +153,19 @@ class FarFieldData:
     def k(self):
         return 2 * np.pi * self.freq / 3e8
 
-    @property
-    def radiation_power(self):
-        return (8 * np.pi * 120 * np.pi * self.source_power) / self.k ** 2
+    # @property
+    # def radiation_power(self):
+    #     return (8 * np.pi * 120 * np.pi * self.source_power) / self.k ** 2
 
     @property
     def data_tehta(self):
-        return np.abs(120 * np.pi * self.a_theta + self.f_phi) ** 2 / self.radiation_power
+        a = self.k ** 2 / (8 * np.pi * 120 * np.pi)
+        return a * np.abs(120 * np.pi * self.a_theta + self.f_phi) ** 2 / self.source_power
 
     @property
     def data_phi(self):
-        return np.abs(-120 * np.pi * self.a_phi + self.f_theta) ** 2 / self.radiation_power
+        a = self.k ** 2 / (8 * np.pi * 120 * np.pi)
+        return a * np.abs(-120 * np.pi * self.a_phi + self.f_theta) ** 2 / self.source_power
 
     @property
     def data_theta_dB(self):

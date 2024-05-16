@@ -38,34 +38,28 @@ endif()
 # DEPENDENCIES
 # ##############################################################################
 
-if(WIN32)
-  find_package(OpenBLAS REQUIRED)
-  set(BLAS_LIBRARIES ${CMAKE_INSTALL_PREFIX} ${OpenBLAS_LIBRARIES})
-else()
-  find_package(BLAS REQUIRED)
-  find_package(LAPACK REQUIRED)
-endif()
-
 find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
-find_package(xtensor-blas REQUIRED)
 
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
+set(XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR ${xtensor_INCLUDE_DIRS})
 set(XFDTD_CORE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
-include_directories(
-  ${XFDTD_CORE_PUBLIC_INCLUDE_DIR} ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
-  ${xtensor_INCLUDE_DIRS} ${xtensor_blas_INCLUDE_DIRS})
-
-set(XFDTD_CORE_THIRD_PARTY_LIB ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} xtensor)
+set(XFDTD_CORE_THIRD_PARTY_LIB xtensor)
 
 if(XFDTD_CORE_WITH_MPI)
   message(STATUS "XFDTD Core MPI support enabled")
   find_package(MPI REQUIRED)
   add_definitions(-DXFDTD_CORE_WITH_MPI)
   set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB} MPI::MPI_CXX)
+  set(XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR ${XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR}
+                                         ${MPI_CXX_INCLUDE_DIRS})
 endif()
+
+include_directories(
+  ${XFDTD_CORE_PUBLIC_INCLUDE_DIR} ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
+  ${XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR})
 
 enable_testing()
 

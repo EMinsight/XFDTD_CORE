@@ -92,7 +92,8 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
     for (auto i{is}; i < ie; ++i) {
       for (auto j{js}; j < je; ++j) {
         for (auto k{ks}; k < ke; ++k) {
-          if (!shape->isInside(grid_space->getGridCenterVector({i, j, k}))) {
+          if (!shape->isInside(grid_space->getGridCenterVector({i, j, k}),
+                               grid_space->eps())) {
             continue;
           }
           arr(i, j, k) = value;
@@ -108,7 +109,8 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
   std::for_each(g_variety->gridWithMaterial().begin(),
                 g_variety->gridWithMaterial().end(),
                 [index, &grid_space = _grid_space, &shape = _shape](auto&& g) {
-                  if (!shape->isInside(grid_space->getGridCenterVector(*g))) {
+                  if (!shape->isInside(grid_space->getGridCenterVector(*g),
+                                       grid_space->eps())) {
                     return;
                   }
                   g->setMaterialIndex(index);
@@ -149,7 +151,8 @@ void Object::handleDispersion() {
     for (Index i{0}; i < nx; ++i) {
       for (Index j{0}; j < ny; ++j) {
         for (Index k{0}; k < nz; ++k) {
-          if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}))) {
+          if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}),
+                                _grid_space->eps())) {
             continue;
           }
           m->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),

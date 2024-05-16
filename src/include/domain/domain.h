@@ -122,6 +122,8 @@ class Domain {
   std::vector<std::shared_ptr<NFFFT>> _nfffts{};
   std::barrier<>& _barrier;
   bool _master = false;
+
+  std::chrono::time_point<std::chrono::system_clock> _start_time;
 };
 
 }  // namespace xfdtd

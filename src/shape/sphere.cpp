@@ -22,13 +22,13 @@ std::string Sphere::toString() const {
          std::to_string(_radius) + ")";
 }
 
-bool Sphere::isInside(Real x, Real y, Real z) const {
-  return isInside(Vector{x, y, z});
+bool Sphere::isInside(Real x, Real y, Real z, Real eps) const {
+  return isInside(Vector{x, y, z}, eps);
 }
 
-bool Sphere::isInside(const Vector& vector) const {
+bool Sphere::isInside(const Vector& vector, Real eps) const {
   return floatCompare((vector - center()).normL2(), radius(),
-                      FloatCompareOperator::LessEqual);
+                      FloatCompareOperator::LessEqual, eps);
 }
 
 std::unique_ptr<Cube> Sphere::wrappedCube() const {

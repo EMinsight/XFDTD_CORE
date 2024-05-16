@@ -8,6 +8,7 @@
 #include <xfdtd/material/material.h>
 #include <xfdtd/monitor/field_monitor.h>
 #include <xfdtd/monitor/movie_monitor.h>
+#include <xfdtd/nffft/nffft_frequency_domain.h>
 #include <xfdtd/object/object.h>
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/shape/cube.h>
@@ -20,6 +21,8 @@
 #include <memory>
 #include <string>
 #include <xtensor/xnpy.hpp>
+
+#include "xfdtd/nffft/nffft_time_domain.h"
 
 inline void outputRelativePermittivity(
     const xt::xarray<double>& freq,
@@ -44,7 +47,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
               << "\n";
   }
 
-  constexpr double dl{7.5e-3};
+  constexpr double dl{3e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -59,6 +62,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       sphere_material);
 
   constexpr auto l_min{dl * 20};
+  constexpr auto f_max = 3e8 / l_min;  
   constexpr auto tau{l_min / 6e8};
   constexpr auto t_0{4.5 * tau};
   constexpr std::size_t tfsf_start{static_cast<size_t>(15)};
@@ -67,9 +71,13 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
                                       0, xfdtd::Waveform::gaussian(tau, t_0))};
 
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
-  auto nffft_fd{std::make_shared<xfdtd::NFFFT>(nffft_start, nffft_start,
-                                               nffft_start, freq,
-                                               (sphere_scatter_dir).string())};
+  auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
+      nffft_start, nffft_start, nffft_start, freq,
+      (sphere_scatter_dir / "fd").string())};
+
+  auto nffft_td = std::make_shared<xfdtd::NFFFTTimeDomain>(
+      nffft_start, nffft_start, nffft_start,
+      (sphere_scatter_dir / "td").string(), -xfdtd::constant::PI, 0);
 
   auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(
@@ -85,11 +93,12 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       10, "movie_ex_yz", (sphere_scatter_dir / "movie_ex_yz").string());
 
   auto simulation =
-      xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}};
+      xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 1}};
   simulation.addObject(domain);
   simulation.addObject(sphere);
   simulation.addWaveformSource(tfsf);
   simulation.addNF2FF(nffft_fd);
+  simulation.addNF2FF(nffft_td);
   simulation.addBoundary(
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::XN));
   simulation.addBoundary(
@@ -102,9 +111,9 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   simulation.addBoundary(
       std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
-  simulation.addMonitor(movie_ex_xz);
-  simulation.addMonitor(movie_ex_yz);
-  simulation.run(1000);
+  //   simulation.addMonitor(movie_ex_xz);
+  //   simulation.addMonitor(movie_ex_yz);
+  simulation.run(1800);
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,
@@ -118,6 +127,8 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
   nffft_fd->processFarField(
       xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
+
+  nffft_td->processFarField();
 
   if (!xfdtd::MpiSupport::instance().isRoot()) {
     return;
