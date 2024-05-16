@@ -203,10 +203,11 @@ the gif file will be saved in the current directory.
 
 ### Use MPI
 
->**Note**: There are some issues when you compile the project with MPI and link the library to your project.
-The temporary solution is compile your project and this library at the same time. Just like the `test/example` folder.
+XFDTD CORE support MPI parallel computing. You can use the following command to compile the project with MPI.
 
-If you want to use MPI, you need to install the MPI library on your system. And you need to add cmake option `-DXFDTD_CORE_WITH_MPI=ON` when you build the project.
+First build XFDTD_CORE with MPI
+
+In XFDTD_CORE project directory
 
 ```bash
 cmake -DXFDTD_CORE_WITH_MPI=ON -B ./build
@@ -214,17 +215,39 @@ cmake --build ./build
 cmake --build ./build --target install
 ```
 
-Then add the MPI library in your `CMakeLists.txt` file.
+And then you can return to your project directory and use the following `CMakeLists.txt` file to compile your project with MPI.
+
+You need to link your target with `MPI::MPI_CXX` library.
 
 ```cmake
-find_package(MPI REQUIRED)
-target_link_libraries(your_target PRIVATE MPI::MPI_CXX)
+# You can check if the MPI is enabled by checking the XFDTD_CORE_WITH_MPI variable.
+if(XFDTD_CORE_WITH_MPI)
+  target_link_libraries(your_target PRIVATE MPI::MPI_CXX)
+endif()
 ```
 
-Run the executable with `mpiexec`
+```bash
+mpiexec -n ${num_of_core} ./build/your_executable
+```
+
+If you want to config the MPI parallel dim, you can use the following code.
+
+```cpp
+#include <xfdtd/parallel/mpi_support.h>
+
+/*
+some code
+*/
+
+// before you create the simulation
+// set MPI parallel dim (2x2x1)
+xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
+```
+
+Then you can run the project with the following command.
 
 ```bash
-mpiexec -n ${n} ${your_executable}
+mpiexec -n 4 ./build/your_executable
 ```
 
 ## More Examples
@@ -235,8 +258,8 @@ See the `examples` folder for more examples.
 
 ## Known Issues
 
-1. MPI support is not perfect. There are some issues when you compile the project with MPI and link the library to your project. (Waiting for validation in Windows and Linux)
-2. S11 parameter calculation is not correct.
+1. S11 parameter calculation is not correct.
+2. Can't see the std::cout output in the console when using MPI in Linux.
 
 ## Acknowledgement
 
