@@ -51,15 +51,16 @@ Vector Vector::normalized(const Vector& vector) {
   auto norm_l2{vector.normL2()};
   if (norm_l2 == 0) {
     // Real equal to zero?
-    throw XFDTDCoordinateSystemVectorNormalizedException{};
+    throw XFDTDCoordinateSystemVectorException{
+        "Cannot normalize a vector with zero norm."};
   }
 
   return Vector{vector.data() / norm_l2};
 }
 
-const VectorData& Vector::data() const { return _data; }
+const Vector::VectorData& Vector::data() const { return _data; }
 
-VectorData& Vector::data() { return _data; }
+Vector::VectorData& Vector::data() { return _data; }
 
 Real Vector::x() const { return _data[0]; }
 
@@ -68,6 +69,15 @@ Real Vector::y() const { return _data[1]; }
 Real Vector::z() const { return _data[2]; }
 
 Real Vector::normL2() const { return xt::eval(xt::norm_l2(_data))(); }
+
+auto Vector::dot(const Vector& rhs) const -> Real {
+  return x() * rhs.x() + y() * rhs.y() + z() * rhs.z();
+}
+
+auto Vector::cross(const Vector& rhs) const -> Vector {
+  return {y() * rhs.z() - z() * rhs.y(), z() * rhs.x() - x() * rhs.z(),
+          x() * rhs.y() - y() * rhs.x()};
+}
 
 void Vector::set(Real x, Real y, Real z) { _data = {x, y, z}; }
 

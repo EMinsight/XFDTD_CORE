@@ -14,7 +14,7 @@ This is a part of the XFDTD project. It contains the core functionality of the X
 
 ## Getting Stared
 
-You will require the the following libraries on your system to compile: [BLAS](https://www.netlib.org/blas/), [LAPACK](https://www.netlib.org/lapack/), [xtl](https://github.com/xtensor-stack/xtl), [xtensor](https://github.com/xtensor-stack/xtensor),[xtensor-blas](https://github.com/xtensor-stack/xtensor-blas).
+You will require the the following libraries on your system to compile:[xtl](https://github.com/xtensor-stack/xtl), [xtensor](https://github.com/xtensor-stack/xtensor).
 
 C++20 is required to compile the library.
 

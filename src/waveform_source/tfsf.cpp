@@ -5,7 +5,9 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <xtensor-blas/xlinalg.hpp>
+
+#include "xfdtd/common/type_define.h"
+#include "xfdtd/coordinate_system/coordinate_system.h"
 
 namespace xfdtd {
 
@@ -55,12 +57,12 @@ void TFSF::updateWaveformSource() {
     _h_inc(i) = _chih * _h_inc(i) + _chiei * (_e_inc(i + 1) - _e_inc(i));
   }
 
-  _ex_inc = _transform_e(0) * _e_inc;
-  _ey_inc = _transform_e(1) * _e_inc;
-  _ez_inc = _transform_e(2) * _e_inc;
-  _hx_inc = _transform_h(0) * _h_inc;
-  _hy_inc = _transform_h(1) * _h_inc;
-  _hz_inc = _transform_h(2) * _h_inc;
+  _ex_inc = _transform_e.x() * _e_inc;
+  _ey_inc = _transform_e.y() * _e_inc;
+  _ez_inc = _transform_e.z() * _e_inc;
+  _hx_inc = _transform_h.x() * _h_inc;
+  _hy_inc = _transform_h.y() * _h_inc;
+  _hz_inc = _transform_h.z() * _h_inc;
 }
 
 std::size_t TFSF::x() const { return _x; }
@@ -625,14 +627,22 @@ void TFSF::initTransform() {
 
   _k = Vector{sin_theta * cos_phi, sin_theta * sin_phi, cos_theta};
 
-  _rotation_matrix =
-      Array2D<Real>{{-_sin_phi, _cos_theta * _cos_phi, _sin_theta * _cos_phi},
-                    {_cos_phi, _cos_theta * _sin_phi, _sin_theta * _sin_phi},
-                    {0, -_sin_theta, _cos_theta}};
+  auto a = Vector{-_sin_phi, _cos_theta * _cos_phi, _sin_theta * _cos_phi};
+  auto b = Vector{_cos_phi, _cos_theta * _sin_phi, _sin_theta * _sin_phi};
+  auto c = Vector{0, -_sin_theta, _cos_theta};
 
   _k_e = Vector{sin_psi, cos_psi, 0};
-  _transform_e = xt::linalg::dot(_rotation_matrix, _k_e.data());
-  _transform_h = xt::linalg::cross(_k.data(), _transform_e);
+
+  _transform_e = Vector{
+      a.dot(_k_e),
+      b.dot(_k_e),
+      c.dot(_k_e),
+  };
+
+  _transform_h = _k.cross(_transform_e);
+
+  // _transform_e = xt::linalg::dot(_rotation_matrix, _k_e.data());
+  // _transform_h = xt::linalg::cross(_k.data(), _transform_e);
 }
 
 void TFSF::calculateProjection() {
