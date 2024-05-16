@@ -380,8 +380,8 @@ void CurrentMonitor::update() {
 
 void CurrentMonitor::initTimeDependentVariable() {
   setTime(calculationParamPtr()->timeParam()->hTime());
-  _node_data = xt::empty_like(time());
-  data() = xt::empty_like(time());
+  _node_data = xt::zeros_like(time());
+  data() = xt::zeros_like(time());
 }
 
 void CurrentMonitor::initParallelizedConfig() { makeMpiSubComm(); }
@@ -396,7 +396,7 @@ auto CurrentMonitor::gatherData() -> void {
     return;
   }
 
-  data() = xt::empty_like(time());
+  data() = xt::zeros_like(time());
 
   auto& mpi_support = MpiSupport::instance();
 

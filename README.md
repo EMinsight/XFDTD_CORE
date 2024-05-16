@@ -60,8 +60,6 @@ set(XFDTD_EXAMPLE_LIBRARIES xfdtd::xfdtd_core)
 
 # check for MPI
 if(XFDTD_CORE_WITH_MPI)
-  message(STATUS "XFDTD Core MPI support enabled")
-  find_package(MPI REQUIRED)
   set(XFDTD_EXAMPLE_LIBRARIES ${XFDTD_EXAMPLE_LIBRARIES} MPI::MPI_CXX)
 endif()
 
@@ -237,7 +235,7 @@ See the `examples` folder for more examples.
 
 ## Known Issues
 
-1. MPI support is not perfect. There are some issues when you compile the project with MPI and link the library to your project.
+1. MPI support is not perfect. There are some issues when you compile the project with MPI and link the library to your project. (Waiting for validation in Windows and Linux)
 2. S11 parameter calculation is not correct.
 
 ## Acknowledgement
