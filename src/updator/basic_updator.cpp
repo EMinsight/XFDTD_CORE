@@ -66,7 +66,7 @@ void BasicUpdator::updateH() {
     }
   }
 
-  updateHEdge();
+  // updateHEdge();
 }
 
 BasicUpdatorTEM::BasicUpdatorTEM(
@@ -77,8 +77,9 @@ BasicUpdatorTEM::BasicUpdatorTEM(
                    std::move(emf), task) {}
 
 void BasicUpdatorTEM::updateE() {
-  const auto ks =
-      basic::GridStructure::exFDTDUpdateZStart(task().zRange().start());
+  // const auto ks =
+  // basic::GridStructure::exFDTDUpdateZStart(task().zRange().start());
+  const auto ks = task().zRange().start() == 0 ? 1 : task().zRange().start();
   const auto ke = basic::GridStructure::exFDTDUpdateZEnd(task().zRange().end());
 
   const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
@@ -92,7 +93,7 @@ void BasicUpdatorTEM::updateE() {
                         hy(0, 0, k - 1), 0.0, 0.0, 0.0);
   }
 
-  updateEEdge();
+  // updateEEdge();
 }
 
 auto BasicUpdatorTEM::updateEEdge() -> void {

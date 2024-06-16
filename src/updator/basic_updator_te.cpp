@@ -23,9 +23,11 @@ void BasicUpdatorTE::updateE() {
   const auto x_range = task.xRange();
   const auto y_range = task.yRange();
   const auto z_range = task.zRange();
-  const auto is = basic::GridStructure::ezFDTDUpdateXStart(x_range.start());
+  // const auto is = basic::GridStructure::ezFDTDUpdateXStart(x_range.start());
+  const auto is = x_range.start() == 0 ? 1 : x_range.start();
   const auto ie = basic::GridStructure::ezFDTDUpdateXEnd(x_range.end());
-  const auto js = basic::GridStructure::ezFDTDUpdateYStart(y_range.start());
+  // const auto js = basic::GridStructure::ezFDTDUpdateYStart(y_range.start());
+  const auto js = y_range.start() == 0 ? 1 : y_range.start();
   const auto je = basic::GridStructure::ezFDTDUpdateYEnd(y_range.end());
   const auto ks = basic::GridStructure::ezFDTDUpdateZStart(z_range.start());
   const auto ke = basic::GridStructure::ezFDTDUpdateZEnd(z_range.end());
@@ -48,7 +50,7 @@ void BasicUpdatorTE::updateE() {
     }
   }
 
-  updateEEdge();
+  // updateEEdge();
 }
 
 std::string BasicUpdatorTE::toString() const {

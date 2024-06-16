@@ -57,9 +57,11 @@ void BasicUpdator3D::updateE() {
 
   auto is = basic::GridStructure::exFDTDUpdateXStart(task.xRange().start());
   auto ie = basic::GridStructure::exFDTDUpdateXEnd(task.xRange().end());
-  auto js = basic::GridStructure::exFDTDUpdateYStart(task.yRange().start());
+  // auto js = basic::GridStructure::exFDTDUpdateYStart(task.yRange().start());
+  auto js = task.yRange().start() == 0 ? 1 : task.yRange().start();
   auto je = basic::GridStructure::exFDTDUpdateYEnd(task.yRange().end());
-  auto ks = basic::GridStructure::exFDTDUpdateZStart(task.zRange().start());
+  // auto ks = basic::GridStructure::exFDTDUpdateZStart(task.zRange().start());
+  auto ks = task.zRange().start() == 0 ? 1 : task.zRange().start();
   auto ke = basic::GridStructure::exFDTDUpdateZEnd(task.zRange().end());
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
@@ -71,11 +73,13 @@ void BasicUpdator3D::updateE() {
     }
   }
 
-  is = basic::GridStructure::eyFDTDUpdateXStart(task.xRange().start());
+  // is = basic::GridStructure::eyFDTDUpdateXStart(task.xRange().start());
+  is = task.xRange().start() == 0 ? 1 : task.xRange().start();
   ie = basic::GridStructure::eyFDTDUpdateXEnd(task.xRange().end());
   js = basic::GridStructure::eyFDTDUpdateYStart(task.yRange().start());
   je = basic::GridStructure::eyFDTDUpdateYEnd(task.yRange().end());
-  ks = basic::GridStructure::eyFDTDUpdateZStart(task.zRange().start());
+  // ks = basic::GridStructure::eyFDTDUpdateZStart(task.zRange().start());
+  ks = task.zRange().start() == 0 ? 1 : task.zRange().start();
   ke = basic::GridStructure::eyFDTDUpdateZEnd(task.zRange().end());
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
@@ -87,9 +91,11 @@ void BasicUpdator3D::updateE() {
     }
   }
 
-  is = basic::GridStructure::ezFDTDUpdateXStart(task.xRange().start());
+  // is = basic::GridStructure::ezFDTDUpdateXStart(task.xRange().start());
+  is = task.xRange().start() == 0 ? 1 : task.xRange().start();
   ie = basic::GridStructure::ezFDTDUpdateXEnd(task.xRange().end());
-  js = basic::GridStructure::ezFDTDUpdateYStart(task.yRange().start());
+  // js = basic::GridStructure::ezFDTDUpdateYStart(task.yRange().start());
+  js = task.yRange().start() == 0 ? 1 : task.yRange().start();
   je = basic::GridStructure::ezFDTDUpdateYEnd(task.yRange().end());
   ks = basic::GridStructure::ezFDTDUpdateZStart(task.zRange().start());
   ke = basic::GridStructure::ezFDTDUpdateZEnd(task.zRange().end());
@@ -103,7 +109,7 @@ void BasicUpdator3D::updateE() {
     }
   }
 
-  updateEEdge();
+  // updateEEdge();
 }
 
 void BasicUpdator3D::updateEEdge() {
