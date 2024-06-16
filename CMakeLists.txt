@@ -34,6 +34,13 @@ if(XFDTD_CORE_SINGLE_PRECISION)
   add_definitions(-DXFDTD_CORE_SINGLE_PRECISION)
 endif()
 
+option(XFDTD_CORE_WITH_CUDA "Enable CUDA support" OFF)
+if(XFDTD_CORE_WITH_CUDA)
+  message(STATUS "XFDTD Core CUDA support enabled")
+  add_definitions(-DXFDTD_CORE_WITH_CUDA)
+  enable_language(CUDA)
+endif()
+
 # ##############################################################################
 # DEPENDENCIES
 # ##############################################################################
