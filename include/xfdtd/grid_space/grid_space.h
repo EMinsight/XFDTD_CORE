@@ -173,10 +173,10 @@ class GridSpace {
 
   Vector getGridEndVector(const Grid& grid) const;
 
-  auto getShapeMask(const Shape* shape) const;
+  // auto getShapeMask(const Shape* shape) const;
 
-  template <typename T>
-  auto getGridWithMaterialView(const T& mask);
+  // template <typename T>
+  // auto getGridWithMaterialView(const T& mask);
 
   GridBox getGridBox(const Shape* shape) const;
 
@@ -305,19 +305,19 @@ class GridSpace {
                                const Array1D<Real>& e_node, Real dl);
 };
 
-inline auto GridSpace::getShapeMask(const Shape* shape) const {
-  Array3D<bool> mask{xt::make_lambda_xfunction(
-      [shape, this](auto&& g) {
-        return shape->isInside(getGridCenterVector(*g), eps());
-      },
-      _grid_with_material)};
-  return mask;
-}
+// inline auto GridSpace::getShapeMask(const Shape* shape) const {
+//   Array3D<bool> mask{xt::make_lambda_xfunction(
+//       [shape, this](auto&& g) {
+//         return shape->isInside(getGridCenterVector(*g), eps());
+//       },
+//       _grid_with_material)};
+//   return mask;
+// }
 
-template <typename T>
-inline auto GridSpace::getGridWithMaterialView(const T& mask) {
-  return xt::filter(_grid_with_material, mask);
-}
+// template <typename T>
+// inline auto GridSpace::getGridWithMaterialView(const T& mask) {
+//   return xt::filter(_grid_with_material, mask);
+// }
 
 }  // namespace xfdtd
 

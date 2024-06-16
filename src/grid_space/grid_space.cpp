@@ -7,7 +7,7 @@
 #include <utility>
 #include <xtensor.hpp>
 
-#include "util/float_compare.h"
+// #include "util/float_compare.h"
 #include "xfdtd/common/type_define.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
@@ -378,15 +378,16 @@ void GridSpace::setGlobalGridSpace(std::weak_ptr<GridSpace> global_grid_space) {
 }
 
 std::size_t GridSpace::handleTransformX(Real x) const {
-  if (x < _e_node_x.front()) {
-    throw XFDTDGridSpaceException{"x is smaller than e_node_x.front()"};
-  }
+  // if (x < _e_node_x.front()) {
+  //   throw XFDTDGridSpaceException{"x is smaller than e_node_x.front()"};
+  // }
 
-  if (!floatCompare(x, _e_node_x.back(), FloatCompareOperator::LessEqual, eps())) {
-    throw XFDTDGridSpaceException{"x is bigger than e_node_x.back()" +
-                                  std::to_string(x) + " " +
-                                  std::to_string(_e_node_x.back())};
-  }
+  // if (!floatCompare(x, _e_node_x.back(), FloatCompareOperator::LessEqual,
+  // eps())) {
+  //   throw XFDTDGridSpaceException{"x is bigger than e_node_x.back()" +
+  //                                 std::to_string(x) + " " +
+  //                                 std::to_string(_e_node_x.back())};
+  // }
 
   return xt::argmin(xt::abs(_e_node_x - x)).front();
 }
@@ -464,28 +465,28 @@ auto GridSpace::eps() const -> Real {
 }
 
 std::size_t GridSpace::handleTransformY(Real y) const {
-  if (y < _e_node_y.front()) {
-    throw XFDTDGridSpaceException{"y is smaller than e_node_y.front()"};
-  }
+  // if (y < _e_node_y.front()) {
+  //   throw XFDTDGridSpaceException{"y is smaller than e_node_y.front()"};
+  // }
 
-  if (y > _e_node_y.back() + basedDy() / 2) {
-    throw XFDTDGridSpaceException{"y is bigger than e_node_y.back()"};
-  }
+  // if (y > _e_node_y.back() + basedDy() / 2) {
+  //   throw XFDTDGridSpaceException{"y is bigger than e_node_y.back()"};
+  // }
 
   return xt::argmin(xt::abs(_e_node_y - y)).front();
 }
 
 std::size_t GridSpace::handleTransformZ(Real z) const {
-  if (z < _e_node_z.front()) {
-    throw XFDTDGridSpaceException{"z is smaller than e_node_z.front()"};
-  }
+  // if (z < _e_node_z.front()) {
+  //   throw XFDTDGridSpaceException{"z is smaller than e_node_z.front()"};
+  // }
 
-  if (!floatCompare(z, _e_node_z.back() + basedDz() / 2,
-                    FloatCompareOperator::LessEqual)) {
-    throw XFDTDGridSpaceException{"z is bigger than e_node_z.back() " +
-                                  std::to_string(z) + " " +
-                                  std::to_string(_e_node_z.back())};
-  }
+  // if (!floatCompare(z, _e_node_z.back() + basedDz() / 2,
+  //                   FloatCompareOperator::LessEqual)) {
+  //   throw XFDTDGridSpaceException{"z is bigger than e_node_z.back() " +
+  //                                 std::to_string(z) + " " +
+  //                                 std::to_string(_e_node_z.back())};
+  // }
 
   return xt::argmin(xt::abs(_e_node_z - z)).front();
 }
