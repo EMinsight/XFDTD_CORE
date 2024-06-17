@@ -1,7 +1,15 @@
 #ifndef __XFDTD_CORE_CUDA_TENSOR_HD_CUH__
 #define __XFDTD_CORE_CUDA_TENSOR_HD_CUH__
 
+#include <xfdtd/exception/exception.h>
+
+#include <cassert>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <xfdtd/cuda/common.cuh>
+#include <xfdtd/cuda/fixed_array.cuh>
+#include <xfdtd/cuda/memory.cuh>
 #include <xfdtd/cuda/tensor.cuh>
 
 namespace xfdtd {
@@ -21,24 +29,41 @@ namespace cuda {
     }                                                                      \
   }
 
-template <typename T, SizeType N, typename WrappedTensor>
+class XFDTDCudaTensorHDException : public XFDTDException {
+ public:
+  XFDTDCudaTensorHDException(const std::string &mes) : XFDTDException{mes} {}
+};
+
+template <typename T, SizeType N>
 class TensorHD {
  public:
  public:
-  using HostTensor = Tensor<T, N>;
   using DeviceTensor = Tensor<T, N>;
 
-  TensorHD(WrappedTensor &wrapped_tensor) {
-    auto dim = wrapped_tensor.dimension();
-    auto shape = wrapped_tensor.shape();
-    auto stride = wrapped_tensor.strides();
-    auto size = wrapped_tensor.size();
-    auto data = wrapped_tensor.data();
+  template <typename WrappedTensor>
+  TensorHD(const WrappedTensor &wrapped_tensor) {
+    const auto &dim = wrapped_tensor.dimension();
+    const auto &shape = wrapped_tensor.shape();
+    const auto &stride = wrapped_tensor.strides();
+    const auto size = wrapped_tensor.size();
+    // remove const
+    auto data = const_cast<T *>(wrapped_tensor.data());
 
+    // check dim
+    if (dim != DeviceTensor::dimension()) {
+      std::stringstream ss;
+      ss << "Wrong dim";
+      throw XFDTDCudaTensorHDException{ss.str()};
+    }
 
+    for (SizeType i = 0; i < dim; ++i) {
+      _shape[i] = shape[i];
+    }
+
+    _host_data = data;
   }
 
-  // TensorHD(Array<SizeType, N> shape) : _host{new HostTensor{shape}} {}
+  // TensorHD(FixedArray<SizeType, N> shape) : _host{new HostTensor{shape}} {}
 
   ~TensorHD() {
     if (_device) {
@@ -64,25 +89,27 @@ class TensorHD {
       }
       _device_data = nullptr;
     }
-
-    delete _host;
-    _host = nullptr;
   }
 
   XFDTD_CORE_CUDA_DUAL auto device() -> DeviceTensor * { return _device; }
 
-  auto host() -> HostTensor * { return _host; }
+  // auto host() -> HostTensor * { return _host; }
 
   XFDTD_CORE_CUDA_DUAL auto device() const -> const DeviceTensor * {
     return _device;
   }
 
-  auto host() const -> const HostTensor * { return _host; }
+  // auto host() const -> const HostTensor * { return _host; }
+
+  auto hostData() { return _host_data; }
+
+  auto hostData() const { return _host_data; }
 
   auto copyHostToDevice() -> void {
-    if (!_host) {
-      throw std::runtime_error("Host memory is not allocated");
+    if (_host_data == nullptr) {
+      throw XFDTDCudaTensorHDException{"Host memory is not allocated"};
     }
+
     if (_device) {
       // Free previous device memory
       XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(cudaFree(_device));
@@ -91,49 +118,33 @@ class TensorHD {
 
     if (_device_data != nullptr) {
       XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(cudaFree(_device_data));
+      _device_data = nullptr;
     }
 
+    // Malloc device
     XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(
         cudaMalloc(&_device, sizeof(DeviceTensor)));
 
-    // {
-    //   // Allocate device memory
-    //   auto err = cudaMalloc(&_device, sizeof(DeviceTensor));
-    //   if (err != cudaSuccess) {
-    //     throw std::runtime_error("Failed to allocate device memory" +
-    //                              std::string(cudaGetErrorString(err)));
-    //   }
-    // }
+    // Copy tensor metadata
+    auto host_tensor_matedata = DeviceTensor{};
+    host_tensor_matedata._shape = _shape;
+    host_tensor_matedata._strides = host_tensor_matedata.makeStride(_shape);
+    host_tensor_matedata._size = host_tensor_matedata.makeSize(_shape);
+    host_tensor_matedata._data = nullptr;
+    XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(cudaMemcpy(_device, &host_tensor_matedata,
+                                                sizeof(DeviceTensor),
+                                                cudaMemcpyHostToDevice));
 
-    {
-      // Copy tensor metadata
-      auto err = cudaMemcpy(_device, _host, sizeof(HostTensor),
-                            cudaMemcpyHostToDevice);
-      if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to copy to device memory" +
-                                 std::string(cudaGetErrorString(err)));
-      }
-    }
+    // Malloc device data
+    XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(
+        cudaMalloc(&_device_data, host_tensor_matedata.size() * sizeof(T)));
 
-    {
-      // Malloc device data
-      auto err = cudaMalloc(&_device_data, _host->size() * sizeof(T));
-      if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to allocate device memory" +
-                                 std::string(cudaGetErrorString(err)));
-      }
-    }
+    // Copy data
+    XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(cudaMemcpy(
+        _device_data, _host_data, host_tensor_matedata.size() * sizeof(T),
+        cudaMemcpyHostToDevice))
 
-    {
-      // Copy tensor data
-      auto err = cudaMemcpy(_device_data, _host->_data,
-                            _host->size() * sizeof(T), cudaMemcpyHostToDevice);
-      if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to copy to device memory" +
-                                 std::string(cudaGetErrorString(err)));
-      }
-    }
-
+    // set decive data
     __kernelSetDeviceArrayData<<<1, 1>>>(_device, _device_data);
   }
 
@@ -142,60 +153,43 @@ class TensorHD {
       throw std::runtime_error("Device memory is not allocated");
     }
 
-    {
-      auto err = cudaMemcpy(_host, _device, sizeof(DeviceTensor),
-                            cudaMemcpyDeviceToHost);
-      if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to copy to host memory" +
-                                 std::string(cudaGetErrorString(err)));
-      }
-    }
-
-    assert(_device_data == _host->_data);
-    _host->_data = new T[_host->size()];
-
-    {
-      auto err = cudaMemcpy(_host->_data, _device_data,
-                            _host->size() * sizeof(T), cudaMemcpyDeviceToHost);
-      if (err != cudaSuccess) {
-        throw std::runtime_error("Failed to copy data to host memory" +
-                                 std::string(cudaGetErrorString(err)));
-      }
-    }
-
-    // auto new_host = new HostTensor();
-
-    // {
-    //   auto err = cudaMemcpy(new_host, _device, sizeof(DeviceTensor),
-    //                         cudaMemcpyDeviceToHost);
-    //   if (err != cudaSuccess) {
-    //     throw std::runtime_error("Failed to copy to host memory" +
-    //                              std::string(cudaGetErrorString(err)));
-    //   }
-    // }
-
-    // assert(_device_data == new_host->_data);
-    // new_host->_data = new T[new_host->size()];
-
-    // {
-    //   auto err =
-    //       cudaMemcpy(new_host->_data, _device_data,
-    //                  new_host->size() * sizeof(T), cudaMemcpyDeviceToHost);
-    //   if (err != cudaSuccess) {
-    //     throw std::runtime_error("Failed to copy data to host memory" +
-    //                              std::string(cudaGetErrorString(err)));
-    //   }
-    // }
-
-    // delete _host;
-    // _host = new_host;
+    // recieve meta data
+    auto host_tensor_matedata = DeviceTensor{};
+    XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(cudaMemcpy(&host_tensor_matedata, _device,
+                                                sizeof(DeviceTensor),
+                                                cudaMemcpyDeviceToHost));
+    host_tensor_matedata._data = nullptr; // can't receive data in device
+    // assume that shape will be never changed. Just copy
+    XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(
+        cudaMemcpy(_host_data, _device_data,
+                   host_tensor_matedata.size() * sizeof(T),
+                   cudaMemcpyDeviceToHost););
   }
 
  protected:
  private:
   DeviceTensor *_device{};
-  HostTensor *_host{};
+
   T *_device_data{};
+  T *_host_data{};
+
+  FixedArray<SizeType, N> _shape;
+};
+
+template <typename WrappedTensor, SizeType N>
+class TensorHDWrapped : public TensorHD<typename WrappedTensor::value_type, N> {
+ public:
+ public:
+  using T = typename WrappedTensor::value_type;
+  TensorHDWrapped(WrappedTensor tensor)
+      : TensorHD<T, N>{tensor}, _host_tensor{std::move(tensor)} {}
+
+  auto tensor() const -> const WrappedTensor & { return _host_tensor; }
+
+  auto tensor() -> WrappedTensor & { return _host_tensor; }
+
+ private:
+  WrappedTensor _host_tensor;
 };
 
 }  // namespace cuda

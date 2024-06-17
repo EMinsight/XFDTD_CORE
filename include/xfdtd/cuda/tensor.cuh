@@ -9,7 +9,13 @@ namespace xfdtd {
 namespace cuda {
 
 template <typename T, SizeType N>
+class TensorHD;
+
+template <typename T, SizeType N>
 class Tensor {
+ public:
+  friend class TensorHD<T, N>;
+
  public:
   using DimArray = FixedArray<SizeType, N>;
 
@@ -160,7 +166,7 @@ class Tensor {
     _strides = makeStride(shape);
   }
 
-  auto fill(const T& value) {
+  auto fill(const T &value) {
     for (SizeType i = 0; i < size(); ++i) {
       _data[i] = value;
     }
@@ -223,7 +229,7 @@ class Tensor {
                                               Arg &&arg,
                                               Args &&...args) -> SizeType {
     constexpr SizeType nargs = sizeof...(Args) + 1;
-    if constexpr (nargs == dim()) {
+    if constexpr (nargs == dimension()) {
       return rawOffset<static_cast<SizeType>(0)>(stride, std::forward<Arg>(arg),
                                                  std::forward<Args>(args)...);
     }

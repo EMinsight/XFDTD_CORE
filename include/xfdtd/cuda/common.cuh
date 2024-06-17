@@ -5,8 +5,8 @@
 
 namespace xfdtd::cuda {
 
-#ifdef __CUDA_ARCH__
-#define XFDTD_CORE_CUDA_GLOBLA __global__
+#ifdef XFDTD_CORE_WITH_CUDA
+#define XFDTD_CORE_CUDA_GLOBAL __global__
 #define XFDTD_CORE_CUDA_HOST __host__
 #define XFDTD_CORE_CUDA_DEVICE __device__
 #define XFDTD_CORE_CUDA_DUAL __host__ __device__
