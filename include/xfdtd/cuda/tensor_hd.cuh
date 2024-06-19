@@ -93,17 +93,19 @@ class TensorHD {
 
   XFDTD_CORE_CUDA_DUAL auto device() -> DeviceTensor * { return _device; }
 
-  // auto host() -> HostTensor * { return _host; }
-
   XFDTD_CORE_CUDA_DUAL auto device() const -> const DeviceTensor * {
     return _device;
   }
 
-  // auto host() const -> const HostTensor * { return _host; }
-
   auto hostData() { return _host_data; }
 
   auto hostData() const { return _host_data; }
+
+  /**
+   * @brief Reset host data. It doesn't free previous host data and copy data to
+   * device. The only thing it does is to change the host data pointer.
+   */
+  auto resetHostData(T *data) { _host_data = data; }
 
   auto copyHostToDevice() -> void {
     if (_host_data == nullptr) {
@@ -146,6 +148,7 @@ class TensorHD {
 
     // set decive data
     __kernelSetDeviceArrayData<<<1, 1>>>(_device, _device_data);
+    cudaDeviceSynchronize();
   }
 
   auto copyDeviceToHost() -> void {
@@ -158,7 +161,7 @@ class TensorHD {
     XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(cudaMemcpy(&host_tensor_matedata, _device,
                                                 sizeof(DeviceTensor),
                                                 cudaMemcpyDeviceToHost));
-    host_tensor_matedata._data = nullptr; // can't receive data in device
+    host_tensor_matedata._data = nullptr;  // can't receive data in device
     // assume that shape will be never changed. Just copy
     XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(
         cudaMemcpy(_host_data, _device_data,

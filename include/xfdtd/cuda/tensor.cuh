@@ -19,8 +19,12 @@ class Tensor {
  public:
   using DimArray = FixedArray<SizeType, N>;
 
+  XFDTD_CORE_CUDA_DUAL static auto from_shape(DimArray shape) -> Tensor<T, N> {
+    return Tensor<T, N>{shape};
+  }
+
  public:
-  XFDTD_CORE_CUDA_DUAL Tensor() {};
+  Tensor() = default;
 
   XFDTD_CORE_CUDA_DUAL Tensor(DimArray shape)
       : _shape{shape},

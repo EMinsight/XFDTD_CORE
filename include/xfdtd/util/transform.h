@@ -68,8 +68,8 @@ inline auto aBCToXYZ(const std::tuple<T, T, T> &data, Axis::XYZ xyz) {
   }
 }
 
-template <Axis::XYZ xyz, SCS scs>
-inline auto cCSToSCSTransformMatrix(const auto &theta, const auto &phi) {
+template <Axis::XYZ xyz, SCS scs, typename ThetaT, typename PhiT>
+inline auto cCSToSCSTransformMatrix(const ThetaT &theta, const PhiT &phi) {
   if constexpr (scs == SCS::R) {
     if constexpr (xyz == Axis::XYZ::X) {
       return xt::sin(theta) * xt::cos(phi);
@@ -106,8 +106,8 @@ inline auto cCSToSCSTransformMatrix(const auto &theta, const auto &phi) {
 }
 
 // Warning: This function is not tested.
-template <Axis::XYZ xyz, SCS scs>
-inline auto cCSToSCS(const auto &theta, const auto &phi, const auto &data) {
+template <Axis::XYZ xyz, SCS scs, typename ThetaT, typename PhiT, typename DataT>
+inline auto cCSToSCS(const ThetaT &theta, const PhiT &phi, const DataT &data) {
   if constexpr (scs == SCS::R) {
     if constexpr (xyz == Axis::XYZ::X) {
       auto &&sin_t_cos_p = xt::sin(theta) * xt::cos(phi);

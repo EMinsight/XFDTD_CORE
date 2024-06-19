@@ -8,14 +8,20 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <xfdtd/cuda/index_task.cuh>
 #include <xfdtd/cuda/tensor.cuh>
 #include <xfdtd/cuda/tensor_hd.cuh>
+
+#include "xfdtd/cuda/calculation_param/calculation_param.cuh"
+#include "xfdtd/cuda/calculation_param/fdtd_coefficient.cuh"
+#include "xfdtd/cuda/calculation_param/material_param.cuh"
+#include "xfdtd/cuda/calculation_param/time_param.cuh"
 
 using Real = float;
 using SizeType = std::size_t;
 
 struct FDTD2DScatterProblem {
-  using Array1D = xfdtd::cuda::Tensor<Real, 1>;
+  using Array1D = xfdtd::cuda::Array1D<Real>;
   using Array2D = xfdtd::cuda::Tensor<Real, 2>;
   using Array3D = xfdtd::cuda::Tensor<Real, 3>;
 
@@ -289,6 +295,14 @@ __global__ void run(FDTD2DScatterProblem* problem) {
     SizeType _start;
     SizeType _end;
   };
+
+  auto t = xfdtd::cuda::TimeParam();
+  t.eTime();
+  auto m = xfdtd::cuda::MaterialParam();
+  auto c = xfdtd::cuda::CalculationParam();
+  auto tt = c.timeParam();
+  auto f = xfdtd::cuda::FDTDCoefficient();
+  auto ddc = xfdtd::cuda::CalculationParam();
 
   auto split_task = [](const decltype(id_x) id, const decltype(id_x) num_thread,
                        const SizeType problem_size) -> Range {
