@@ -31,40 +31,50 @@ void BasicUpdator::updateH() {
   const auto ks = basic::GridStructure::hFDTDUpdateZStart(z_range.start());
   const auto ke = basic::GridStructure::hFDTDUpdateZEnd(z_range.end());
 
-  const auto& chxh{_calculation_param->fdtdCoefficient()->chxh()};
-  const auto& chyh{_calculation_param->fdtdCoefficient()->chyh()};
-  const auto& chzh{_calculation_param->fdtdCoefficient()->chzh()};
-  const auto& chxey{_calculation_param->fdtdCoefficient()->chxey()};
-  const auto& chxez{_calculation_param->fdtdCoefficient()->chxez()};
-  const auto& chyex{_calculation_param->fdtdCoefficient()->chyex()};
-  const auto& chyez{_calculation_param->fdtdCoefficient()->chyez()};
-  const auto& chzex{_calculation_param->fdtdCoefficient()->chzex()};
-  const auto& chzey{_calculation_param->fdtdCoefficient()->chzey()};
+  update<EMF::Attribute::H, Axis::XYZ::X>(
+      *_emf, *_calculation_param->fdtdCoefficient(), is, ie, js, je, ks, ke);
+  update<EMF::Attribute::H, Axis::XYZ::Y>(
+      *_emf, *_calculation_param->fdtdCoefficient(), is, ie, js, je, ks, ke);
+  update<EMF::Attribute::H, Axis::XYZ::Z>(
+      *_emf, *_calculation_param->fdtdCoefficient(), is, ie, js, je, ks, ke);
 
-  auto& hx{_emf->hx()};
-  auto& hy{_emf->hy()};
-  auto& hz{_emf->hz()};
-  const auto& ex{_emf->ex()};
-  const auto& ey{_emf->ey()};
-  const auto& ez{_emf->ez()};
+  // const auto& chxh{_calculation_param->fdtdCoefficient()->chxh()};
+  // const auto& chyh{_calculation_param->fdtdCoefficient()->chyh()};
+  // const auto& chzh{_calculation_param->fdtdCoefficient()->chzh()};
+  // const auto& chxey{_calculation_param->fdtdCoefficient()->chxey()};
+  // const auto& chxez{_calculation_param->fdtdCoefficient()->chxez()};
+  // const auto& chyex{_calculation_param->fdtdCoefficient()->chyex()};
+  // const auto& chyez{_calculation_param->fdtdCoefficient()->chyez()};
+  // const auto& chzex{_calculation_param->fdtdCoefficient()->chzex()};
+  // const auto& chzey{_calculation_param->fdtdCoefficient()->chzey()};
 
-  for (std::size_t i{is}; i < ie; ++i) {
-    for (std::size_t j{js}; j < je; ++j) {
-      for (std::size_t k{ks}; k < ke; ++k) {
-        hx(i, j, k) =
-            hNext(chxh(i, j, k), hx(i, j, k), chxey(i, j, k), ey(i, j, k + 1),
-                  ey(i, j, k), chxez(i, j, k), ez(i, j + 1, k), ez(i, j, k));
+  // auto& hx{_emf->hx()};
+  // auto& hy{_emf->hy()};
+  // auto& hz{_emf->hz()};
+  // const auto& ex{_emf->ex()};
+  // const auto& ey{_emf->ey()};
+  // const auto& ez{_emf->ez()};
 
-        hy(i, j, k) =
-            hNext(chyh(i, j, k), hy(i, j, k), chyez(i, j, k), ez(i + 1, j, k),
-                  ez(i, j, k), chyex(i, j, k), ex(i, j, k + 1), ex(i, j, k));
+  // for (std::size_t i{is}; i < ie; ++i) {
+  //   for (std::size_t j{js}; j < je; ++j) {
+  //     for (std::size_t k{ks}; k < ke; ++k) {
+  //       hx(i, j, k) =
+  //           hNextDeparted(chxh(i, j, k), hx(i, j, k), chxey(i, j, k), ey(i,
+  //           j, k + 1),
+  //                 ey(i, j, k), chxez(i, j, k), ez(i, j + 1, k), ez(i, j, k));
 
-        hz(i, j, k) =
-            hNext(chzh(i, j, k), hz(i, j, k), chzex(i, j, k), ex(i, j + 1, k),
-                  ex(i, j, k), chzey(i, j, k), ey(i + 1, j, k), ey(i, j, k));
-      }
-    }
-  }
+  //       hy(i, j, k) =
+  //           hNextDeparted(chyh(i, j, k), hy(i, j, k), chyez(i, j, k), ez(i +
+  //           1, j, k),
+  //                 ez(i, j, k), chyex(i, j, k), ex(i, j, k + 1), ex(i, j, k));
+
+  //       hz(i, j, k) =
+  //           hNextDeparted(chzh(i, j, k), hz(i, j, k), chzex(i, j, k), ex(i, j
+  //           + 1, k),
+  //                 ex(i, j, k), chzey(i, j, k), ey(i + 1, j, k), ey(i, j, k));
+  //     }
+  //   }
+  // }
 
   // updateHEdge();
 }
@@ -96,21 +106,21 @@ void BasicUpdatorTEM::updateE() {
   // updateEEdge();
 }
 
-auto BasicUpdatorTEM::updateEEdge() -> void {
-  if (containZNEdge()) {
-    return;
-  }
+// auto BasicUpdatorTEM::updateEEdge() -> void {
+//   if (containZNEdge()) {
+//     return;
+//   }
 
-  const auto ks = task().zRange().start();
+//   const auto ks = task().zRange().start();
 
-  const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
-  const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
+//   const auto& cexe{_calculation_param->fdtdCoefficient()->cexe()};
+//   const auto& cexhy{_calculation_param->fdtdCoefficient()->cexhy()};
 
-  const auto& hy{_emf->hy()};
-  auto& ex{_emf->ex()};
-  auto k = ks;
-  ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
-                      hy(0, 0, k - 1), 0.0, 0.0, 0.0);
-}
+//   const auto& hy{_emf->hy()};
+//   auto& ex{_emf->ex()};
+//   auto k = ks;
+//   ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
+//                       hy(0, 0, k - 1), 0.0, 0.0, 0.0);
+// }
 
 }  // namespace xfdtd

@@ -26,11 +26,6 @@ class BasicUpdatorTEM : public BasicUpdator {
   ~BasicUpdatorTEM() override = default;
 
   void updateE() override;
-
- protected:
-  void updateEEdge() override;
-
-  void updateHEdge() override {}
 };
 
 class BasicUpdatorTE : public BasicUpdator {
@@ -44,11 +39,6 @@ class BasicUpdatorTE : public BasicUpdator {
   void updateE() override;
 
   std::string toString() const override;
-
- protected:
-  void updateEEdge() override;
-
-  void updateHEdge() override{};
 };
 
 class BasicUpdator3D : public BasicUpdator {
@@ -62,11 +52,6 @@ class BasicUpdator3D : public BasicUpdator {
   std::string toString() const override;
 
   void updateE() override;
-
- protected:
-  void updateEEdge() override;
-
-  void updateHEdge() override {}
 };
 
 }  // namespace xfdtd

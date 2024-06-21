@@ -127,6 +127,7 @@ class TensorHD {
     XFDTD_CORE_CUDA_CHECK_CUDA_ERROR(
         cudaMalloc(&_device, sizeof(DeviceTensor)));
 
+    // TODO: first: maclloc device data, second: malloc metadata
     // Copy tensor metadata
     auto host_tensor_matedata = DeviceTensor{};
     host_tensor_matedata._shape = _shape;

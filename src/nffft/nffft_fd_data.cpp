@@ -28,9 +28,17 @@ FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
       return;
     }
 
-    const auto [range_a, range_b, range_c] = transform::xYZToABC(
-        std::tuple{task.xRange(), task.yRange(), task.zRange()},
-        Axis::fromDirectionToXYZ(direction));
+    const auto [range_a, range_b, range_c] =
+        transform::xYZToABC(task.xRange(), task.yRange(), task.zRange(),
+                            Axis::fromDirectionToXYZ(direction));
+    std::cout << "range_x: " << task.xRange().toString() << "\n";
+    std::cout << "range_y: " << task.yRange().toString() << "\n";
+    std::cout << "range_z: " << task.zRange().toString() << "\n";
+    
+    std::cout << "Direction: " << Axis::toString(Axis::fromDirectionToXYZ(direction)) << "\n";
+    std::cout << "range_a: " << range_a.toString() << "\n";
+    std::cout << "range_b: " << range_b.toString() << "\n";
+    std::cout << "range_c: " << range_c.toString() << "\n";
 
     if (range_c.size() != 1) {
       throw XFDTDNFFFTException("FDPlaneData: Major axis size != 1");

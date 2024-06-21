@@ -341,7 +341,7 @@ template <Axis::Direction D>
 template <EMF::Attribute attribute>
 auto TDPlaneData<D>::distanceRange() const -> Range<Real> {
   auto min_dis = std::numeric_limits<Real>::max();
-  auto max_dis = std::numeric_limits<Real>::min();
+  auto max_dis = std::numeric_limits<Real>::lowest();
 
   if (task().valid()) {
     return {min_dis, max_dis};

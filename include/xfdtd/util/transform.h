@@ -4,8 +4,7 @@
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
-
-#include <tuple>
+#include <xfdtd/util/transform/abc_xyz.h>
 
 namespace xfdtd::transform {
 
@@ -21,52 +20,6 @@ enum class SCS {
   Theta,
   Phi,
 };
-
-template <typename T>
-inline auto xYZToABC(const std::tuple<T, T, T> &data, Axis::XYZ xyz) {
-  switch (xyz) {
-    case Axis::XYZ::X: {
-      // a: y b: z c: x
-      return std::make_tuple(std::get<1>(data), std::get<2>(data),
-                             std::get<0>(data));
-    }
-    case Axis::XYZ::Y: {
-      // a: z b: x c: y
-      return std::make_tuple(std::get<2>(data), std::get<0>(data),
-                             std::get<1>(data));
-    }
-    case Axis::XYZ::Z: {
-      // a: x b: y c: z
-      return std::make_tuple(std::get<0>(data), std::get<1>(data),
-                             std::get<2>(data));
-    }
-    default:
-      throw std::invalid_argument("Invalid Axis::XYZ");
-  }
-}
-
-template <typename T>
-inline auto aBCToXYZ(const std::tuple<T, T, T> &data, Axis::XYZ xyz) {
-  switch (xyz) {
-    case Axis::XYZ::X: {
-      // x: c y: a z: b
-      return std::make_tuple(std::get<2>(data), std::get<0>(data),
-                             std::get<1>(data));
-    }
-    case Axis::XYZ::Y: {
-      // x: b y: c z: a
-      return std::make_tuple(std::get<1>(data), std::get<2>(data),
-                             std::get<0>(data));
-    }
-    case Axis::XYZ::Z: {
-      // x: a y: b z: c
-      return std::make_tuple(std::get<0>(data), std::get<1>(data),
-                             std::get<2>(data));
-    }
-    default:
-      throw std::invalid_argument("Invalid Axis::XYZ");
-  }
-}
 
 template <Axis::XYZ xyz, SCS scs, typename ThetaT, typename PhiT>
 inline auto cCSToSCSTransformMatrix(const ThetaT &theta, const PhiT &phi) {
@@ -106,7 +59,8 @@ inline auto cCSToSCSTransformMatrix(const ThetaT &theta, const PhiT &phi) {
 }
 
 // Warning: This function is not tested.
-template <Axis::XYZ xyz, SCS scs, typename ThetaT, typename PhiT, typename DataT>
+template <Axis::XYZ xyz, SCS scs, typename ThetaT, typename PhiT,
+          typename DataT>
 inline auto cCSToSCS(const ThetaT &theta, const PhiT &phi, const DataT &data) {
   if constexpr (scs == SCS::R) {
     if constexpr (xyz == Axis::XYZ::X) {

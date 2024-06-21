@@ -30,8 +30,8 @@ class EMF {
 
   static constexpr auto fieldToString(Field f) -> std::string;
 
-  static constexpr auto attributeComponentToField(Attribute a, Component c)
-      -> Field;
+  static constexpr auto attributeComponentToField(Attribute a,
+                                                  Component c) -> Field;
 
   static constexpr auto fieldToComponent(Field f) -> Component;
 
@@ -49,6 +49,31 @@ class EMF {
 
   template <Field f>
   auto field() -> Array3D<Real>&;
+
+ public:
+  template <Attribute a, Axis::XYZ xyz>
+  auto field() const -> const Array3D<Real>& {
+    constexpr auto f = attributeComponentToField(a, xYZToComponent(xyz));
+    if constexpr (f == Field::EX) {
+      return _ex;
+    } else if constexpr (f == Field::EY) {
+      return _ey;
+    } else if constexpr (f == Field::EZ) {
+      return _ez;
+    } else if constexpr (f == Field::HX) {
+      return _hx;
+    } else if constexpr (f == Field::HY) {
+      return _hy;
+    } else if constexpr (f == Field::HZ) {
+      return _hz;
+    }
+  }
+
+  template <Attribute a, Axis::XYZ xyz>
+  auto field() -> Array3D<Real>& {
+    return const_cast<Array3D<Real>&>(
+        static_cast<const EMF*>(this)->field<a, xyz>());
+  }
 
  public:
   const Array3D<Real>& ex() const;
@@ -158,9 +183,8 @@ class EMF {
 //   return "Invalid Field";
 // }
 
-inline constexpr auto EMF::attributeComponentToField(EMF::Attribute a,
-                                                     EMF::Component c)
-    -> EMF::Field {
+inline constexpr auto EMF::attributeComponentToField(
+    EMF::Attribute a, EMF::Component c) -> EMF::Field {
   if (a == EMF::Attribute::E) {
     if (c == EMF::Component::X) {
       return EMF::Field::EX;

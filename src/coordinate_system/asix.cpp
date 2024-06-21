@@ -84,7 +84,7 @@ auto Axis::fromDirectionToXYZ(Axis::Direction direction) -> Axis::XYZ {
   }
 }
 
-auto Axis::tangentialAAxis(Axis::XYZ c) -> Axis::XYZ {
+constexpr auto Axis::tangentialAAxis(Axis::XYZ c) -> Axis::XYZ {
   switch (c) {
     case Axis::XYZ::X:
       return Axis::XYZ::Y;
@@ -97,7 +97,7 @@ auto Axis::tangentialAAxis(Axis::XYZ c) -> Axis::XYZ {
   }
 }
 
-auto Axis::tangentialBAxis(Axis::XYZ c) -> Axis::XYZ {
+constexpr auto Axis::tangentialBAxis(Axis::XYZ c) -> Axis::XYZ {
   switch (c) {
     case Axis::XYZ::X:
       return Axis::XYZ::Z;

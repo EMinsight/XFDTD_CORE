@@ -144,18 +144,6 @@ class FDTDUpdateCoefficient {
             Axis::XYZ xyz_b>
   auto coeff() -> Array3D<Real>&;
 
-  template <EMF::Attribute c, Axis::XYZ xyz>
-  auto coeffDualA() const -> const Array3D<Real>&;
-
-  template <EMF::Attribute c, Axis::XYZ xyz>
-  auto coeffDualA() -> Array3D<Real>&;
-
-  template <EMF::Attribute c, Axis::XYZ xyz>
-  auto coeffDualB() const -> const Array3D<Real>&;
-
-  template <EMF::Attribute c, Axis::XYZ xyz>
-  auto coeffDualB() -> Array3D<Real>&;
-
   auto save(const std::string& dir) const -> void;
 
  public:
@@ -256,22 +244,23 @@ class FDTDUpdateCoefficient {
 template <EMF::Attribute c, Axis::XYZ xyz>
 inline auto FDTDUpdateCoefficient::coeff() const -> const Array3D<Real>& {
   constexpr auto f = transform::attributeXYZToField<c, xyz>();
-  switch (f) {
-    case EMF::Field::EX:
-      return cexe();
-    case EMF::Field::EY:
-      return ceye();
-    case EMF::Field::EZ:
-      return ceze();
-    case EMF::Field::HX:
-      return chxh();
-    case EMF::Field::HY:
-      return chyh();
-    case EMF::Field::HZ:
-      return chzh();
-    default:
-      throw XFDTDException{
-          "FDTDUpdateCoefficient::coeff(): Invalid EMF::Field"};
+  if constexpr (f == EMF::Field::EX) {
+    return cexe();
+  } else if constexpr (f == EMF::Field::EY) {
+    return ceye();
+  } else if constexpr (f == EMF::Field::EZ) {
+    return ceze();
+  } else if constexpr (f == EMF::Field::HX) {
+    return chxh();
+  } else if constexpr (f == EMF::Field::HY) {
+    return chyh();
+  } else if constexpr (f == EMF::Field::HZ) {
+    return chzh();
+  } else {
+    static_assert(f == EMF::Field::EX || f == EMF::Field::EY ||
+                      f == EMF::Field::EZ || f == EMF::Field::HX ||
+                      f == EMF::Field::HY || f == EMF::Field::HZ,
+                  "FDTDUpdateCoefficient::coeff(): Invalid EMF::Field");
   }
 }
 
@@ -310,7 +299,10 @@ auto FDTDUpdateCoefficient::coeff() const -> const Array3D<Real>& {
   } else if constexpr (f == EMF::Field::HZ && g == EMF::Field::EY) {
     return chzey();
   } else {
-    throw XFDTDException{"FDTDUpdateCoefficient::coeff(): Invalid EMF::Field"};
+    static_assert(f == EMF::Field::EX || f == EMF::Field::EY ||
+                      f == EMF::Field::EZ || f == EMF::Field::HX ||
+                      f == EMF::Field::HY || f == EMF::Field::HZ,
+                  "FDTDUpdateCoefficient::coeff(): Invalid EMF::Field");
   }
 }
 
@@ -319,32 +311,6 @@ auto FDTDUpdateCoefficient::coeff() -> Array3D<Real>& {
   return const_cast<Array3D<Real>&>(
       static_cast<const FDTDUpdateCoefficient*>(this)
           ->coeff<a, xyz_a, b, xyz_b>());
-}
-
-template <EMF::Attribute c, Axis::XYZ xyz>
-inline auto FDTDUpdateCoefficient::coeffDualA() const -> const Array3D<Real>& {
-  constexpr auto a = EMF::dualAttribute(c);
-  const auto xyz_a = Axis::tangentialAAxis<xyz>();
-  return coeff<c, xyz, a, xyz_a>();
-}
-
-template <EMF::Attribute c, Axis::XYZ xyz>
-inline auto FDTDUpdateCoefficient::coeffDualA() -> Array3D<Real>& {
-  return const_cast<Array3D<Real>&>(
-      static_cast<const FDTDUpdateCoefficient*>(this)->coeffDualA<c, xyz>());
-}
-
-template <EMF::Attribute c, Axis::XYZ xyz>
-inline auto FDTDUpdateCoefficient::coeffDualB() const -> const Array3D<Real>& {
-  constexpr auto a = EMF::dualAttribute(c);
-  const auto xyz_b = Axis::tangentialBAxis<xyz>();
-  return coeff<c, xyz, a, xyz_b>();
-}
-
-template <EMF::Attribute c, Axis::XYZ xyz>
-inline auto FDTDUpdateCoefficient::coeffDualB() -> Array3D<Real>& {
-  return const_cast<Array3D<Real>&>(
-      static_cast<const FDTDUpdateCoefficient*>(this)->coeffDualB<c, xyz>());
 }
 
 class XFDTDCalculationParamException : public XFDTDException {

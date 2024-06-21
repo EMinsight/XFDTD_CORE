@@ -54,10 +54,6 @@ class Updator {
   std::shared_ptr<const CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
 
-  virtual void updateEEdge() = 0;
-
-  virtual void updateHEdge() = 0;
-
  private:
   IndexTask _task;
 };
