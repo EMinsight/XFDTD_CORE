@@ -238,19 +238,8 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction) -> IndexTask {
   auto range_b = make_secondary_axis_range(
       node_lower_b, node_upper_b, node_range_b.start(), node_range_b.end());
 
-  if (direction == Axis::Direction::XN) {
-    std::cout << "range_a: " << range_a.toString() << "\n";
-    std::cout << "range_b: " << range_b.toString() << "\n";
-    std::cout << "range_c: " << range_c.toString() << "\n";
-  }
-
   auto [range_x, range_y, range_z] =
       transform::aBCToXYZ(range_a, range_b, range_c, xyz);
-  if (direction == Axis::Direction::XN) {
-    std::cout << "range_x: " << range_x.toString() << "\n";
-    std::cout << "range_y: " << range_y.toString() << "\n";
-    std::cout << "range_z: " << range_z.toString() << "\n";
-  }
 
   return makeIndexTask(range_x, range_y, range_z);
 }
@@ -292,8 +281,6 @@ auto NFFFT::globalTaskSurfaceZP() const -> IndexTask {
 }
 
 auto NFFFT::nodeTaskSurfaceXN() const -> IndexTask {
-  std::cout << "node_task_surface_xn: " << _node_task_surface_xn.toString()
-            << "\n";
   return _node_task_surface_xn;
 }
 

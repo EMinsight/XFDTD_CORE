@@ -59,58 +59,48 @@ class TFSF : public WaveformSource {
 
   GridBox globalBox() const;
 
-  IndexTask taskXN() const;
+  auto globalTask() const -> IndexTask;
 
-  IndexTask taskXP() const;
+//   IndexTask taskXN() const;
 
-  IndexTask taskYN() const;
+//   IndexTask taskXP() const;
 
-  IndexTask taskYP() const;
+//   IndexTask taskYN() const;
 
-  IndexTask taskZN() const;
+//   IndexTask taskYP() const;
 
-  IndexTask taskZP() const;
+//   IndexTask taskZN() const;
 
-  IndexTask globalEyTaskXN() const;
+//   IndexTask taskZP() const;
 
-  IndexTask globalEzTaskXN() const;
+//   IndexTask globalEyTaskXN() const;
 
-  IndexTask globalEyTaskXP() const;
+//   IndexTask globalEzTaskXN() const;
 
-  IndexTask globalEzTaskXP() const;
+//   IndexTask globalEyTaskXP() const;
 
-  IndexTask globalEzTaskYN() const;
+//   IndexTask globalEzTaskXP() const;
 
-  IndexTask globalExTaskYN() const;
+//   IndexTask globalEzTaskYN() const;
 
-  IndexTask globalEzTaskYP() const;
+//   IndexTask globalExTaskYN() const;
 
-  IndexTask globalExTaskYP() const;
+//   IndexTask globalEzTaskYP() const;
 
-  IndexTask globalExTaskZN() const;
+//   IndexTask globalExTaskYP() const;
 
-  IndexTask globalEyTaskZN() const;
+//   IndexTask globalExTaskZN() const;
 
-  IndexTask globalExTaskZP() const;
+//   IndexTask globalEyTaskZN() const;
 
-  IndexTask globalEyTaskZP() const;
+//   IndexTask globalExTaskZP() const;
+
+//   IndexTask globalEyTaskZP() const;
 
  protected:
   void defaultInit(std::shared_ptr<GridSpace> grid_space,
                    std::shared_ptr<CalculationParam> calculation_param,
                    std::shared_ptr<EMF> emf) override;
-
-  Real exInc(std::size_t i, std::size_t j, std::size_t k);
-
-  Real eyInc(std::size_t i, std::size_t j, std::size_t k);
-
-  Real ezInc(std::size_t i, std::size_t j, std::size_t k);
-
-  Real hxInc(std::size_t i, std::size_t j, std::size_t k);
-
-  Real hyInc(std::size_t i, std::size_t j, std::size_t k);
-
-  Real hzInc(std::size_t i, std::size_t j, std::size_t k);
 
   Real cax();
 
@@ -124,29 +114,31 @@ class TFSF : public WaveformSource {
 
   Real cbz();
 
-  IndexTask nodeEyTaskXN(const IndexTask &task) const;
+  auto nodeGlobalTask() const -> IndexTask;
 
-  IndexTask nodeEzTaskXN(const IndexTask &task) const;
+//   IndexTask nodeEyTaskXN(const IndexTask &task) const;
 
-  IndexTask nodeEyTaskXP(const IndexTask &task) const;
+//   IndexTask nodeEzTaskXN(const IndexTask &task) const;
 
-  IndexTask nodeEzTaskXP(const IndexTask &task) const;
+//   IndexTask nodeEyTaskXP(const IndexTask &task) const;
 
-  IndexTask nodeExTaskYN(const IndexTask &task) const;
+//   IndexTask nodeEzTaskXP(const IndexTask &task) const;
 
-  IndexTask nodeEzTaskYN(const IndexTask &task) const;
+//   IndexTask nodeExTaskYN(const IndexTask &task) const;
 
-  IndexTask nodeExTaskYP(const IndexTask &task) const;
+//   IndexTask nodeEzTaskYN(const IndexTask &task) const;
 
-  IndexTask nodeEzTaskYP(const IndexTask &task) const;
+//   IndexTask nodeExTaskYP(const IndexTask &task) const;
 
-  IndexTask nodeExTaskZN(const IndexTask &task) const;
+//   IndexTask nodeEzTaskYP(const IndexTask &task) const;
 
-  IndexTask nodeEyTaskZN(const IndexTask &task) const;
+//   IndexTask nodeExTaskZN(const IndexTask &task) const;
 
-  IndexTask nodeExTaskZP(const IndexTask &task) const;
+//   IndexTask nodeEyTaskZN(const IndexTask &task) const;
 
-  IndexTask nodeEyTaskZP(const IndexTask &task) const;
+//   IndexTask nodeExTaskZP(const IndexTask &task) const;
+
+//   IndexTask nodeEyTaskZP(const IndexTask &task) const;
 
  protected:
   Array1D<Real> _projection_x_int;
@@ -156,12 +148,11 @@ class TFSF : public WaveformSource {
   Array1D<Real> _projection_y_half;
   Array1D<Real> _projection_z_half;
 
-  Array1D<Real> _ex_inc;
-  Array1D<Real> _ey_inc;
-  Array1D<Real> _ez_inc;
-  Array1D<Real> _hx_inc;
-  Array1D<Real> _hy_inc;
-  Array1D<Real> _hz_inc;
+  // IFA
+  Array1D<Real> _e_inc;
+  Array1D<Real> _h_inc;
+
+  Vector _transform_e, _transform_h;
 
  private:
   std::size_t _x, _y, _z;
@@ -169,16 +160,11 @@ class TFSF : public WaveformSource {
   Real _sin_theta, _cos_theta, _sin_phi, _cos_phi, _sin_psi, _cos_psi;
   Vector _k;
   Vector _k_e;
-  Vector _transform_e, _transform_h;
 
   //   std::unique_ptr<GridBox> _box;
   GridBox _global_box;
   Real _ratio_delta;
   std::size_t _auxiliary_size;
-
-  // IFA
-  Array1D<Real> _e_inc;
-  Array1D<Real> _h_inc;
 
   Real _scaled_dl;
   Real _ceie;

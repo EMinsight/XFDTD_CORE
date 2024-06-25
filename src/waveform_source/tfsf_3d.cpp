@@ -19,49 +19,29 @@ void TFSF3D::init(std::shared_ptr<GridSpace> grid_space,
 }
 
 std::unique_ptr<Corrector> TFSF3D::generateCorrector(const IndexTask& task) {
-  auto global_ey_task_xn = nodeEyTaskXN(task);
+  auto offset = gridSpace()->globalBox().origin();
 
-  auto global_ez_task_xn = nodeEzTaskXN(task);
+  auto node_task =
+      makeIndexTask(task.xRange() + offset.i(), task.yRange() + offset.j(),
+                    task.zRange() + offset.k());
+  auto g_task = globalTask();
 
-  auto global_ey_task_xp = nodeEyTaskXP(task);
+  auto intersection_task = taskIntersection(node_task, g_task);
 
-  auto global_ez_task_xp = nodeEzTaskXP(task);
-
-  auto global_ex_task_yn = nodeExTaskYN(task);
-
-  auto global_ez_task_yn = nodeEzTaskYN(task);
-
-  auto global_ex_task_yp = nodeExTaskYP(task);
-
-  auto global_ez_task_yp = nodeEzTaskYP(task);
-
-  auto global_ex_task_zn = nodeExTaskZN(task);
-
-  auto global_ey_task_zn = nodeEyTaskZN(task);
-
-  auto global_ex_task_zp = nodeExTaskZP(task);
-
-  auto global_ey_task_zp = nodeEyTaskZP(task);
-
-  if (!global_ey_task_xn.valid() && !global_ez_task_xn.valid() &&
-      !global_ey_task_xp.valid() && !global_ez_task_xp.valid() &&
-      !global_ex_task_yn.valid() && !global_ez_task_yn.valid() &&
-      !global_ex_task_yp.valid() && !global_ez_task_yp.valid() &&
-      !global_ex_task_zn.valid() && !global_ey_task_zn.valid() &&
-      !global_ex_task_zp.valid() && !global_ey_task_zp.valid()) {
+  if (!intersection_task.has_value()) {
     return nullptr;
   }
 
   return std::make_unique<TFSF3DCorrector>(
-      globalBox().origin(), gridSpace(), calculationParam(), emf(),
-      waveform()->value(), global_ey_task_xn, global_ez_task_xn,
-      global_ey_task_xp, global_ez_task_xp, global_ez_task_yn,
-      global_ex_task_yn, global_ez_task_yp, global_ex_task_yp,
-      global_ex_task_zn, global_ey_task_zn, global_ex_task_zp,
-      global_ey_task_zp, _projection_x_int, _projection_y_int,
-      _projection_z_int, _projection_x_half, _projection_y_half,
-      _projection_z_half, _ex_inc, _ey_inc, _ez_inc, _hx_inc, _hy_inc, _hz_inc,
-      cax(), cbx(), cay(), cby(), caz(), cbz());
+      intersection_task.value(), gridSpace().get(), calculationParam().get(),
+      emf().get(), &waveform()->value(), globalTask(),
+      gridSpace()->globalBox().origin().i(),
+      gridSpace()->globalBox().origin().j(),
+      gridSpace()->globalBox().origin().k(), &_projection_x_int,
+      &_projection_y_int, &_projection_z_int, &_projection_x_half,
+      &_projection_y_half, &_projection_z_half, &_e_inc, &_h_inc, cax(), cbx(),
+      cay(), cby(), caz(), cbz(), _transform_e.x(), _transform_e.y(),
+      _transform_e.z(), _transform_h.x(), _transform_h.y(), _transform_h.z());
 }
 
 }  // namespace xfdtd
