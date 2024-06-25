@@ -28,7 +28,7 @@ Real TFSFCorrector::exInc(Index t, Index i, Index j, Index k) const {
   const auto& e_inc = *_e_inc;
 
   return _transform_e_x *
-         ((1 - weight) * e_inc(index) + weight * e_inc(index + 1));
+         ((1 - weight) * e_inc(t, index) + weight * e_inc(t, index + 1));
 }
 
 Real TFSFCorrector::eyInc(Index t, Index i, Index j, Index k) const {
@@ -46,7 +46,7 @@ Real TFSFCorrector::eyInc(Index t, Index i, Index j, Index k) const {
   const auto& e_inc = *_e_inc;
 
   return _transform_e_y *
-         ((1 - weight) * e_inc(index) + weight * e_inc(index + 1));
+         ((1 - weight) * e_inc(t, index) + weight * e_inc(t, index + 1));
 }
 
 Real TFSFCorrector::ezInc(Index t, Index i, Index j, Index k) const {
@@ -64,7 +64,7 @@ Real TFSFCorrector::ezInc(Index t, Index i, Index j, Index k) const {
   const auto& e_inc = *_e_inc;
 
   return _transform_e_z *
-         ((1 - weight) * e_inc(index) + weight * e_inc(index + 1));
+         ((1 - weight) * e_inc.at(t, index) + weight * e_inc.at(t, index + 1));
 }
 
 Real TFSFCorrector::hxInc(Index t, Index i, Index j, Index k) const {
@@ -82,7 +82,7 @@ Real TFSFCorrector::hxInc(Index t, Index i, Index j, Index k) const {
   const auto& h_inc = *_h_inc;
 
   return _transform_h_x *
-         ((1 - weight) * h_inc(index) + weight * h_inc(index + 1));
+         ((1 - weight) * h_inc(t, index) + weight * h_inc(t, index + 1));
 }
 
 Real TFSFCorrector::hyInc(Index t, Index i, Index j, Index k) const {
@@ -100,7 +100,7 @@ Real TFSFCorrector::hyInc(Index t, Index i, Index j, Index k) const {
   const auto& h_inc = *_h_inc;
 
   return _transform_h_y *
-         ((1 - weight) * h_inc(index) + weight * h_inc(index + 1));
+         ((1 - weight) * h_inc(t, index) + weight * h_inc(t, index + 1));
 }
 
 Real TFSFCorrector::hzInc(Index t, Index i, Index j, Index k) const {
@@ -118,7 +118,7 @@ Real TFSFCorrector::hzInc(Index t, Index i, Index j, Index k) const {
   const auto& h_inc = *_h_inc;
 
   return _transform_h_z *
-         ((1 - weight) * h_inc(index) + weight * h_inc(index + 1));
+         ((1 - weight) * h_inc(t, index) + weight * h_inc(t, index + 1));
 }
 
 void TFSF1DCorrector::correctE() {
@@ -130,20 +130,23 @@ void TFSF1DCorrector::correctE() {
     return;
   }
 
-  correctTFSF<Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
   // correctExZP();
 }
 
 void TFSF1DCorrector::correctH() {
   auto task = this->task();
   if (_forward) {
-    correctTFSF<Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
+    correctTFSF<Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::Y>(
+        task, _node_offset_i, _node_offset_j, _node_offset_k);
 
     // correctHyZN();
     return;
   }
 
-  correctTFSF<Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
   // correctHyZP();
 }
 
@@ -173,35 +176,59 @@ void TFSF2DCorrector::correctH() {
 
 void TFSF3DCorrector::correctE() {
   auto task = this->task();
-  correctTFSF<Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
 }
 
 void TFSF3DCorrector::correctH() {
   auto task = this->task();
 
-  correctTFSF<Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::X>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::Z>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
-  correctTFSF<Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::Y>(task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::X>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::Z>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
+  correctTFSF<Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::Y>(
+      task, _node_offset_i, _node_offset_j, _node_offset_k);
 }
 
 }  // namespace xfdtd

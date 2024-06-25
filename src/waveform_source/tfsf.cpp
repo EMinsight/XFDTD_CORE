@@ -36,26 +36,45 @@ void TFSF::correctUpdateCoefficient() {}
 void TFSF::initTimeDependentVariable() {
   waveform()->init(calculationParamPtr()->timeParam()->eTime() -
                    calculationParamPtr()->timeParam()->dt());
-}
 
-void TFSF::updateWaveformSource() {
-  auto x{_e_inc(_e_inc.size() - 2)};
-  auto y{_e_inc(_e_inc.size() - 1)};
-  _e_inc(0) = waveform()->value()(
-      calculationParamPtr()->timeParam()->currentTimeStep());
-  for (std::size_t i{1}; i < _e_inc.size() - 1; ++i) {
-    _e_inc(i) = _ceie * _e_inc(i) + _ceihi * (_h_inc(i) - _h_inc(i - 1));
-  }
+  auto fdtd_1d = [](auto&& e, auto&& h, const auto ceie, const auto ceih,
+                    const auto chih, const auto chie, const auto abc_coeff_0,
+                    const auto abc_coeff_1, const auto& source) {
+    const auto nt = h.shape()[0];
+    const auto nl = h.shape()[1];
 
-  _e_inc(_e_inc.size() - 1) = -_a +
-                              _abc_coff_0 * (_e_inc(_e_inc.size() - 2) + _b) +
-                              _abc_coff_1 * (x + y);
-  _a = x;
-  _b = y;
+    e(0, 0) = source(0);
+    for (Index l = 1; l < nl; ++l) {
+      h(0, l) = chih * h(0, l) + chie * (e(0, l + 1) - e(0, l));
+    }
 
-  for (std::size_t i{0}; i < _h_inc.size(); ++i) {
-    _h_inc(i) = _chih * _h_inc(i) + _chiei * (_e_inc(i + 1) - _e_inc(i));
-  }
+    for (Index t = 1; t < nt; ++t) {
+      for (Index l = 1; l < nl; ++l) {
+        e(t, 0) = source(t);
+        e(t, l) = ceie * e(t - 1, l) + ceih * (h(t - 1, l) - h(t - 1, l - 1));
+      }
+
+      // abc
+      Real e_l_prev_t_prev_prev = (t < 2) ? 0.0 : e(t - 2, nl - 1);
+      Real e_l_t_prev_prev = (t < 2) ? 0.0 : e(t - 2, nl);
+      e(t, nl) = -e_l_prev_t_prev_prev +
+                 abc_coeff_0 * (e(t, nl - 1) + e_l_t_prev_prev) +
+                 abc_coeff_1 * (e(t - 1, nl) + e(t - 1, nl - 1));
+
+      for (Index l = 0; l < nl; ++l) {
+        h(t, l) = chih * h(t - 1, l) + chie * (e(t, l + 1) - e(t, l));
+      }
+    }
+  };
+
+  _e_inc = xt::zeros<Real>(
+      {calculationParamPtr()->timeParam()->size(), _auxiliary_size});
+
+  _h_inc = xt::zeros<Real>(
+      {calculationParamPtr()->timeParam()->size(), _auxiliary_size - 1});
+
+  fdtd_1d(_e_inc, _h_inc, _ceie, _ceihi, _chih, _chiei, _abc_coff_0,
+          _abc_coff_1, waveform()->value());
 }
 
 std::size_t TFSF::x() const { return _x; }
@@ -130,13 +149,6 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
       4 + 1;
 
   calculateProjection();
-
-  _e_inc = xt::zeros<Real>({_auxiliary_size});
-
-  _h_inc = xt::zeros<Real>({_auxiliary_size - 1});
-
-  _a = 0;
-  _b = 0;
 
   if (gridSpacePtr()->dimension() == GridSpace::Dimension::ONE) {
     _scaled_dl = gridSpacePtr()->basedDz() / _ratio_delta;

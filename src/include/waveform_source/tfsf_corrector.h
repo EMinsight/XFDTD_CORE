@@ -20,8 +20,8 @@ class TFSFCorrector : public WaveformSourceCorrector {
                 const Array1D<Real>* projection_z_int,
                 const Array1D<Real>* projection_x_half,
                 const Array1D<Real>* projection_y_half,
-                const Array1D<Real>* projection_z_half, Array1D<Real>* e_inc,
-                Array1D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
+                const Array1D<Real>* projection_z_half, Array2D<Real>* e_inc,
+                Array2D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
                 Real caz, Real cbz, Real transform_e_x = 0.0,
                 Real transform_e_y = 0.0, Real transform_e_z = 0.0,
                 Real transform_h_x = 0.0, Real transform_h_y = 0.0,
@@ -130,6 +130,8 @@ class TFSFCorrector : public WaveformSourceCorrector {
     auto [is, js, ks] = transform::aBCToXYZ<Index, xyz>(as, bs, cs);
     auto [ie, je, ke] = transform::aBCToXYZ<Index, xyz>(ae, be, ce);
 
+    const auto t = calculationParam()->timeParam()->currentTimeStep();
+
     auto emf = this->emf();
     for (Index i{is}; i < ie; ++i) {
       for (Index j{js}; j < je; ++j) {
@@ -145,7 +147,7 @@ class TFSFCorrector : public WaveformSourceCorrector {
               auto [i_dual, j_dual, k_dual] =
                   transform::aBCToXYZ<Index, xyz>(a, b, c - 1);
               const auto dual_incident_field_v =
-                  getInc<dual_attribute, dual_field_xyz>(i_dual, j_dual,
+                  getInc<dual_attribute, dual_field_xyz>(t, i_dual, j_dual,
                                                          k_dual);
               const auto coefficient =
                   getCoefficient<xyz, attribute>() * coefficient_flag;
@@ -155,7 +157,7 @@ class TFSFCorrector : public WaveformSourceCorrector {
               field_v += dual_incident_field_v * coefficient;
             } else {
               const auto dual_incident_field_v =
-                  getInc<dual_attribute, dual_field_xyz>(i, j, k);
+                  getInc<dual_attribute, dual_field_xyz>(t, i, j, k);
 
               const auto coefficient =
                   getCoefficient<xyz, attribute>() * coefficient_flag;
@@ -176,7 +178,7 @@ class TFSFCorrector : public WaveformSourceCorrector {
               emf->field<attribute, field_xyz>()(i_node, j_node, k_node);
 
           const auto dual_incident_field_v =
-              getInc<dual_attribute, dual_field_xyz>(i, j, k);
+              getInc<dual_attribute, dual_field_xyz>(t, i, j, k);
 
           const auto coefficient =
               getCoefficient<xyz, attribute>() * coefficient_flag;
@@ -188,22 +190,22 @@ class TFSFCorrector : public WaveformSourceCorrector {
   };
 
   template <EMF::Attribute attribute, Axis::XYZ xyz>
-  auto getInc(Index i, Index j, Index k) const {
+  auto getInc(Index t, Index i, Index j, Index k) const {
     if constexpr (attribute == EMF::Attribute::E) {
       if constexpr (xyz == Axis::XYZ::X) {
-        return exInc(0, i, j, k);
+        return exInc(t, i, j, k);
       } else if constexpr (xyz == Axis::XYZ::Y) {
-        return eyInc(0, i, j, k);
+        return eyInc(t, i, j, k);
       } else if constexpr (xyz == Axis::XYZ::Z) {
-        return ezInc(0, i, j, k);
+        return ezInc(t, i, j, k);
       }
     } else {
       if constexpr (xyz == Axis::XYZ::X) {
-        return hxInc(0, i, j, k);
+        return hxInc(t, i, j, k);
       } else if constexpr (xyz == Axis::XYZ::Y) {
-        return hyInc(0, i, j, k);
+        return hyInc(t, i, j, k);
       } else if constexpr (xyz == Axis::XYZ::Z) {
-        return hzInc(0, i, j, k);
+        return hzInc(t, i, j, k);
       }
     }
   }
@@ -303,7 +305,7 @@ class TFSFCorrector : public WaveformSourceCorrector {
   const Array1D<Real>* _projection_z_half;
 
   // IFA
-  Array1D<Real>*_e_inc, *_h_inc;
+  Array2D<Real>*_e_inc, *_h_inc;
   const Real _cax, _cbx, _cay, _cby, _caz, _cbz;
   const Real _transform_e_x, _transform_e_y, _transform_e_z, _transform_h_x,
       _transform_h_y, _transform_h_z;
@@ -319,8 +321,8 @@ class TFSF1DCorrector : public TFSFCorrector {
                   const Array1D<Real>* projection_z_int,
                   const Array1D<Real>* projection_x_half,
                   const Array1D<Real>* projection_y_half,
-                  const Array1D<Real>* projection_z_half, Array1D<Real>* e_inc,
-                  Array1D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
+                  const Array1D<Real>* projection_z_half, Array2D<Real>* e_inc,
+                  Array2D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
                   Real caz, Real cbz, Real transform_e_x, Real transform_e_y,
                   Real transform_e_z, Real transform_h_x, Real transform_h_y,
                   Real transform_h_z, bool forward)
@@ -376,8 +378,8 @@ class TFSF2DCorrector : public TFSFCorrector {
                   const Array1D<Real>* projection_z_int,
                   const Array1D<Real>* projection_x_half,
                   const Array1D<Real>* projection_y_half,
-                  const Array1D<Real>* projection_z_half, Array1D<Real>* e_inc,
-                  Array1D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
+                  const Array1D<Real>* projection_z_half, Array2D<Real>* e_inc,
+                  Array2D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
                   Real caz, Real cbz, Real transform_e_x, Real transform_e_y,
                   Real transform_e_z, Real transform_h_x, Real transform_h_y,
                   Real transform_h_z)
@@ -431,8 +433,8 @@ class TFSF3DCorrector : public TFSFCorrector {
                   const Array1D<Real>* projection_z_int,
                   const Array1D<Real>* projection_x_half,
                   const Array1D<Real>* projection_y_half,
-                  const Array1D<Real>* projection_z_half, Array1D<Real>* e_inc,
-                  Array1D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
+                  const Array1D<Real>* projection_z_half, Array2D<Real>* e_inc,
+                  Array2D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
                   Real caz, Real cbz, Real transform_e_x, Real transform_e_y,
                   Real transform_e_z, Real transform_h_x, Real transform_h_y,
                   Real transform_h_z)

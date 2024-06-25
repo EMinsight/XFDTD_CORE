@@ -29,8 +29,6 @@ class TFSF : public WaveformSource {
 
   void initTimeDependentVariable() override;
 
-  void updateWaveformSource() override;
-
   std::size_t x() const;
 
   std::size_t y() const;
@@ -61,42 +59,6 @@ class TFSF : public WaveformSource {
 
   auto globalTask() const -> IndexTask;
 
-//   IndexTask taskXN() const;
-
-//   IndexTask taskXP() const;
-
-//   IndexTask taskYN() const;
-
-//   IndexTask taskYP() const;
-
-//   IndexTask taskZN() const;
-
-//   IndexTask taskZP() const;
-
-//   IndexTask globalEyTaskXN() const;
-
-//   IndexTask globalEzTaskXN() const;
-
-//   IndexTask globalEyTaskXP() const;
-
-//   IndexTask globalEzTaskXP() const;
-
-//   IndexTask globalEzTaskYN() const;
-
-//   IndexTask globalExTaskYN() const;
-
-//   IndexTask globalEzTaskYP() const;
-
-//   IndexTask globalExTaskYP() const;
-
-//   IndexTask globalExTaskZN() const;
-
-//   IndexTask globalEyTaskZN() const;
-
-//   IndexTask globalExTaskZP() const;
-
-//   IndexTask globalEyTaskZP() const;
-
  protected:
   void defaultInit(std::shared_ptr<GridSpace> grid_space,
                    std::shared_ptr<CalculationParam> calculation_param,
@@ -116,30 +78,6 @@ class TFSF : public WaveformSource {
 
   auto nodeGlobalTask() const -> IndexTask;
 
-//   IndexTask nodeEyTaskXN(const IndexTask &task) const;
-
-//   IndexTask nodeEzTaskXN(const IndexTask &task) const;
-
-//   IndexTask nodeEyTaskXP(const IndexTask &task) const;
-
-//   IndexTask nodeEzTaskXP(const IndexTask &task) const;
-
-//   IndexTask nodeExTaskYN(const IndexTask &task) const;
-
-//   IndexTask nodeEzTaskYN(const IndexTask &task) const;
-
-//   IndexTask nodeExTaskYP(const IndexTask &task) const;
-
-//   IndexTask nodeEzTaskYP(const IndexTask &task) const;
-
-//   IndexTask nodeExTaskZN(const IndexTask &task) const;
-
-//   IndexTask nodeEyTaskZN(const IndexTask &task) const;
-
-//   IndexTask nodeExTaskZP(const IndexTask &task) const;
-
-//   IndexTask nodeEyTaskZP(const IndexTask &task) const;
-
  protected:
   Array1D<Real> _projection_x_int;
   Array1D<Real> _projection_y_int;
@@ -149,22 +87,20 @@ class TFSF : public WaveformSource {
   Array1D<Real> _projection_z_half;
 
   // IFA
-  Array1D<Real> _e_inc;
-  Array1D<Real> _h_inc;
+  Array2D<Real> _e_inc, _h_inc;
 
   Vector _transform_e, _transform_h;
 
  private:
-  std::size_t _x, _y, _z;
+  Index _x, _y, _z;
   Real _theta, _phi, _psi;
   Real _sin_theta, _cos_theta, _sin_phi, _cos_phi, _sin_psi, _cos_psi;
   Vector _k;
   Vector _k_e;
 
-  //   std::unique_ptr<GridBox> _box;
   GridBox _global_box;
   Real _ratio_delta;
-  std::size_t _auxiliary_size;
+  Index _auxiliary_size;
 
   Real _scaled_dl;
   Real _ceie;
@@ -172,7 +108,7 @@ class TFSF : public WaveformSource {
   Real _ceihi;
   Real _chiei;
   Real _abc_coff_0, _abc_coff_1;
-  Real _a{}, _b{};  // !!!!!!!!! Don't forget to initialize these variables
+  Real _a = 0, _b = 0;
 
   void initTransform();
 
