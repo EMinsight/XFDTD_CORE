@@ -16,10 +16,6 @@ add_subdirectory(updator)
 add_subdirectory(waveform)
 add_subdirectory(waveform_source)
 
-if (XFDTD_CORE_WITH_CUDA)
-  add_subdirectory(cuda)
-endif()
-
 add_library(xfdtd_core ${ALL_OBJECT_FILES})
 
 set(XFDTD_CORE_LIBS
@@ -42,14 +38,6 @@ set(XFDTD_CORE_LIBS
     xfdtd_waveform
     xfdtd_waveform_source
 )
-
-if (XFDTD_CORE_WITH_CUDA)
-  set(XFDTD_CORE_LIBS ${XFDTD_CORE_LIBS} xfdtd_calculation_param_cuda)
-endif()
-
-if (XFDTD_CORE_WITH_CUDA)
-    target_link_libraries(xfdtd_core PUBLIC ${XFDTD_CORE_CUDA_LIB})
-endif()
 
 target_link_libraries(xfdtd_core PUBLIC ${XFDTD_CORE_THIRD_PARTY_LIB}
                                         ${XFDTD_CORE_LIBS})

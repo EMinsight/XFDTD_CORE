@@ -34,11 +34,6 @@ if(XFDTD_CORE_SINGLE_PRECISION)
   add_definitions(-DXFDTD_CORE_SINGLE_PRECISION)
 endif()
 
-option(XFDTD_CORE_WITH_CUDA "Enable CUDA support" OFF)
-if(XFDTD_CORE_WITH_CUDA)
-  include(cmake/cuda.cmake)
-endif()
-
 # ##############################################################################
 # DEPENDENCIES
 # ##############################################################################

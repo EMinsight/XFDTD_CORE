@@ -70,8 +70,6 @@ class Simulation {
 
   void init();
 
-  auto runInCUDA() -> void;
-
  private:
   Real _dx, _dy, _dz;
   Real _cfl;

@@ -1,5 +1,0 @@
-message(STATUS "XFDTD Core CUDA support enabled")
-add_definitions(-DXFDTD_CORE_WITH_CUDA)
-enable_language(CUDA)
-set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
