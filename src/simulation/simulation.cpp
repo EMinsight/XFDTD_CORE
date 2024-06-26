@@ -232,6 +232,14 @@ void Simulation::init() {
       _grid_space->sizeX(), _grid_space->sizeY(), _grid_space->sizeZ());
 }
 
+auto Simulation::runInCUDA() -> void {
+#ifdef XFDTD_CORE_WITH_CUDA
+  // Copy Data to GPU
+
+#else
+#endif
+}
+
 void Simulation::generateDomain() {
   if (std::thread::hardware_concurrency() < numThread()) {
     std::stringstream ss;

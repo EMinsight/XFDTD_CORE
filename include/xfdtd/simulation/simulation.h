@@ -3,7 +3,6 @@
 
 #include <xfdtd/boundary/boundary.h>
 #include <xfdtd/calculation_param/calculation_param.h>
-
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
@@ -70,6 +69,8 @@ class Simulation {
   const std::shared_ptr<EMF>& emf() const;
 
   void init();
+
+  auto runInCUDA() -> void;
 
  private:
   Real _dx, _dy, _dz;
