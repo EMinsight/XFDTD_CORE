@@ -158,23 +158,19 @@ void Simulation::run(std::size_t time_step) {
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                      _end_time - _start_time)
                      .count()
-              << " ms"
-              << " or "
+              << " ms" << " or "
               << std::chrono::duration_cast<std::chrono::seconds>(_end_time -
                                                                   _start_time)
                      .count()
-              << " s"
-              << " or "
+              << " s" << " or "
               << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
                                                                   _start_time)
                      .count()
-              << " m"
-              << " or "
+              << " m" << " or "
               << std::chrono::duration_cast<std::chrono::hours>(_end_time -
                                                                 _start_time)
                      .count()
-              << " h."
-              << "\n";
+              << " h." << "\n";
   }
 }
 

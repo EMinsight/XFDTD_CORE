@@ -30,8 +30,8 @@ class EMF {
 
   static constexpr auto fieldToString(Field f) -> std::string;
 
-  static constexpr auto attributeComponentToField(Attribute a, Component c)
-      -> Field;
+  static constexpr auto attributeComponentToField(Attribute a,
+                                                  Component c) -> Field;
 
   static constexpr auto fieldToComponent(Field f) -> Component;
 
@@ -49,6 +49,31 @@ class EMF {
 
   template <Field f>
   auto field() -> Array3D<Real>&;
+
+ public:
+  template <Attribute a, Axis::XYZ xyz>
+  auto field() const -> const Array3D<Real>& {
+    constexpr auto f = attributeComponentToField(a, xYZToComponent(xyz));
+    if constexpr (f == Field::EX) {
+      return _ex;
+    } else if constexpr (f == Field::EY) {
+      return _ey;
+    } else if constexpr (f == Field::EZ) {
+      return _ez;
+    } else if constexpr (f == Field::HX) {
+      return _hx;
+    } else if constexpr (f == Field::HY) {
+      return _hy;
+    } else if constexpr (f == Field::HZ) {
+      return _hz;
+    }
+  }
+
+  template <Attribute a, Axis::XYZ xyz>
+  auto field() -> Array3D<Real>& {
+    return const_cast<Array3D<Real>&>(
+        static_cast<const EMF*>(this)->field<a, xyz>());
+  }
 
  public:
   const Array3D<Real>& ex() const;
@@ -100,67 +125,66 @@ class EMF {
   Array3D<Real> _hx, _hy, _hz;
 };
 
-inline constexpr auto EMF::componentToString(Component c) -> std::string {
-  // is it possible to use switch case here?
-  if (c == Component::X) {
-    return "X";
-  }
-  if (c == Component::Y) {
-    return "Y";
-  }
-  if (c == Component::Z) {
-    return "Z";
-  }
-  if (c == Component::Magnitude) {
-    return "Magnitude";
-  }
+// inline constexpr auto EMF::componentToString(Component c) -> std::string {
+//   // is it possible to use switch case here?
+//   if (c == Component::X) {
+//     return "X";
+//   }
+//   if (c == Component::Y) {
+//     return "Y";
+//   }
+//   if (c == Component::Z) {
+//     return "Z";
+//   }
+//   if (c == Component::Magnitude) {
+//     return "Magnitude";
+//   }
 
-  return "Invalid Component";
-}
+//   return "Invalid Component";
+// }
 
-inline constexpr auto EMF::attributeToString(Attribute a) -> std::string {
-  if (a == Attribute::E) {
-    return "E";
-  }
-  if (a == Attribute::H) {
-    return "H";
-  }
+// inline constexpr auto EMF::attributeToString(Attribute a) -> std::string {
+//   if (a == Attribute::E) {
+//     return "E";
+//   }
+//   if (a == Attribute::H) {
+//     return "H";
+//   }
 
-  return "Invalid Attribute";
-}
+//   return "Invalid Attribute";
+// }
 
-inline constexpr auto EMF::fieldToString(Field f) -> std::string {
-  if (f == Field::EX) {
-    return "Ex";
-  }
-  if (f == Field::EY) {
-    return "Ey";
-  }
-  if (f == Field::EZ) {
-    return "Ez";
-  }
-  if (f == Field::EM) {
-    return "Em";
-  }
-  if (f == Field::HX) {
-    return "Hx";
-  }
-  if (f == Field::HY) {
-    return "Hy";
-  }
-  if (f == Field::HZ) {
-    return "Hz";
-  }
-  if (f == Field::HM) {
-    return "Hm";
-  }
+// inline constexpr auto EMF::fieldToString(Field f) -> std::string {
+//   if (f == Field::EX) {
+//     return "Ex";
+//   }
+//   if (f == Field::EY) {
+//     return "Ey";
+//   }
+//   if (f == Field::EZ) {
+//     return "Ez";
+//   }
+//   if (f == Field::EM) {
+//     return "Em";
+//   }
+//   if (f == Field::HX) {
+//     return "Hx";
+//   }
+//   if (f == Field::HY) {
+//     return "Hy";
+//   }
+//   if (f == Field::HZ) {
+//     return "Hz";
+//   }
+//   if (f == Field::HM) {
+//     return "Hm";
+//   }
 
-  return "Invalid Field";
-}
+//   return "Invalid Field";
+// }
 
-inline constexpr auto EMF::attributeComponentToField(EMF::Attribute a,
-                                                     EMF::Component c)
-    -> EMF::Field {
+inline constexpr auto EMF::attributeComponentToField(
+    EMF::Attribute a, EMF::Component c) -> EMF::Field {
   if (a == EMF::Attribute::E) {
     if (c == EMF::Component::X) {
       return EMF::Field::EX;

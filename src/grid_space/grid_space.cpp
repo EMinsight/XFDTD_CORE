@@ -8,6 +8,7 @@
 #include <xtensor.hpp>
 
 // #include "util/float_compare.h"
+#include "grid_space/grid_space_data.h"
 #include "xfdtd/common/type_define.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
@@ -109,12 +110,12 @@ GridSpace::Dimension GridSpace::dimension() const { return _dimension; }
 
 GridSpace::Type GridSpace::type() const { return _type; }
 
-Cube GridSpace::region() const {
-  return Cube{Vector{eNodeX().front(), eNodeY().front(), eNodeZ().front()},
-              Vector{eNodeX().back() - eNodeX().front(),
-                     eNodeY().back() - eNodeY().front(),
-                     eNodeZ().back() - eNodeZ().front()}};
-}
+// Cube GridSpace::region() const {
+//   return Cube{Vector{eNodeX().front(), eNodeY().front(), eNodeZ().front()},
+//               Vector{eNodeX().back() - eNodeX().front(),
+//                      eNodeY().back() - eNodeY().front(),
+//                      eNodeZ().back() - eNodeZ().front()}};
+// }
 
 GridBox GridSpace::box() const {
   return GridBox{Grid{0, 0, 0}, Grid{sizeX(), sizeY(), sizeZ()}};
@@ -436,7 +437,7 @@ std::string GridSpace::toString() const {
   ss << "GridSpace: \n";
   ss << " Dimension: " << dimensionToString(dimension()) << "\n";
   ss << " Type: " << typeToString(type()) << "\n";
-  ss << " Region: " << region().toString() << "\n";
+  // ss << " Region: " << region().toString() << "\n";
   ss << "  " << box().toString() << "\n";
   ss << " Global " << globalBox().toString();
 
@@ -462,6 +463,14 @@ auto GridSpace::eps() const -> Real {
     return std::min(minDx(), minDy()) / num;
   }
   return std::min({minDx(), minDy(), minDz()}) / num;
+}
+
+auto GridSpace::gridSpaceData() const
+    -> GridSpaceData<Array1D<Real>, Index, Real> {
+  return GridSpaceData<Array1D<Real>, Index, Real>{
+      _based_dx,  _based_dy,  _based_dz,  _min_dx,    _min_dy,    _min_dz,
+      &_e_node_x, &_e_node_y, &_e_node_z, &_h_node_x, &_h_node_y, &_h_node_z,
+      &_e_size_x, &_e_size_y, &_e_size_z, &_h_size_x, &_h_size_y, &_h_size_z};
 }
 
 std::size_t GridSpace::handleTransformY(Real y) const {

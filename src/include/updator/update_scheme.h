@@ -1,6 +1,9 @@
 #ifndef _XFDTD_CORE_UPDATE_SCHEME_H_
 #define _XFDTD_CORE_UPDATE_SCHEME_H_
 
+#include "xfdtd/calculation_param/calculation_param.h"
+#include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 namespace xfdtd {
 
 /**
@@ -45,10 +48,63 @@ inline auto eNext(const T& cece, T ec, const T& cecha, T ha_p, T ha_q,
  * @return The next time step value of the magnetic field.
  */
 template <typename T>
-inline auto hNext(const T& chch, T hc, const T& chcea, T ea_p, T ea_q,
-                  const T& chceb, T eb_p, T eb_q) {
+inline auto hNextDeparted(const T& chch, T hc, const T& chcea, T ea_p, T ea_q,
+                          const T& chceb, T eb_p, T eb_q) {
   auto&& result = chch * hc + chcea * (ea_p - ea_q) + chceb * (eb_p - eb_q);
   return result;
+}
+
+template <typename T>
+inline auto hNext(const T& chch, T hc, const T& chcea, T ea_p, T ea_q,
+                  const T& chceb, T eb_p, T eb_q) {
+  auto&& result = chch * hc + chcea * (ea_q - ea_p) + chceb * (eb_q - eb_p);
+  return result;
+}
+
+template <typename EMF::Attribute attribute, Axis::XYZ xyz, typename Size>
+inline auto update(EMF& emf, FDTDUpdateCoefficient& update_coefficient,
+                   const Size is, const Size ie, const Size js, const Size je,
+                   const Size ks, const Size ke) {
+  constexpr auto dual_attribute = EMF::dualAttribute(attribute);
+  constexpr auto xzy_a = Axis::tangentialAAxis<xyz>();
+  constexpr auto xzy_b = Axis::tangentialBAxis<xyz>();
+
+  const auto& cfcf = update_coefficient.coeff<attribute, xyz>();
+  const auto& cf_a =
+      update_coefficient.coeff<attribute, xyz, dual_attribute, xzy_a>();
+  const auto& cf_b =
+      update_coefficient.coeff<attribute, xyz, dual_attribute, xzy_b>();
+
+  auto&& field = emf.field<attribute, xyz>();
+  const auto& field_a = emf.field<dual_attribute, xzy_a>();
+  const auto& field_b = emf.field<dual_attribute, xzy_b>();
+
+  constexpr Size offset = attribute == EMF::Attribute::E ? -1 : 1;
+  for (Size i = is; i < ie; ++i) {
+    for (Size j = js; j < je; ++j) {
+      for (Size k = ks; k < ke; ++k) {
+        auto [a, b, c] = transform::xYZToABC<Index, xyz>(i, j, k);
+        auto b_1 = b + offset;
+        auto a_1 = a + offset;
+
+        auto [i_a, j_a, k_a] = transform::aBCToXYZ<Index, xyz>(a, b_1, c);
+
+        auto [i_b, j_b, k_b] = transform::aBCToXYZ<Index, xyz>(a_1, b, c);
+
+        if constexpr (attribute == EMF::Attribute::E) {
+          field(i, j, k) =
+              eNext(cfcf(i, j, k), field(i, j, k), cf_a(i, j, k),
+                    field_a(i, j, k), field_a(i_a, j_a, k_a), cf_b(i, j, k),
+                    field_b(i, j, k), field_b(i_b, j_b, k_b));
+        } else {
+          field(i, j, k) =
+              hNext(cfcf(i, j, k), field(i, j, k), cf_a(i, j, k),
+                    field_a(i, j, k), field_a(i_a, j_a, k_a), cf_b(i, j, k),
+                    field_b(i, j, k), field_b(i_b, j_b, k_b));
+        }
+      }
+    }
+  }
 }
 
 }  // namespace xfdtd

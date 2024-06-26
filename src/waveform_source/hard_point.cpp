@@ -18,8 +18,6 @@ void HardPoint::correctMaterialSpace() {}
 
 void HardPoint::correctUpdateCoefficient() {}
 
-void HardPoint::updateWaveformSource() {}
-
 // void HardPoint::correctE() {
 //   // center
 //   auto center{gridSpacePtr()->box().center()};

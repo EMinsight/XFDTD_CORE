@@ -34,9 +34,6 @@ class LinearDispersiveMaterialUpdator : public BasicUpdator3D {
 
   auto updateE() -> void override;
 
- protected:
-  auto updateEEdge() -> void override;
-
  private:
   std::vector<Index> _map;
   std::vector<std::shared_ptr<LinearDispersiveMaterialUpdateMethod>>
@@ -56,9 +53,6 @@ class LinearDispersiveMaterialUpdator1D : public BasicUpdatorTEM {
   ~LinearDispersiveMaterialUpdator1D() override = default;
 
   auto updateE() -> void override;
-
- protected:
-  auto updateEEdge() -> void override;
 
  private:
   std::vector<Index> _map;

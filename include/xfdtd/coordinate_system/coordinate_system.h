@@ -136,9 +136,9 @@ class Axis : public Vector {
 
   static auto fromDirectionToXYZ(Direction direction) -> Axis::XYZ;
 
-  static auto tangentialAAxis(Axis::XYZ c) -> Axis::XYZ;
+  static constexpr auto tangentialAAxis(Axis::XYZ c) -> Axis::XYZ;
 
-  static auto tangentialBAxis(Axis::XYZ c) -> Axis::XYZ;
+  static constexpr auto tangentialBAxis(Axis::XYZ c) -> Axis::XYZ;
 
   static auto crossProduct(Axis::XYZ a, Axis::XYZ b) -> Axis::Direction;
 

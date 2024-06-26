@@ -4,6 +4,8 @@
 #include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/exception/exception.h>
+#include <xfdtd/grid_space/grid.h>
+#include <xfdtd/grid_space/grid_box.h>
 #include <xfdtd/shape/cube.h>
 #include <xfdtd/shape/shape.h>
 
@@ -15,78 +17,13 @@
 
 namespace xfdtd {
 
+template <typename Arr1D, typename Index, typename Real>
+class GridSpaceData;
+
 class XFDTDGridSpaceException : public XFDTDException {
  public:
-  explicit XFDTDGridSpaceException(
-      std::string message = "XFDTD GridSpace Exception")
+  explicit XFDTDGridSpaceException(std::string message = "")
       : XFDTDException(std::move(message)) {}
-};
-
-class Grid {
- public:
-  Grid() = default;
-
-  Grid(std::size_t i, std::size_t j, std::size_t k,
-       std::size_t material_index = -1);
-
-  Grid(const Grid&) = default;
-
-  Grid(Grid&&) noexcept = default;
-
-  Grid& operator=(const Grid&) = default;
-
-  Grid& operator=(Grid&&) noexcept = default;
-
-  ~Grid() = default;
-
-  Grid operator+(const Grid& grid) const;
-
-  Grid operator-(const Grid& grid) const;
-
-  std::size_t i() const;
-
-  std::size_t j() const;
-
-  std::size_t k() const;
-
-  std::size_t materialIndex() const;
-
-  void setMaterialIndex(std::size_t index);
-
-  std::string toString() const;
-
- private:
-  std::size_t _i{0}, _j{0}, _k{0}, _material_index{static_cast<size_t>(-1)};
-};
-
-class GridBox {
- public:
-  GridBox() = default;
-
-  GridBox(Grid origin, Grid size);
-
-  GridBox(const GridBox&) = default;
-
-  GridBox(GridBox&&) noexcept = default;
-
-  GridBox& operator=(const GridBox&) = default;
-
-  GridBox& operator=(GridBox&&) noexcept = default;
-
-  ~GridBox() = default;
-
-  Grid origin() const;
-
-  Grid size() const;
-
-  Grid center() const;
-
-  Grid end() const;
-
-  std::string toString() const;
-
- private:
-  Grid _origin, _size;
 };
 
 class GridSpace {
@@ -109,7 +46,7 @@ class GridSpace {
 
   Type type() const;
 
-  Cube region() const;
+  // Cube region() const;
 
   GridBox box() const;
 
@@ -157,11 +94,11 @@ class GridSpace {
 
   const Array1D<Real>& hSize(Axis::XYZ xyz) const;
 
-  std::size_t sizeX() const;
+  Index sizeX() const;
 
-  std::size_t sizeY() const;
+  Index sizeY() const;
 
-  std::size_t sizeZ() const;
+  Index sizeZ() const;
 
   Grid getGrid(Real x, Real y, Real z) const;
 
@@ -173,26 +110,22 @@ class GridSpace {
 
   Vector getGridEndVector(const Grid& grid) const;
 
-  // auto getShapeMask(const Shape* shape) const;
-
-  // template <typename T>
-  // auto getGridWithMaterialView(const T& mask);
-
   GridBox getGridBox(const Shape* shape) const;
 
   virtual void correctGridSpace() = 0;
 
-  void extendGridSpace(Axis::Direction direction, std::size_t num, Real dl);
+  void extendGridSpace(Axis::Direction direction, Index num, Real dl);
 
-  virtual std::unique_ptr<GridSpace> subGridSpace(
-      std::size_t start_i, std::size_t start_j, std::size_t start_k,
-      std::size_t end_i, std::size_t end_j, std::size_t end_k) const = 0;
+  virtual std::unique_ptr<GridSpace> subGridSpace(Index start_i, Index start_j,
+                                                  Index start_k, Index end_i,
+                                                  Index end_j,
+                                                  Index end_k) const = 0;
 
   GridBox getGridBoxWithoutCheck(const Shape* shape) const;
 
   Grid getGridWithoutCheck(const Vector& vector) const;
 
-  void generateMaterialGrid(std::size_t nx, std::size_t ny, std::size_t nz);
+  void generateMaterialGrid(Index nx, Index ny, Index nz);
 
   void setGlobalGridSpace(std::weak_ptr<GridSpace> global_grid_space);
 
@@ -209,6 +142,8 @@ class GridSpace {
   Grid transformNodeToGlobal(const Grid& grid) const;
 
   GridBox transformNodeToGlobal(const GridBox& box) const;
+
+  auto gridSpaceData() const -> GridSpaceData<Array1D<Real>, Index, Real>;
 
   auto eps() const -> Real;
 
@@ -261,17 +196,17 @@ class GridSpace {
 
   void setMinDz(Real min_dz);
 
-  virtual std::size_t handleTransformX(Real x) const;
+  virtual Index handleTransformX(Real x) const;
 
-  virtual std::size_t handleTransformY(Real y) const;
+  virtual Index handleTransformY(Real y) const;
 
-  virtual std::size_t handleTransformZ(Real z) const;
+  virtual Index handleTransformZ(Real z) const;
 
-  virtual std::size_t handleTransformXWithoutCheck(Real x) const;
+  virtual Index handleTransformXWithoutCheck(Real x) const;
 
-  virtual std::size_t handleTransformYWithoutCheck(Real y) const;
+  virtual Index handleTransformYWithoutCheck(Real y) const;
 
-  virtual std::size_t handleTransformZWithoutCheck(Real z) const;
+  virtual Index handleTransformZWithoutCheck(Real z) const;
 
   void correctGridSpaceForOne(Real dl, const Array1D<Real>& e_node,
                               Array1D<Real>& h_node, Array1D<Real>& e_size,
@@ -304,20 +239,6 @@ class GridSpace {
   Array1D<Real> calculateHSize(const Array1D<Real>& h_node,
                                const Array1D<Real>& e_node, Real dl);
 };
-
-// inline auto GridSpace::getShapeMask(const Shape* shape) const {
-//   Array3D<bool> mask{xt::make_lambda_xfunction(
-//       [shape, this](auto&& g) {
-//         return shape->isInside(getGridCenterVector(*g), eps());
-//       },
-//       _grid_with_material)};
-//   return mask;
-// }
-
-// template <typename T>
-// inline auto GridSpace::getGridWithMaterialView(const T& mask) {
-//   return xt::filter(_grid_with_material, mask);
-// }
 
 }  // namespace xfdtd
 

@@ -106,16 +106,6 @@ class PML : public Boundary {
   Array3D<Real> _c_hb_psi_ea;
   Array3D<Real> _hb_psi_ea;
 
-  //   bool taskContainPML(const Task<std::size_t>& task) const;
-
-  Array3D<Real>& eaF();
-
-  Array3D<Real>& ebF();
-
-  Array3D<Real>& haF();
-
-  Array3D<Real>& hbF();
-
   void correctCoefficientX();
 
   void correctCoefficientY();

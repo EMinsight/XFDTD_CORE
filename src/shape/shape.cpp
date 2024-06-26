@@ -12,11 +12,11 @@ std::unique_ptr<Cube> Shape::makeWrappedCube(
   }
 
   auto min_x = std::numeric_limits<Real>::max();
-  auto max_x = std::numeric_limits<Real>::min();
+  auto max_x = std::numeric_limits<Real>::lowest();
   auto min_y = std::numeric_limits<Real>::max();
-  auto max_y = std::numeric_limits<Real>::min();
+  auto max_y = std::numeric_limits<Real>::lowest();
   auto min_z = std::numeric_limits<Real>::max();
-  auto max_z = std::numeric_limits<Real>::min();
+  auto max_z = std::numeric_limits<Real>::lowest();
 
   for (const auto& s : shapes) {
     if (s == nullptr) {

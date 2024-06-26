@@ -37,8 +37,6 @@ class WaveformSource {
 
   virtual void initTimeDependentVariable() = 0;
 
-  virtual void updateWaveformSource() = 0;
-
   const std::unique_ptr<Waveform> &waveform();
 
   virtual std::unique_ptr<Corrector> generateCorrector(

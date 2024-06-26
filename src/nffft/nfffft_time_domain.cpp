@@ -171,7 +171,7 @@ auto NFFFTTimeDomain::distanceRange() const -> Range<Real> {
     auto ke = global_task.zRange().end();
 
     auto min_dis = std::numeric_limits<Real>::max();
-    auto max_dis = std::numeric_limits<Real>::min();
+    auto max_dis = std::numeric_limits<Real>::lowest();
 
     auto r_vector = [](Index i, Index j, Index k, const GridSpace* grid_space,
                        Axis::XYZ xyz) {
