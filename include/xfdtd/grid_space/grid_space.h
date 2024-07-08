@@ -147,21 +147,6 @@ class GridSpace {
 
   auto eps() const -> Real;
 
- protected:
-  GridSpace(Real dx, Real dy, Real dz, Dimension dimension,
-            Array1D<Real> e_node_x, Array1D<Real> e_node_y,
-            Array1D<Real> e_node_z);
-
-  // for subGridSpace
-  GridSpace(Dimension dimension, Type type, GridBox global_box, Real based_dx,
-            Real based_dy, Real based_dz, Real min_dx, Real min_dy, Real min_dz,
-            Array1D<Real> e_node_x, Array1D<Real> e_node_y,
-            Array1D<Real> e_node_z, Array1D<Real> h_node_x,
-            Array1D<Real> h_node_y, Array1D<Real> h_node_z,
-            Array1D<Real> e_size_x, Array1D<Real> e_size_y,
-            Array1D<Real> e_size_z, Array1D<Real> h_size_x,
-            Array1D<Real> h_size_y, Array1D<Real> h_size_z);
-
   Array1D<Real>& eNodeX();
 
   Array1D<Real>& eNodeY();
@@ -189,6 +174,21 @@ class GridSpace {
   Array1D<Real>& eSize(Axis::XYZ xyz);
 
   Array1D<Real>& hSize(Axis::XYZ xyz);
+
+ protected:
+  GridSpace(Real dx, Real dy, Real dz, Dimension dimension,
+            Array1D<Real> e_node_x, Array1D<Real> e_node_y,
+            Array1D<Real> e_node_z);
+
+  // for subGridSpace
+  GridSpace(Dimension dimension, Type type, GridBox global_box, Real based_dx,
+            Real based_dy, Real based_dz, Real min_dx, Real min_dy, Real min_dz,
+            Array1D<Real> e_node_x, Array1D<Real> e_node_y,
+            Array1D<Real> e_node_z, Array1D<Real> h_node_x,
+            Array1D<Real> h_node_y, Array1D<Real> h_node_z,
+            Array1D<Real> e_size_x, Array1D<Real> e_size_y,
+            Array1D<Real> e_size_z, Array1D<Real> h_size_x,
+            Array1D<Real> h_size_y, Array1D<Real> h_size_z);
 
   void setMinDx(Real min_dx);
 

@@ -80,6 +80,16 @@ class Monitor {
 
   virtual auto valid() const -> bool;
 
+  auto gridSpace() const -> std::shared_ptr<const GridSpace> {
+    return _grid_space;
+  }
+
+  auto calculationParam() const -> std::shared_ptr<const CalculationParam> {
+    return _calculation_param;
+  }
+
+  auto emf() const -> std::shared_ptr<const EMF> { return _emf; }
+
  protected:
   void defaultInit(std::shared_ptr<const GridSpace> grid_space,
                    std::shared_ptr<const CalculationParam> calculation_param,

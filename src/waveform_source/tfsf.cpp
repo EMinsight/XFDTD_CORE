@@ -174,34 +174,34 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
       (constant::C_0 * calculationParamPtr()->timeParam()->dt() + _scaled_dl);
 }
 
-Real TFSF::cax() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::EPSILON_0 * gridSpacePtr()->basedDx());
+Real TFSF::cax() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::EPSILON_0 * gridSpace()->basedDx());
 }
 
-Real TFSF::cay() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::EPSILON_0 * gridSpacePtr()->basedDy());
+Real TFSF::cay() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::EPSILON_0 * gridSpace()->basedDy());
 }
 
-Real TFSF::caz() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::EPSILON_0 * gridSpacePtr()->basedDz());
+Real TFSF::caz() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::EPSILON_0 * gridSpace()->basedDz());
 }
 
-Real TFSF::cbx() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::MU_0 * gridSpacePtr()->basedDx());
+Real TFSF::cbx() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::MU_0 * gridSpace()->basedDx());
 }
 
-Real TFSF::cby() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::MU_0 * gridSpacePtr()->basedDy());
+Real TFSF::cby() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::MU_0 * gridSpace()->basedDy());
 }
 
-Real TFSF::cbz() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::MU_0 * gridSpacePtr()->basedDz());
+Real TFSF::cbz() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::MU_0 * gridSpace()->basedDz());
 }
 
 auto TFSF::nodeGlobalTask() const -> IndexTask {

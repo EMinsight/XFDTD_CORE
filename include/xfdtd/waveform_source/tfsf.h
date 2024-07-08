@@ -59,22 +59,54 @@ class TFSF : public WaveformSource {
 
   auto globalTask() const -> IndexTask;
 
+  Real cax() const;
+
+  Real cay() const;
+
+  Real caz() const;
+
+  Real cbx() const;
+
+  Real cby() const;
+
+  Real cbz() const;
+
+  auto transformE() const -> Vector { return _transform_e; }
+
+  auto transformH() const -> Vector { return _transform_h; }
+
+  auto projectionXInt() const -> const Array1D<Real> & {
+    return _projection_x_int;
+  }
+
+  auto projectionYInt() const -> const Array1D<Real> & {
+    return _projection_y_int;
+  }
+
+  auto projectionZInt() const -> const Array1D<Real> & {
+    return _projection_z_int;
+  }
+
+  auto projectionXHalf() const -> const Array1D<Real> & {
+    return _projection_x_half;
+  }
+
+  auto projectionYHalf() const -> const Array1D<Real> & {
+    return _projection_y_half;
+  }
+
+  auto projectionZHalf() const -> const Array1D<Real> & {
+    return _projection_z_half;
+  }
+
+  auto eInc() const -> const Array2D<Real> & { return _e_inc; }
+
+  auto hInc() const -> const Array2D<Real> & { return _h_inc; }
+
  protected:
   void defaultInit(std::shared_ptr<GridSpace> grid_space,
                    std::shared_ptr<CalculationParam> calculation_param,
                    std::shared_ptr<EMF> emf) override;
-
-  Real cax();
-
-  Real cay();
-
-  Real caz();
-
-  Real cbx();
-
-  Real cby();
-
-  Real cbz();
 
   auto nodeGlobalTask() const -> IndexTask;
 

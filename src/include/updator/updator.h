@@ -49,6 +49,18 @@ class Updator {
   // only work for shared memory model
   bool containZNEdge() const { return task().zRange().start() == 0; }
 
+  auto gridSpace() const { return _grid_space; }
+
+  auto calculationParam() const { return _calculation_param; }
+
+  auto emf() const { return _emf; }
+
+  auto gridSpace() { return _grid_space; }
+
+  auto calculationParam() { return _calculation_param; }
+
+  auto emf() { return _emf; }
+
  protected:
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const CalculationParam> _calculation_param;

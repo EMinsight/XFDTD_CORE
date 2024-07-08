@@ -70,6 +70,18 @@ class Simulation {
 
   void init();
 
+  auto init(Index time_step) -> void;
+
+  auto waveformSources() -> std::vector<std::shared_ptr<WaveformSource>> {
+    return _waveform_sources;
+  }
+
+  auto boundaries() -> std::vector<std::shared_ptr<Boundary>> {
+    return _boundaries;
+  }
+
+  auto monitors() -> std::vector<std::shared_ptr<Monitor>> { return _monitors; }
+
  private:
   Real _dx, _dy, _dz;
   Real _cfl;

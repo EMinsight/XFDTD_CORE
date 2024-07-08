@@ -67,6 +67,60 @@ class PML : public Boundary {
   std::unique_ptr<Corrector> generateDomainCorrector(
       const Task<std::size_t>& task) override;
 
+  auto task() const -> IndexTask {
+    return _pml_global_task;
+  }
+
+  auto offsetC() const -> Index;
+
+  auto coeffAE() const -> const Array1D<Real>& {
+    return _coeff_a_e;
+  }
+
+  auto coeffBE() const -> const Array1D<Real>& {
+    return _coeff_b_e;
+  }
+
+  auto coeffAH() const -> const Array1D<Real>& {
+    return _coeff_a_h;
+  }
+
+  auto coeffBH() const -> const Array1D<Real>& {
+    return _coeff_b_h;
+  }
+
+  auto coeffEAPsiHB() const -> const Array3D<Real>& {
+    return _c_ea_psi_hb;
+  }
+
+  auto coeffEBPsiHA() const -> const Array3D<Real>& {
+    return _c_eb_psi_ha;
+  }
+
+  auto coeffHAPsiEB() const -> const Array3D<Real>& {
+    return _c_ha_psi_eb;
+  }
+
+  auto coeffHBPsiEA() const -> const Array3D<Real>& {
+    return _c_hb_psi_ea;
+  }
+
+  auto eaPsiHB() const -> const Array3D<Real>& {
+    return _ea_psi_hb;
+  }
+
+  auto ebPsiHA() const -> const Array3D<Real>& {
+    return _eb_psi_ha;
+  }
+
+  auto haPsiEB() const -> const Array3D<Real>& {
+    return _ha_psi_eb;
+  }
+
+  auto hbPsiEA() const -> const Array3D<Real>& {
+    return _hb_psi_ea;
+  }
+
  private:
   int _thickness;
   std::size_t _n;
@@ -116,37 +170,33 @@ class PML : public Boundary {
 
   Real calculateSigmaMax(Real dl) const;
 
-  Array1D<Real> calculateRhoE(std::size_t n,
-                                   const Array1D<Real>& size) const;
+  Array1D<Real> calculateRhoE(std::size_t n, const Array1D<Real>& size) const;
 
-  Array1D<Real> calculateRhoM(std::size_t n,
-                                   const Array1D<Real>& size) const;
+  Array1D<Real> calculateRhoM(std::size_t n, const Array1D<Real>& size) const;
 
-  Array1D<Real> calculateSigma(Real sigma_max,
-                                    const Array1D<Real>& rho,
-                                    std::size_t order) const;
+  Array1D<Real> calculateSigma(Real sigma_max, const Array1D<Real>& rho,
+                               std::size_t order) const;
 
-  Array1D<Real> calculateKappa(Real kappa_max,
-                                    const Array1D<Real>& rho,
-                                    std::size_t order) const;
+  Array1D<Real> calculateKappa(Real kappa_max, const Array1D<Real>& rho,
+                               std::size_t order) const;
 
   Array1D<Real> calculateAlpha(Real alpha_min, Real alpha_max,
-                                    const Array1D<Real>& rho) const;
+                               const Array1D<Real>& rho) const;
 
   Array1D<Real> calculateCoefficientA(const Array1D<Real>& b,
-                                           const Array1D<Real>& sigma,
-                                           const Array1D<Real>& kappa,
-                                           const Array1D<Real>& alpha,
-                                           const Array1D<Real>& dl) const;
+                                      const Array1D<Real>& sigma,
+                                      const Array1D<Real>& kappa,
+                                      const Array1D<Real>& alpha,
+                                      const Array1D<Real>& dl) const;
 
   Array1D<Real> calculateCoefficientB(const Array1D<Real>& sigma,
-                                           const Array1D<Real>& kappa,
-                                           const Array1D<Real>& alpha,
-                                           Real dt, Real constant) const;
+                                      const Array1D<Real>& kappa,
+                                      const Array1D<Real>& alpha, Real dt,
+                                      Real constant) const;
 
   Array1D<Real> calculateCoeffPsi(const Array1D<Real>& coeff,
-                                       const Array1D<Real>& kappa,
-                                       const Array1D<Real>& dl) const;
+                                  const Array1D<Real>& kappa,
+                                  const Array1D<Real>& dl) const;
 };
 
 }  // namespace xfdtd

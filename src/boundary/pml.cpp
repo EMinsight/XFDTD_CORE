@@ -197,6 +197,20 @@ void PML::init(std::shared_ptr<const GridSpace> grid_space,
 
 void PML::correctMaterialSpace() {}
 
+auto PML::offsetC() const -> Index {
+  auto offset = gridSpacePtr()->globalBox().origin();
+  switch (mainAxis()) {
+    case Axis::XYZ::X:
+      return offset.i();
+    case Axis::XYZ::Y:
+      return offset.j();
+    case Axis::XYZ::Z:
+      return offset.k();
+    default:
+      throw XFDTDPMLException("Invalid direction");
+  }
+}
+
 void PML::correctUpdateCoefficient() {
   if (!_pml_node_task.valid()) {
     return;

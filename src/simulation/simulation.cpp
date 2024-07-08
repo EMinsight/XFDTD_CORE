@@ -29,6 +29,7 @@
 #include "updator/dispersive_material_updator.h"
 #include "updator/updator.h"
 #include "util/decompose_task.h"
+#include "xfdtd/common/type_define.h"
 
 namespace xfdtd {
 
@@ -226,6 +227,24 @@ void Simulation::init() {
 
   MpiSupport::instance().generateSlice(
       _grid_space->sizeX(), _grid_space->sizeY(), _grid_space->sizeZ());
+}
+
+auto Simulation::init(Index time_step) -> void {
+  init();
+  _calculation_param->timeParam()->setTimeParamRunRange(time_step);
+  // do final check
+  for (auto&& o : _objects) {
+    o->initTimeDependentVariable();
+  }
+  for (auto&& w : _waveform_sources) {
+    w->initTimeDependentVariable();
+  }
+  for (auto&& n : _nfffts) {
+    n->initTimeDependentVariable();
+  }
+  for (auto&& m : _monitors) {
+    m->initTimeDependentVariable();
+  }
 }
 
 void Simulation::generateDomain() {
