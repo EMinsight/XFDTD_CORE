@@ -198,4 +198,170 @@ auto NFFFTFrequencyDomain::generateSurface() -> void {
   }
 }
 
+template <Axis::Direction D, EMF::Attribute A, Axis::XYZ XYZ>
+auto NFFFTFrequencyDomain::equivalentSurfaceCurrent(Index freq_index) const
+    -> const Array3D<std::complex<Real>>& {
+  const auto& fd_data = _fd_plane_data.at(freq_index);
+  if constexpr (D == Axis::Direction::XN && A == EMF::Attribute::E &&
+                XYZ == Axis::XYZ::Y) {
+    return fd_data._my_xn;
+  } else if constexpr (D == Axis::Direction::XN && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._mz_xn;
+  } else if constexpr (D == Axis::Direction::XP && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Y) {
+    return fd_data._my_xp;
+  } else if constexpr (D == Axis::Direction::XP && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._mz_xp;
+  } else if constexpr (D == Axis::Direction::YN && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._mz_yn;
+  } else if constexpr (D == Axis::Direction::YN && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._mx_yn;
+  } else if constexpr (D == Axis::Direction::YP && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._mz_yp;
+  } else if constexpr (D == Axis::Direction::YP && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._mx_yp;
+  } else if constexpr (D == Axis::Direction::ZN && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._mx_zn;
+  } else if constexpr (D == Axis::Direction::ZN && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Y) {
+    return fd_data._my_zn;
+  } else if constexpr (D == Axis::Direction::ZP && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._mx_zp;
+  } else if constexpr (D == Axis::Direction::ZP && A == EMF::Attribute::E &&
+                       XYZ == Axis::XYZ::Y) {
+    return fd_data._my_zp;
+  } else if (D == Axis::Direction::XN && A == EMF::Attribute::H &&
+             XYZ == Axis::XYZ::Y) {
+    return fd_data._jy_xn;
+  } else if constexpr (D == Axis::Direction::XN && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._jz_xn;
+  } else if constexpr (D == Axis::Direction::XP && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Y) {
+    return fd_data._jy_xp;
+  } else if constexpr (D == Axis::Direction::XP && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._jz_xp;
+  } else if constexpr (D == Axis::Direction::YN && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._jz_yn;
+  } else if constexpr (D == Axis::Direction::YN && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._jx_yn;
+  } else if constexpr (D == Axis::Direction::YP && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Z) {
+    return fd_data._jz_yp;
+  } else if constexpr (D == Axis::Direction::YP && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._jx_yp;
+  } else if constexpr (D == Axis::Direction::ZN && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._jx_zn;
+  } else if constexpr (D == Axis::Direction::ZN && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Y) {
+    return fd_data._jy_zn;
+  } else if constexpr (D == Axis::Direction::ZP && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::X) {
+    return fd_data._jx_zp;
+  } else if constexpr (D == Axis::Direction::ZP && A == EMF::Attribute::H &&
+                       XYZ == Axis::XYZ::Y) {
+    return fd_data._jy_zp;
+  } else {
+    throw XFDTDNFFFTFrequencyDomainException(
+        "NFFFTFrequencyDomain: Invalid direction, attribute, or xyz");
+  }
+}
+
+auto NFFFTFrequencyDomain::transformE(Index freq_index) const
+    -> const Array1D<std::complex<Real>>& {
+  return _fd_plane_data.at(freq_index)._transform_e;
+}
+
+auto NFFFTFrequencyDomain::transformH(Index freq_index) const
+    -> const Array1D<std::complex<Real>>& {
+  return _fd_plane_data.at(freq_index)._transform_h;
+}
+
+// explicit instantiation
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::Z>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::X>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+template auto NFFFTFrequencyDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::Y>(
+    Index freq_index) const -> const Array3D<std::complex<Real>>&;
+
 }  // namespace xfdtd

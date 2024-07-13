@@ -43,7 +43,7 @@ class FDPlaneData {
   auto getPotential(const Array1D<Real>& theta, const Array1D<Real>& phi,
                     const Vector& origin) const -> Array1D<std::complex<Real>>;
 
- private:
+//  private:
   template <Potential potential, Axis::Direction direction>
   auto calculatePotential(const Array1D<Real>& theta, const Array1D<Real>& phi,
                           const Vector& origin,
@@ -60,7 +60,7 @@ class FDPlaneData {
   template <Axis::XYZ xyz>
   auto ds(size_t i, std::size_t j, std::size_t k) const -> Real;
 
- private:
+//  private:
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const EMF> _emf;
   Real _freq;

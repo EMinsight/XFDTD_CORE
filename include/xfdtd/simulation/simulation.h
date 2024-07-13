@@ -82,6 +82,8 @@ class Simulation {
 
   auto monitors() -> std::vector<std::shared_ptr<Monitor>> { return _monitors; }
 
+  auto nf2ffs() -> std::vector<std::shared_ptr<NFFFT>> { return _nfffts; }
+
  private:
   Real _dx, _dy, _dz;
   Real _cfl;

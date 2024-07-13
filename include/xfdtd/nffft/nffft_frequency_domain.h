@@ -1,6 +1,7 @@
 #ifndef __XFDTD_CORE_NFFFT_FREQUENCY_DOMAIN_H__
 #define __XFDTD_CORE_NFFFT_FREQUENCY_DOMAIN_H__
 
+#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/nffft/nffft.h>
 
 namespace xfdtd {
@@ -33,15 +34,25 @@ class NFFFTFrequencyDomain : public NFFFT {
 
   auto processFarField(const Array1D<Real>& theta, Real phi,
                        const std::string& sub_dir,
-                       const Vector& origin = Vector{0.0, 0.0, 0.0}) const
-      -> void;
+                       const Vector& origin = Vector{0.0, 0.0,
+                                                     0.0}) const -> void;
 
   auto processFarField(Real theta, const Array1D<Real>& phi,
                        const std::string& sub_dir,
-                       const Vector& origin = Vector{0.0, 0.0, 0.0}) const
-      -> void;
+                       const Vector& origin = Vector{0.0, 0.0,
+                                                     0.0}) const -> void;
 
   auto outputRadiationPower() -> void;
+
+  template <Axis::Direction D, EMF::Attribute A, Axis::XYZ XYZ>
+  auto equivalentSurfaceCurrent(Index freq_index) const
+      -> const Array3D<std::complex<Real>>&;
+
+  auto transformE(Index freq_index) const -> const Array1D<std::complex<Real>>&;
+
+  auto transformH(Index freq_index) const -> const Array1D<std::complex<Real>>&;
+
+  auto freqCount() const { return _frequencies.size(); }
 
  private:
   Array1D<Real> _frequencies;
@@ -49,8 +60,8 @@ class NFFFTFrequencyDomain : public NFFFT {
   std::vector<FDPlaneData> _fd_plane_data;
 
   auto processFarField(const Array1D<Real>& theta, const Array1D<Real>& phi,
-                       const std::string& sub_dir, const Vector& origin) const
-      -> void;
+                       const std::string& sub_dir,
+                       const Vector& origin) const -> void;
 
   auto generateSurface() -> void;
 };
