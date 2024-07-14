@@ -9,7 +9,7 @@ This is a part of the XFDTD project. It contains the core functionality of the X
 3. Support TFSF source.
 4. Support lumped element.
 5. Support dispersive material.(Lorentz, Drude, Debye and Modified Lorentz)
-6. Parallel computing support.(C++ Standard Thread and MPI.)
+6. Parallel computing support.(C++ Standard Thread, MPI and CUDA)
 7. cross-platform support.(Linux, Windows and MacOS)
 
 ## Getting Stared
@@ -201,6 +201,24 @@ the gif file will be saved in the current directory.
 
 ![movie_ex_xz](./doc/image/movie_ex_xz.gif)
 
+## Parallel Computing
+
+There are mainly three levels of parallel computing: Vectorization, Shared Memory and Distributed Memory.
+We use the C++ Standard Thread, MPI and CUDA for shared memory and use MPI for distributed memory.
+
+### Use C++ Standard Thread
+
+You can use the following code to set the thread number while creating the simulation object.
+
+```cpp
+#include <xfdtd/simulation/simulation.h>
+
+// Create simulation object with 2 threads in X direction, 1 thread in Y direction and 1 thread in Z direction
+auto s{xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}}};
+```
+
+We suggest that you set the thread dimension to 1 in the X and Y direction and set 2 or 4 in the Z direction.
+
 ### Use MPI
 
 XFDTD CORE support MPI parallel computing. You can use the following command to compile the project with MPI.
@@ -249,6 +267,10 @@ Then you can run the project with the following command.
 ```bash
 mpiexec -n 4 ./build/your_executable
 ```
+
+### CUDA
+
+You can see the project [xfdtd_cuda](https://github.com/Mrwatermolen/XFDTD_CUDA) for the CUDA version of the XFDTD project.
 
 ## More Examples
 
