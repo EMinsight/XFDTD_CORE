@@ -3,7 +3,6 @@
 
 #include <xfdtd/boundary/boundary.h>
 #include <xfdtd/calculation_param/calculation_param.h>
-
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
@@ -70,6 +69,20 @@ class Simulation {
   const std::shared_ptr<EMF>& emf() const;
 
   void init();
+
+  auto init(Index time_step) -> void;
+
+  auto waveformSources() -> std::vector<std::shared_ptr<WaveformSource>> {
+    return _waveform_sources;
+  }
+
+  auto boundaries() -> std::vector<std::shared_ptr<Boundary>> {
+    return _boundaries;
+  }
+
+  auto monitors() -> std::vector<std::shared_ptr<Monitor>> { return _monitors; }
+
+  auto nf2ffs() -> std::vector<std::shared_ptr<NFFFT>> { return _nfffts; }
 
  private:
   Real _dx, _dy, _dz;

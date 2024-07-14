@@ -29,6 +29,7 @@
 #include "updator/dispersive_material_updator.h"
 #include "updator/updator.h"
 #include "util/decompose_task.h"
+#include "xfdtd/common/type_define.h"
 
 namespace xfdtd {
 
@@ -158,23 +159,19 @@ void Simulation::run(std::size_t time_step) {
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                      _end_time - _start_time)
                      .count()
-              << " ms"
-              << " or "
+              << " ms" << " or "
               << std::chrono::duration_cast<std::chrono::seconds>(_end_time -
                                                                   _start_time)
                      .count()
-              << " s"
-              << " or "
+              << " s" << " or "
               << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
                                                                   _start_time)
                      .count()
-              << " m"
-              << " or "
+              << " m" << " or "
               << std::chrono::duration_cast<std::chrono::hours>(_end_time -
                                                                 _start_time)
                      .count()
-              << " h."
-              << "\n";
+              << " h." << "\n";
   }
 }
 
@@ -230,6 +227,24 @@ void Simulation::init() {
 
   MpiSupport::instance().generateSlice(
       _grid_space->sizeX(), _grid_space->sizeY(), _grid_space->sizeZ());
+}
+
+auto Simulation::init(Index time_step) -> void {
+  init();
+  _calculation_param->timeParam()->setTimeParamRunRange(time_step);
+  // do final check
+  for (auto&& o : _objects) {
+    o->initTimeDependentVariable();
+  }
+  for (auto&& w : _waveform_sources) {
+    w->initTimeDependentVariable();
+  }
+  for (auto&& n : _nfffts) {
+    n->initTimeDependentVariable();
+  }
+  for (auto&& m : _monitors) {
+    m->initTimeDependentVariable();
+  }
 }
 
 void Simulation::generateDomain() {

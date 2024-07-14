@@ -18,8 +18,6 @@ class HardPoint : public WaveformSource {
 
   void correctUpdateCoefficient() override;
 
-  void updateWaveformSource() override;
-
   std::unique_ptr<Corrector> generateCorrector(
       const IndexTask &task) override;
 };

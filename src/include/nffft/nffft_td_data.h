@@ -34,8 +34,8 @@ inline auto rVector(Index i, Index j, Index k, const GridSpace* grid_space) {
 }
 
 template <Axis::XYZ xyz, EMF::Attribute attribute>
-inline auto surfaceArea(Index i, Index j, Index k, const GridSpace* grid_space)
-    -> Real {
+inline auto surfaceArea(Index i, Index j, Index k,
+                        const GridSpace* grid_space) -> Real {
   if constexpr (xyz == Axis::XYZ::X) {
     return grid_space->eSizeY()(j) * grid_space->eSizeZ()(k);
   } else if constexpr (xyz == Axis::XYZ::Y) {
@@ -84,7 +84,6 @@ class TDPlaneData {
   template <EMF::Attribute attribute>
   auto distanceRange() const -> Range<Real>;
 
- private:
   std::shared_ptr<const GridSpace> _grid_space;
   std::shared_ptr<const CalculationParam> _calculation_param;
   std::shared_ptr<const EMF> _emf;
@@ -94,6 +93,7 @@ class TDPlaneData {
   Range<Real> _distance_range_e, _distance_range_h;
   Array1D<Real> _wa, _wb, _ua, _ub;
 
+ private:
   auto gridSpacePtr() const -> const GridSpace*;
 
   auto calculationParamPtr() const -> const CalculationParam*;
@@ -157,8 +157,8 @@ TDPlaneData<D>::TDPlaneData(
 template <Axis::Direction D>
 auto TDPlaneData<D>::initForUpdate(Index num_e, Index num_h,
                                    Range<Real> distance_range_e,
-                                   Range<Real> distance_range_h, Vector r_unit)
-    -> void {
+                                   Range<Real> distance_range_h,
+                                   Vector r_unit) -> void {
   _ua = xt::zeros<Real>({num_e});
   _ub = xt::zeros<Real>({num_e});
   _wa = xt::zeros<Real>({num_h});
@@ -341,7 +341,7 @@ template <Axis::Direction D>
 template <EMF::Attribute attribute>
 auto TDPlaneData<D>::distanceRange() const -> Range<Real> {
   auto min_dis = std::numeric_limits<Real>::max();
-  auto max_dis = std::numeric_limits<Real>::min();
+  auto max_dis = std::numeric_limits<Real>::lowest();
 
   if (task().valid()) {
     return {min_dis, max_dis};
@@ -427,8 +427,8 @@ auto TDPlaneData<D>::previousBValue(Index i, Index j, Index k) const -> Real {
 
 template <Axis::Direction D>
 template <EMF::Attribute attribute>
-auto TDPlaneData<D>::setPreviousAValue(Index i, Index j, Index k, Real value)
-    -> void {
+auto TDPlaneData<D>::setPreviousAValue(Index i, Index j, Index k,
+                                       Real value) -> void {
   constexpr auto xyz = Axis::fromDirectionToXYZ<D>();
   if constexpr (attribute == EMF::Attribute::E) {
     if constexpr (xyz == Axis::XYZ::X) {
@@ -453,8 +453,8 @@ auto TDPlaneData<D>::setPreviousAValue(Index i, Index j, Index k, Real value)
 
 template <Axis::Direction D>
 template <EMF::Attribute attribute>
-auto TDPlaneData<D>::setPreviousBValue(Index i, Index j, Index k, Real value)
-    -> void {
+auto TDPlaneData<D>::setPreviousBValue(Index i, Index j, Index k,
+                                       Real value) -> void {
   constexpr auto xyz = Axis::fromDirectionToXYZ<D>();
   if constexpr (attribute == EMF::Attribute::E) {
     if constexpr (xyz == Axis::XYZ::X) {

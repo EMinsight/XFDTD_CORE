@@ -159,6 +159,258 @@ auto NFFFTTimeDomain::processFarField() const -> void {
                u_phi);
 }
 
+template <Axis::Direction D, EMF::Attribute A, Axis::XYZ XYZ>
+auto NFFFTTimeDomain::equivalentSurfaceCurrent() const -> const Array1D<Real>& {
+  if constexpr (D == Axis::Direction::XN) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xn->_ua;
+      }
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xn->_ub;
+      }
+    }
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xn->_wa;
+      }
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xn->_wb;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::XP) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xp->_ua;
+      }
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xp->_ub;
+      }
+    }
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xp->_wa;
+      }
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xp->_wb;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::YN) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yn->_ua;
+      }
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yn->_ub;
+      }
+    }
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yn->_wa;
+      }
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yn->_wb;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::YP) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yp->_ua;
+      }
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yp->_ub;
+      }
+    }
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yp->_wa;
+      }
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yp->_wb;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::ZN) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zn->_ua;
+      }
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zn->_ub;
+      }
+    }
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zn->_wa;
+      }
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zn->_wb;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::ZP) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zp->_ua;
+      }
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zp->_ub;
+      }
+    }
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zp->_wa;
+      }
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zp->_wb;
+      }
+    }
+  }
+}
+
+template <Axis::Direction D, EMF::Attribute A, Axis::XYZ XYZ>
+auto NFFFTTimeDomain::fieldPrev() const -> const Array2D<Real>& {
+  if constexpr (D == Axis::Direction::XN) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xn->_ea_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xn->_eb_prev;
+      }
+    }
+
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xn->_ha_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xn->_hb_prev;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::XP) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xp->_ea_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xp->_eb_prev;
+      }
+    }
+
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_xp->_ha_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_xp->_hb_prev;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::YN) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yn->_ea_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yn->_eb_prev;
+      }
+    }
+
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yn->_ha_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yn->_hb_prev;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::YP) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yp->_ea_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yp->_eb_prev;
+      }
+    }
+
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::Z) {
+        return _td_plane_yp->_ha_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_yp->_hb_prev;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::ZN) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zn->_ea_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zn->_eb_prev;
+      }
+    }
+
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zn->_ha_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zn->_hb_prev;
+      }
+    }
+  }
+
+  if constexpr (D == Axis::Direction::ZP) {
+    if constexpr (A == EMF::Attribute::E) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zp->_ea_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zp->_eb_prev;
+      }
+    }
+
+    if constexpr (A == EMF::Attribute::H) {
+      if constexpr (XYZ == Axis::XYZ::X) {
+        return _td_plane_zp->_ha_prev;
+      }
+
+      if constexpr (XYZ == Axis::XYZ::Y) {
+        return _td_plane_zp->_hb_prev;
+      }
+    }
+  }
+}
+
 template <EMF::Attribute attribute>
 auto NFFFTTimeDomain::distanceRange() const -> Range<Real> {
   auto distance_range = [this](const auto& observer_direction,
@@ -171,7 +423,7 @@ auto NFFFTTimeDomain::distanceRange() const -> Range<Real> {
     auto ke = global_task.zRange().end();
 
     auto min_dis = std::numeric_limits<Real>::max();
-    auto max_dis = std::numeric_limits<Real>::min();
+    auto max_dis = std::numeric_limits<Real>::lowest();
 
     auto r_vector = [](Index i, Index j, Index k, const GridSpace* grid_space,
                        Axis::XYZ xyz) {
@@ -269,5 +521,152 @@ auto NFFFTTimeDomain::sinTheta() const -> Real { return std::sin(_theta); }
 auto NFFFTTimeDomain::cosPhi() const -> Real { return std::cos(_phi); }
 
 auto NFFFTTimeDomain::sinPhi() const -> Real { return std::sin(_phi); }
+
+// explicit instantiation
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::E, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XN, EMF::Attribute::H, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::E, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::XP, EMF::Attribute::H, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::E, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YN, EMF::Attribute::H, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::E, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::Z>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::YP, EMF::Attribute::H, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::E, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZN, EMF::Attribute::H, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::E, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::X>() const
+    -> const Array1D<Real>&;
+template auto NFFFTTimeDomain::equivalentSurfaceCurrent<
+    Axis::Direction::ZP, EMF::Attribute::H, Axis::XYZ::Y>() const
+    -> const Array1D<Real>&;
+
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XN, EMF::Attribute::E,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XN, EMF::Attribute::E,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XN, EMF::Attribute::H,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XN, EMF::Attribute::H,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XP, EMF::Attribute::E,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XP, EMF::Attribute::E,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XP, EMF::Attribute::H,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::XP, EMF::Attribute::H,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YN, EMF::Attribute::E,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YN, EMF::Attribute::E,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YN, EMF::Attribute::H,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YN, EMF::Attribute::H,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YP, EMF::Attribute::E,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YP, EMF::Attribute::E,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YP, EMF::Attribute::H,
+                                         Axis::XYZ::Z>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::YP, EMF::Attribute::H,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZN, EMF::Attribute::E,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZN, EMF::Attribute::E,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZN, EMF::Attribute::H,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZN, EMF::Attribute::H,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZP, EMF::Attribute::E,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZP, EMF::Attribute::E,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZP, EMF::Attribute::H,
+                                         Axis::XYZ::X>() const
+    -> const Array2D<Real>&;
+template auto NFFFTTimeDomain::fieldPrev<Axis::Direction::ZP, EMF::Attribute::H,
+                                         Axis::XYZ::Y>() const
+    -> const Array2D<Real>&;
 
 }  // namespace xfdtd

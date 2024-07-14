@@ -36,7 +36,8 @@ set(XFDTD_CORE_LIBS
     xfdtd_simulation
     xfdtd_updator
     xfdtd_waveform
-    xfdtd_waveform_source)
+    xfdtd_waveform_source
+)
 
 target_link_libraries(xfdtd_core PUBLIC ${XFDTD_CORE_THIRD_PARTY_LIB}
                                         ${XFDTD_CORE_LIBS})

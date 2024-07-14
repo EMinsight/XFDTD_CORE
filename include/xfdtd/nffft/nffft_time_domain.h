@@ -3,6 +3,11 @@
 
 #include <xfdtd/nffft/nffft.h>
 
+#include "xfdtd/common/index_task.h"
+#include "xfdtd/common/type_define.h"
+#include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
+
 namespace xfdtd {
 
 class XFDTDNFFFTTimeDomainException : public XFDTDNFFFTException {
@@ -52,6 +57,15 @@ class NFFFTTimeDomain : public NFFFT {
 
   auto uz() const -> Array1D<Real>;
 
+  template <Axis::Direction D, EMF::Attribute A, Axis::XYZ XYZ>
+  auto equivalentSurfaceCurrent() const -> const Array1D<Real>&;
+
+  template <Axis::Direction D, EMF::Attribute A, Axis::XYZ XYZ>
+  auto fieldPrev() const -> const Array2D<Real>&;
+
+  template <EMF::Attribute A>
+  auto distanceRange() const -> Range<Real>;
+
  private:
   Real _theta, _phi;
 
@@ -61,9 +75,6 @@ class NFFFTTimeDomain : public NFFFT {
   std::shared_ptr<TDPlaneData<Axis::Direction::YP>> _td_plane_yp;
   std::shared_ptr<TDPlaneData<Axis::Direction::ZN>> _td_plane_zn;
   std::shared_ptr<TDPlaneData<Axis::Direction::ZP>> _td_plane_zp;
-
-  template <EMF::Attribute A>
-  auto distanceRange() const -> Range<Real>;
 
   auto cosTheta() const -> Real;
 

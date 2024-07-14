@@ -35,25 +35,24 @@ auto TFSF1D::generateCorrector(const IndexTask &task)
   if (!task.valid()) {
     return nullptr;
   }
-  auto node_global_start =
-      task.zRange().start() + gridSpacePtr()->globalBox().origin().i();
-  auto node_global_end =
-      task.zRange().end() + gridSpacePtr()->globalBox().origin().i();
 
-  if (_start <= node_global_start) {
-    return nullptr;
-  }
+  auto g_task = globalTask();
 
-  if (node_global_end <= _start) {
+  auto intersection_task = taskIntersection(task, g_task);
+
+  if (!intersection_task.has_value()) {
     return nullptr;
   }
 
   return std::make_unique<TFSF1DCorrector>(
-      Grid{0, 0, _start}, gridSpace(), calculationParam(), emf(),
-      waveform()->value(), _forward, _projection_x_int, _projection_y_int,
-      _projection_z_int, _projection_x_half, _projection_y_half,
-      _projection_z_half, _ex_inc, _ey_inc, _ez_inc, _hx_inc, _hy_inc, _hz_inc,
-      cax(), cbx(), cay(), cby(), caz(), cbz());
+      intersection_task.value(), gridSpace().get(), calculationParam().get(),
+      emf().get(), &waveform()->value(), globalTask(),
+      gridSpace()->globalBox().origin().k(), &_projection_x_int,
+      &_projection_y_int, &_projection_z_int, &_projection_x_half,
+      &_projection_y_half, &_projection_z_half, &_e_inc, &_h_inc, cax(), cbx(),
+      cay(), cby(), caz(), cbz(), _transform_e.x(), _transform_e.y(),
+      _transform_e.z(), _transform_h.x(), _transform_h.y(), _transform_h.z(),
+      _forward);
 }
 
 }  // namespace xfdtd

@@ -47,12 +47,6 @@ void Domain::run() {
   }
 
   while (!isCalculationDone()) {
-    if (isMaster()) {
-      for (auto&& ws : _waveform_sources) {
-        ws->updateWaveformSource();
-      }
-    }
-
     updateH();
 
     threadSynchronize();

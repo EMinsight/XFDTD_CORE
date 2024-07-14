@@ -1,4 +1,5 @@
 #include <xfdtd/common/constant.h>
+#include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/nffft/nffft.h>
@@ -166,30 +167,25 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction) -> IndexTask {
   const auto xyz = Axis::fromDirectionToXYZ(direction);
 
   const auto [global_offset_a, global_offset_b, global_offset_c] =
-      transform::xYZToABC(
-          std::tuple{node_global_offset.i(), node_global_offset.j(),
-                     node_global_offset.k()},
-          xyz);
+      transform::xYZToABC(node_global_offset.i(), node_global_offset.j(),
+                          node_global_offset.k(), xyz);
 
   const auto [global_range_a, global_range_b, global_range_c] =
       transform::xYZToABC(
-          std::tuple{
-              makeIndexRange(global_box.origin().i(), global_box.end().i()),
-              makeIndexRange(global_box.origin().j(), global_box.end().j()),
-              makeIndexRange(global_box.origin().k(), global_box.end().k())},
-          xyz);
+          makeIndexRange(global_box.origin().i(), global_box.end().i()),
+          makeIndexRange(global_box.origin().j(), global_box.end().j()),
+          makeIndexRange(global_box.origin().k(), global_box.end().k()), xyz);
 
-  const auto [node_lower_a, node_lower_b, node_lower_c] = transform::xYZToABC(
-      std::tuple{node_lower.i(), node_lower.j(), node_lower.k()}, xyz);
+  const auto [node_lower_a, node_lower_b, node_lower_c] =
+      transform::xYZToABC(node_lower.i(), node_lower.j(), node_lower.k(), xyz);
 
-  const auto [node_upper_a, node_upper_b, node_upper_c] = transform::xYZToABC(
-      std::tuple{node_upper.i(), node_upper.j(), node_upper.k()}, xyz);
+  const auto [node_upper_a, node_upper_b, node_upper_c] =
+      transform::xYZToABC(node_upper.i(), node_upper.j(), node_upper.k(), xyz);
 
   auto [node_range_a, node_range_b, node_range_c] = transform::xYZToABC(
-      std::tuple{makeIndexRange(node_box.origin().i(), node_box.end().i()),
-                 makeIndexRange(node_box.origin().j(), node_box.end().j()),
-                 makeIndexRange(node_box.origin().k(), node_box.end().k())},
-      xyz);
+      makeIndexRange(node_box.origin().i(), node_box.end().i()),
+      makeIndexRange(node_box.origin().j(), node_box.end().j()),
+      makeIndexRange(node_box.origin().k(), node_box.end().k()), xyz);
 
   auto invalid_task = IndexTask{};
   auto range_c = IndexRange{};
@@ -243,7 +239,7 @@ auto NFFFT::makeNodeAxisTask(const Axis::Direction& direction) -> IndexTask {
       node_lower_b, node_upper_b, node_range_b.start(), node_range_b.end());
 
   auto [range_x, range_y, range_z] =
-      transform::aBCToXYZ(std::tuple{range_a, range_b, range_c}, xyz);
+      transform::aBCToXYZ(range_a, range_b, range_c, xyz);
 
   return makeIndexTask(range_x, range_y, range_z);
 }

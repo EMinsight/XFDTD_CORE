@@ -129,7 +129,8 @@ std::unique_ptr<GridSpace> GridSpaceGenerator::generateGridSpace1D(
   std::size_t ny{1};
   std::size_t nz{1};
   auto min_z{std::numeric_limits<Real>::max()};
-  auto max_z{std::numeric_limits<Real>::min()};
+  // auto max_z{std::numeric_limits<Real>::min()};
+  auto max_z {std::numeric_limits<Real>::lowest()};
 
   auto cube{domain->wrappedCube()};
   min_z = std::min(min_z, cube->originZ());

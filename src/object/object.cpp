@@ -36,7 +36,8 @@ void Object::init(std::shared_ptr<const GridSpace> grid_space,
 
   _grid_box = std::make_unique<GridBox>(
       _grid_space->getGridBoxWithoutCheck(_shape.get()));
-  _global_grid_box = _grid_space->globalGridSpace()->getGridBox(_shape.get());
+  _global_grid_box =
+      _grid_space->globalGridSpace()->getGridBoxWithoutCheck(shape().get());
 }
 
 void Object::correctMaterialSpace(std::size_t index) {

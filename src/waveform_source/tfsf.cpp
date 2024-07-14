@@ -36,33 +36,45 @@ void TFSF::correctUpdateCoefficient() {}
 void TFSF::initTimeDependentVariable() {
   waveform()->init(calculationParamPtr()->timeParam()->eTime() -
                    calculationParamPtr()->timeParam()->dt());
-}
 
-void TFSF::updateWaveformSource() {
-  auto x{_e_inc(_e_inc.size() - 2)};
-  auto y{_e_inc(_e_inc.size() - 1)};
-  _e_inc(0) = waveform()->value()(
-      calculationParamPtr()->timeParam()->currentTimeStep());
-  for (std::size_t i{1}; i < _e_inc.size() - 1; ++i) {
-    _e_inc(i) = _ceie * _e_inc(i) + _ceihi * (_h_inc(i) - _h_inc(i - 1));
-  }
+  auto fdtd_1d = [](auto&& e, auto&& h, const auto ceie, const auto ceih,
+                    const auto chih, const auto chie, const auto abc_coeff_0,
+                    const auto abc_coeff_1, const auto& source) {
+    const auto nt = h.shape()[0];
+    const auto nl = h.shape()[1];
 
-  _e_inc(_e_inc.size() - 1) = -_a +
-                              _abc_coff_0 * (_e_inc(_e_inc.size() - 2) + _b) +
-                              _abc_coff_1 * (x + y);
-  _a = x;
-  _b = y;
+    e(0, 0) = source(0);
+    for (Index l = 1; l < nl; ++l) {
+      h(0, l) = chih * h(0, l) + chie * (e(0, l + 1) - e(0, l));
+    }
 
-  for (std::size_t i{0}; i < _h_inc.size(); ++i) {
-    _h_inc(i) = _chih * _h_inc(i) + _chiei * (_e_inc(i + 1) - _e_inc(i));
-  }
+    for (Index t = 1; t < nt; ++t) {
+      for (Index l = 1; l < nl; ++l) {
+        e(t, 0) = source(t);
+        e(t, l) = ceie * e(t - 1, l) + ceih * (h(t - 1, l) - h(t - 1, l - 1));
+      }
 
-  _ex_inc = _transform_e.x() * _e_inc;
-  _ey_inc = _transform_e.y() * _e_inc;
-  _ez_inc = _transform_e.z() * _e_inc;
-  _hx_inc = _transform_h.x() * _h_inc;
-  _hy_inc = _transform_h.y() * _h_inc;
-  _hz_inc = _transform_h.z() * _h_inc;
+      // abc
+      Real e_l_prev_t_prev_prev = (t < 2) ? 0.0 : e(t - 2, nl - 1);
+      Real e_l_t_prev_prev = (t < 2) ? 0.0 : e(t - 2, nl);
+      e(t, nl) = -e_l_prev_t_prev_prev +
+                 abc_coeff_0 * (e(t, nl - 1) + e_l_t_prev_prev) +
+                 abc_coeff_1 * (e(t - 1, nl) + e(t - 1, nl - 1));
+
+      for (Index l = 0; l < nl; ++l) {
+        h(t, l) = chih * h(t - 1, l) + chie * (e(t, l + 1) - e(t, l));
+      }
+    }
+  };
+
+  _e_inc = xt::zeros<Real>(
+      {calculationParamPtr()->timeParam()->size(), _auxiliary_size});
+
+  _h_inc = xt::zeros<Real>(
+      {calculationParamPtr()->timeParam()->size(), _auxiliary_size - 1});
+
+  fdtd_1d(_e_inc, _h_inc, _ceie, _ceihi, _chih, _chiei, _abc_coff_0,
+          _abc_coff_1, waveform()->value());
 }
 
 std::size_t TFSF::x() const { return _x; }
@@ -93,164 +105,14 @@ Vector TFSF::k() const { return _k; }
 
 GridBox TFSF::globalBox() const { return _global_box; }
 
-IndexTask TFSF::taskXN() const {
+auto TFSF::globalTask() const -> IndexTask {
   const auto is = globalBox().origin().i();
   const auto ie = globalBox().end().i();
   const auto js = globalBox().origin().j();
   const auto je = globalBox().end().j();
   const auto ks = globalBox().origin().k();
   const auto ke = globalBox().end().k();
-
-  return makeIndexTask(makeIndexRange(is, is + 1), makeIndexRange(js, je),
-                       makeIndexRange(ks, ke));
-}
-
-IndexTask TFSF::taskXP() const {
-  const auto is = globalBox().origin().i();
-  const auto ie = globalBox().end().i();
-  const auto js = globalBox().origin().j();
-  const auto je = globalBox().end().j();
-  const auto ks = globalBox().origin().k();
-  const auto ke = globalBox().end().k();
-
-  return makeIndexTask(makeIndexRange(ie, ie + 1), makeIndexRange(js, je),
-                       makeIndexRange(ks, ke));
-}
-
-IndexTask TFSF::taskYN() const {
-  const auto is = globalBox().origin().i();
-  const auto ie = globalBox().end().i();
-  const auto js = globalBox().origin().j();
-  const auto je = globalBox().end().j();
-  const auto ks = globalBox().origin().k();
-  const auto ke = globalBox().end().k();
-
-  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(js, js + 1),
-                       makeIndexRange(ks, ke));
-}
-
-IndexTask TFSF::taskYP() const {
-  const auto is = globalBox().origin().i();
-  const auto ie = globalBox().end().i();
-  const auto js = globalBox().origin().j();
-  const auto je = globalBox().end().j();
-  const auto ks = globalBox().origin().k();
-  const auto ke = globalBox().end().k();
-
-  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(je, je + 1),
-                       makeIndexRange(ks, ke));
-}
-
-IndexTask TFSF::taskZN() const {
-  const auto is = globalBox().origin().i();
-  const auto ie = globalBox().end().i();
-  const auto js = globalBox().origin().j();
-  const auto je = globalBox().end().j();
-  const auto ks = globalBox().origin().k();
-  const auto ke = globalBox().end().k();
-
-  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(js, je),
-                       makeIndexRange(ks, ks + 1));
-}
-
-IndexTask TFSF::taskZP() const {
-  const auto is = globalBox().origin().i();
-  const auto ie = globalBox().end().i();
-  const auto js = globalBox().origin().j();
-  const auto je = globalBox().end().j();
-  const auto ks = globalBox().origin().k();
-  const auto ke = globalBox().end().k();
-
-  return makeIndexTask(makeIndexRange(is, ie), makeIndexRange(js, je),
-                       makeIndexRange(ke, ke + 1));
-}
-
-IndexTask TFSF::globalEyTaskXN() const {
-  auto task = taskXN();
-  return makeTask(
-      task.xRange(), task.yRange(),
-      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
-}
-
-IndexTask TFSF::globalEzTaskXN() const {
-  auto task = taskXN();
-  return makeTask(
-      task.xRange(),
-      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
-      task.zRange());
-}
-
-IndexTask TFSF::globalEyTaskXP() const {
-  auto task = taskXP();
-  return makeTask(
-      task.xRange(), task.yRange(),
-      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
-}
-
-IndexTask TFSF::globalEzTaskXP() const {
-  auto task = taskXP();
-  return makeIndexTask(
-      task.xRange(),
-      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
-      task.zRange());
-}
-
-IndexTask TFSF::globalEzTaskYN() const {
-  auto task = taskYN();
-  return makeIndexTask(
-      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
-      task.yRange(), task.zRange());
-}
-
-IndexTask TFSF::globalExTaskYN() const {
-  auto task = taskYN();
-  return makeIndexTask(
-      task.xRange(), task.yRange(),
-      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
-}
-
-IndexTask TFSF::globalEzTaskYP() const {
-  auto task = taskYP();
-  return makeIndexTask(
-      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
-      task.yRange(), task.zRange());
-}
-
-IndexTask TFSF::globalExTaskYP() const {
-  auto task = taskYP();
-  return makeIndexTask(
-      task.xRange(), task.yRange(),
-      makeIndexRange(task.zRange().start(), task.zRange().end() + 1));
-}
-
-IndexTask TFSF::globalExTaskZN() const {
-  auto task = taskZN();
-  return makeIndexTask(
-      task.xRange(),
-      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
-      task.zRange());
-}
-
-IndexTask TFSF::globalEyTaskZN() const {
-  auto task = taskZN();
-  return makeIndexTask(
-      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
-      task.yRange(), task.zRange());
-}
-
-IndexTask TFSF::globalExTaskZP() const {
-  auto task = taskZP();
-  return makeIndexTask(
-      task.xRange(),
-      makeIndexRange(task.yRange().start(), task.yRange().end() + 1),
-      task.zRange());
-}
-
-IndexTask TFSF::globalEyTaskZP() const {
-  auto task = taskZP();
-  return makeIndexTask(
-      makeIndexRange(task.xRange().start(), task.xRange().end() + 1),
-      task.yRange(), task.zRange());
+  return makeIndexTask(makeRange(is, ie), makeRange(js, je), makeRange(ks, ke));
 }
 
 void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
@@ -288,17 +150,6 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
 
   calculateProjection();
 
-  _e_inc = xt::zeros<Real>({_auxiliary_size});
-  _ex_inc = xt::zeros<Real>({_auxiliary_size});
-  _ey_inc = xt::zeros<Real>({_auxiliary_size});
-  _ez_inc = xt::zeros<Real>({_auxiliary_size});
-  _h_inc = xt::zeros<Real>({_auxiliary_size - 1});
-  _hx_inc = xt::zeros<Real>({_auxiliary_size - 1});
-  _hy_inc = xt::zeros<Real>({_auxiliary_size - 1});
-  _hz_inc = xt::zeros<Real>({_auxiliary_size - 1});
-  _a = 0;
-  _b = 0;
-
   if (gridSpacePtr()->dimension() == GridSpace::Dimension::ONE) {
     _scaled_dl = gridSpacePtr()->basedDz() / _ratio_delta;
   }
@@ -323,298 +174,44 @@ void TFSF::defaultInit(std::shared_ptr<GridSpace> grid_space,
       (constant::C_0 * calculationParamPtr()->timeParam()->dt() + _scaled_dl);
 }
 
-Real TFSF::exInc(std::size_t i, std::size_t j, std::size_t k) {
-  i = i - globalBox().origin().i() + 1;
-  j = j - globalBox().origin().j();
-  k = k - globalBox().origin().k();
-  auto projection{_projection_x_half(i) + _projection_y_int(j) +
-                  _projection_z_int(k)};
-  auto index{static_cast<std::size_t>(projection)};
-  auto weight{projection - index};
-  return (1 - weight) * _ex_inc(index) + weight * _ex_inc(index + 1);
+Real TFSF::cax() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::EPSILON_0 * gridSpace()->basedDx());
 }
 
-Real TFSF::eyInc(std::size_t i, std::size_t j, std::size_t k) {
-  i = i - globalBox().origin().i();
-  j = j - globalBox().origin().j() + 1;
-  k = k - globalBox().origin().k();
-  auto projection{_projection_x_int(i) + _projection_y_half(j) +
-                  _projection_z_int(k)};
-  auto index{static_cast<std::size_t>(projection)};
-  auto weight{projection - index};
-  return (1 - weight) * _ey_inc(index) + weight * _ey_inc(index + 1);
+Real TFSF::cay() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::EPSILON_0 * gridSpace()->basedDy());
 }
 
-Real TFSF::ezInc(std::size_t i, std::size_t j, std::size_t k) {
-  i = i - globalBox().origin().i();
-  j = j - globalBox().origin().j();
-  k = k - globalBox().origin().k() + 1;
-  auto projection{_projection_x_int(i) + _projection_y_int(j) +
-                  _projection_z_half(k)};
-  auto index{static_cast<std::size_t>(projection)};
-  auto weight{projection - index};
-  return (1 - weight) * _ez_inc(index) + weight * _ez_inc(index + 1);
+Real TFSF::caz() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::EPSILON_0 * gridSpace()->basedDz());
 }
 
-Real TFSF::hxInc(std::size_t i, std::size_t j, std::size_t k) {
-  i = i - globalBox().origin().i();
-  j = j - globalBox().origin().j() + 1;
-  k = k - globalBox().origin().k() + 1;
-  auto projection{_projection_x_int(i) + _projection_y_half(j) +
-                  _projection_z_half(k) - 0.5};
-  auto index{static_cast<std::size_t>(projection)};
-  auto weight{projection - index};
-  return (1 - weight) * _hx_inc(index) + weight * _hx_inc(index + 1);
+Real TFSF::cbx() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::MU_0 * gridSpace()->basedDx());
 }
 
-Real TFSF::hyInc(std::size_t i, std::size_t j, std::size_t k) {
-  i = i - globalBox().origin().i() + 1;
-  j = j - globalBox().origin().j();
-  k = k - globalBox().origin().k() + 1;
-  auto projection{_projection_x_half(i) + _projection_y_int(j) +
-                  _projection_z_half(k) - 0.5};
-  auto index{static_cast<std::size_t>(projection)};
-  auto weight{projection - index};
-  return (1 - weight) * _hy_inc(index) + weight * _hy_inc(index + 1);
+Real TFSF::cby() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::MU_0 * gridSpace()->basedDy());
 }
 
-Real TFSF::hzInc(std::size_t i, std::size_t j, std::size_t k) {
-  i = i - globalBox().origin().i() + 1;
-  j = j - globalBox().origin().j() + 1;
-  k = k - globalBox().origin().k();
-  auto projection{_projection_x_half(i) + _projection_y_half(j) +
-                  _projection_z_int(k) - 0.5};
-  auto index{static_cast<std::size_t>(projection)};
-  auto weight{projection - index};
-  return (1 - weight) * _hz_inc(index) + weight * _hz_inc(index + 1);
+Real TFSF::cbz() const {
+  return calculationParam()->timeParam()->dt() /
+         (constant::MU_0 * gridSpace()->basedDz());
 }
 
-Real TFSF::cax() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::EPSILON_0 * gridSpacePtr()->basedDx());
-}
-
-Real TFSF::cay() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::EPSILON_0 * gridSpacePtr()->basedDy());
-}
-
-Real TFSF::caz() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::EPSILON_0 * gridSpacePtr()->basedDz());
-}
-
-Real TFSF::cbx() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::MU_0 * gridSpacePtr()->basedDx());
-}
-
-Real TFSF::cby() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::MU_0 * gridSpacePtr()->basedDy());
-}
-
-Real TFSF::cbz() {
-  return calculationParamPtr()->timeParam()->dt() /
-         (constant::MU_0 * gridSpacePtr()->basedDz());
-}
-
-static auto intersectionTask(const GridBox& valid_box,
-                             const IndexTask& my_task) {
-  auto valid_task =
-      makeTask(makeIndexRange(valid_box.origin().i(), valid_box.end().i()),
-               makeIndexRange(valid_box.origin().j(), valid_box.end().j()),
-               makeIndexRange(valid_box.origin().k(), valid_box.end().k()));
-  auto intersection = taskIntersection(my_task, valid_task);
-  return intersection;
-}
-
-IndexTask TFSF::nodeEyTaskXN(const IndexTask& task) const {
-  const auto& my_task = globalEyTaskXN();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box = gridSpace()->validGridBoxEy();
-  auto global_valid_box =
-      GridBox{valid_box.origin() + offset, valid_box.size()};
-
-  auto intersection_task = intersectionTask(global_valid_box, my_task);
-
-  return intersection_task.has_value()
-             ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeEzTaskXN(const IndexTask& task) const {
-  const auto& my_task = globalEzTaskXN();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box = gridSpace()->validGridBoxEz();
-  auto global_valid_box =
-      GridBox{valid_box.origin() + offset, valid_box.size()};
-
-  auto intersection_task = intersectionTask(global_valid_box, my_task);
-
-  return intersection_task.has_value()
-             ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeEyTaskXP(const IndexTask& task) const {
-  const auto& my_task = globalEyTaskXP();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box = gridSpace()->validGridBoxEy();
-  auto global_valid_box =
-      GridBox{valid_box.origin() + offset, valid_box.size()};
-
-  auto intersection_task = intersectionTask(global_valid_box, my_task);
-
-  return intersection_task.has_value()
-             ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeEzTaskXP(const IndexTask& task) const {
-  const auto& my_task = globalEzTaskXP();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box = gridSpace()->validGridBoxEz();
-  auto global_valid_box =
-      GridBox{valid_box.origin() + offset, valid_box.size()};
-
-  auto intersection_task = intersectionTask(global_valid_box, my_task);
-
-  return intersection_task.has_value()
-             ? intersection_task.value()
-             : makeIndexTask(my_task.xRange(), makeIndexRange(1, 0),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeExTaskYN(const IndexTask& task) const {
-  const auto& my_task = globalExTaskYN();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box = gridSpace()->validGridBoxEx();
-  auto global_valid_box =
-      GridBox{valid_box.origin() + offset, valid_box.size()};
-
-  auto intersection_task = intersectionTask(global_valid_box, my_task);
-
-  return intersection_task.has_value()
-             ? intersection_task.value()
-             : makeIndexTask(makeIndexRange(1, 0), my_task.yRange(),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeEzTaskYN(const IndexTask& task) const {
-  const auto& my_task = globalEzTaskYN();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box = gridSpace()->validGridBoxEz();
-  auto global_valid_box =
-      GridBox{valid_box.origin() + offset, valid_box.size()};
-
-  auto intersection_task = intersectionTask(global_valid_box, my_task);
-
-  return intersection_task.has_value()
-             ? intersection_task.value()
-             : makeIndexTask(makeIndexRange(1, 0), my_task.yRange(),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeExTaskYP(const IndexTask& task) const {
-  const auto& my_total_global_task_yp = globalExTaskYP();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box_ex = gridSpace()->validGridBoxEx();
-  auto global_valid_box_ex =
-      GridBox{valid_box_ex.origin() + offset, valid_box_ex.size()};
-
-  auto intersection_ex =
-      intersectionTask(global_valid_box_ex, my_total_global_task_yp);
-
-  return intersection_ex.has_value()
-             ? intersection_ex.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                             my_total_global_task_yp.yRange(),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeEzTaskYP(const IndexTask& task) const {
-  const auto& my_total_global_task_yp = globalEzTaskYP();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box_ez = gridSpace()->validGridBoxEz();
-  auto global_valid_box_ez =
-      GridBox{valid_box_ez.origin() + offset, valid_box_ez.size()};
-
-  auto intersection_ez =
-      intersectionTask(global_valid_box_ez, my_total_global_task_yp);
-
-  return intersection_ez.has_value()
-             ? intersection_ez.value()
-             : makeIndexTask(makeIndexRange(1, 0),
-                             my_total_global_task_yp.yRange(),
-                             makeIndexRange(1, 0));
-}
-
-IndexTask TFSF::nodeExTaskZN(const IndexTask& task) const {
-  const auto& my_total_global_task_zn = globalExTaskZN();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box_ex = gridSpace()->validGridBoxEx();
-  auto global_valid_box_ex =
-      GridBox{valid_box_ex.origin() + offset, valid_box_ex.size()};
-
-  auto intersection_ex =
-      intersectionTask(global_valid_box_ex, my_total_global_task_zn);
-
-  return intersection_ex.has_value()
-             ? intersection_ex.value()
-             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
-                             my_total_global_task_zn.zRange());
-}
-
-IndexTask TFSF::nodeEyTaskZN(const IndexTask& task) const {
-  const auto& my_total_global_task_zn = globalEyTaskZN();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box_ey = gridSpace()->validGridBoxEy();
-  auto global_valid_box_ey =
-      GridBox{valid_box_ey.origin() + offset, valid_box_ey.size()};
-
-  auto intersection_ey =
-      intersectionTask(global_valid_box_ey, my_total_global_task_zn);
-
-  return intersection_ey.has_value()
-             ? intersection_ey.value()
-             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
-                             my_total_global_task_zn.zRange());
-}
-
-IndexTask TFSF::nodeExTaskZP(const IndexTask& task) const {
-  const auto& my_total_global_task_zp = globalExTaskZP();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box_ex = gridSpace()->validGridBoxEx();
-  auto global_valid_box_ex =
-      GridBox{valid_box_ex.origin() + offset, valid_box_ex.size()};
-
-  auto intersection_ex =
-      intersectionTask(global_valid_box_ex, my_total_global_task_zp);
-
-  return intersection_ex.has_value()
-             ? intersection_ex.value()
-             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
-                             my_total_global_task_zp.zRange());
-}
-
-IndexTask TFSF::nodeEyTaskZP(const IndexTask& task) const {
-  const auto& my_total_global_task_zp = globalEyTaskZP();
-  const auto& offset = gridSpace()->globalBox().origin();
-  const auto& valid_box_ey = gridSpace()->validGridBoxEy();
-  auto global_valid_box_ey =
-      GridBox{valid_box_ey.origin() + offset, valid_box_ey.size()};
-
-  auto intersection_ey =
-      intersectionTask(global_valid_box_ey, my_total_global_task_zp);
-
-  return intersection_ey.has_value()
-             ? intersection_ey.value()
-             : makeIndexTask(makeIndexRange(1, 0), makeIndexRange(1, 0),
-                             my_total_global_task_zp.zRange());
+auto TFSF::nodeGlobalTask() const -> IndexTask {
+  auto g_box = gridSpace()->globalBox();
+  auto g_task = makeTask(makeIndexRange(g_box.origin().i(), g_box.end().i()),
+                         makeIndexRange(g_box.origin().j(), g_box.end().j()),
+                         makeIndexRange(g_box.origin().k(), g_box.end().k()));
+  auto tfsf_g_task = globalTask();
+  auto intersection = taskIntersection(g_task, tfsf_g_task);
+  return intersection.has_value() ? intersection.value() : IndexTask{};
 }
 
 void TFSF::initTransform() {
@@ -640,9 +237,6 @@ void TFSF::initTransform() {
   };
 
   _transform_h = _k.cross(_transform_e);
-
-  // _transform_e = xt::linalg::dot(_rotation_matrix, _k_e.data());
-  // _transform_h = xt::linalg::cross(_k.data(), _transform_e);
 }
 
 void TFSF::calculateProjection() {

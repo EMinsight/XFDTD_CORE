@@ -1,9 +1,9 @@
 #ifndef __XFDTD_CORE_TYPE_DEFINE_H__
 #define __XFDTD_CORE_TYPE_DEFINE_H__
 
-#include <xtensor/xtensor.hpp>
-#include <xtensor/xarray.hpp>
 #include <cstddef>
+#include <xtensor/xarray.hpp>
+#include <xtensor/xtensor.hpp>
 
 namespace xfdtd {
 
@@ -29,15 +29,6 @@ using Array4D = xt::xtensor<T, 4>;
 
 template <typename T>
 using Array = xt::xarray<T>;
-
-template <typename T>
-concept Number = std::is_arithmetic_v<T>;
-
-template <typename T>
-concept ArrLike = requires(T t) {
-  { t.size() } -> std::convertible_to<std::size_t>;
-  { t[0] } -> Number;
-};
 
 namespace unit {
 

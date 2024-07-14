@@ -1,10 +1,12 @@
 #include <xfdtd/boundary/pml.h>
 #include <xfdtd/calculation_param/calculation_param.h>
 #include <xfdtd/common/constant.h>
+#include <xfdtd/common/index_task.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/util/transform.h>
+#include <xfdtd/util/transform/abc_xyz.h>
 
 #include <cassert>
 #include <cstddef>
@@ -16,7 +18,6 @@
 #include <xtensor.hpp>
 
 #include "boundary/pml_corrector.h"
-#include "corrector/corrector.h"
 
 namespace xfdtd {
 
@@ -93,58 +94,6 @@ std::size_t PML::nodeN() const { return _pml_node_task_abc.zRange().size(); }
 const Array1D<Real>& PML::globalESize() const { return _global_e_size; }
 
 const Array1D<Real>& PML::globalHSize() const { return _global_h_size; }
-
-Array3D<Real>& PML::eaF() {
-  switch (mainAxis()) {
-    case Axis::XYZ::X:
-      return emfPtr()->ey();
-    case Axis::XYZ::Y:
-      return emfPtr()->ez();
-    case Axis::XYZ::Z:
-      return emfPtr()->ex();
-    default:
-      throw XFDTDPMLException("Invalid direction");
-  }
-}
-
-Array3D<Real>& PML::ebF() {
-  switch (mainAxis()) {
-    case Axis::XYZ::X:
-      return emfPtr()->ez();
-    case Axis::XYZ::Y:
-      return emfPtr()->ex();
-    case Axis::XYZ::Z:
-      return emfPtr()->ey();
-    default:
-      throw XFDTDPMLException("Invalid direction");
-  }
-}
-
-Array3D<Real>& PML::haF() {
-  switch (Axis::fromDirectionToXYZ(_direction)) {
-    case Axis::XYZ::X:
-      return emfPtr()->hy();
-    case Axis::XYZ::Y:
-      return emfPtr()->hz();
-    case Axis::XYZ::Z:
-      return emfPtr()->hx();
-    default:
-      throw XFDTDPMLException("Invalid direction");
-  }
-}
-
-Array3D<Real>& PML::hbF() {
-  switch (mainAxis()) {
-    case Axis::XYZ::X:
-      return emfPtr()->hz();
-    case Axis::XYZ::Y:
-      return emfPtr()->hx();
-    case Axis::XYZ::Z:
-      return emfPtr()->hy();
-    default:
-      throw XFDTDPMLException("Invalid direction");
-  }
-}
 
 void PML::init(std::shared_ptr<const GridSpace> grid_space,
                std::shared_ptr<CalculationParam> calculation_param,
@@ -248,6 +197,20 @@ void PML::init(std::shared_ptr<const GridSpace> grid_space,
 
 void PML::correctMaterialSpace() {}
 
+auto PML::offsetC() const -> Index {
+  auto offset = gridSpacePtr()->globalBox().origin();
+  switch (mainAxis()) {
+    case Axis::XYZ::X:
+      return offset.i();
+    case Axis::XYZ::Y:
+      return offset.j();
+    case Axis::XYZ::Z:
+      return offset.k();
+    default:
+      throw XFDTDPMLException("Invalid direction");
+  }
+}
+
 void PML::correctUpdateCoefficient() {
   if (!_pml_node_task.valid()) {
     return;
@@ -291,47 +254,30 @@ std::unique_ptr<Corrector> PML::generateDomainCorrector(
     return nullptr;
   }
 
-  auto [a, b, c_h_n] = transform::xYZToABC(
-      std::make_tuple(t.value().xRange(), t.value().yRange(),
-                      t.value().zRange()),
-      mainAxis());
-  auto t_abc = makeIndexTask(a, b, c_h_n);
-
-  auto a_s = t_abc.xRange().start();
-  auto a_n = t_abc.xRange().size();
-  auto b_s = t_abc.yRange().start();
-  auto b_n = t_abc.yRange().size();
-  auto c_s = t_abc.zRange().start();
-  auto c_n = t_abc.zRange().size();
-  auto c_e_s = (Axis::directionNegative(direction())) ? (c_s + 1) : (c_s);
-
   auto offset = gridSpacePtr()->globalBox().origin();
 
   switch (mainAxis()) {
     case Axis::XYZ::X:
-      return std::make_unique<PMLCorrectorX>(
-          globalENodeStartIndexMainAxis(), globalHNodeStartIndexMainAxis(),
-          nodeENodeStartIndexMainAxis(), nodeHNodeStartIndexMainAxis(), a_s,
-          a_n, b_s, b_n, c_e_s, c_n, c_s, c_n, offset.i(), _coeff_a_e,
-          _coeff_b_e, _coeff_a_h, _coeff_b_h, _c_ea_psi_hb, _c_eb_psi_ha,
-          _c_ha_psi_eb, _c_hb_psi_ea, _ea_psi_hb, _eb_psi_ha, _ha_psi_eb,
-          _hb_psi_ea, eaF(), ebF(), haF(), hbF());
+      return std::make_unique<PMLCorrector<Axis::XYZ::X>>(
+          emfPtr(), t.value(), globalENodeStartIndexMainAxis(),
+          globalHNodeStartIndexMainAxis(), nodeENodeStartIndexMainAxis(),
+          nodeHNodeStartIndexMainAxis(), offset.i(), &_coeff_a_e, &_coeff_b_e,
+          &_coeff_a_h, &_coeff_b_h, &_c_ea_psi_hb, &_c_eb_psi_ha, &_c_ha_psi_eb,
+          &_c_hb_psi_ea, &_ea_psi_hb, &_eb_psi_ha, &_ha_psi_eb, &_hb_psi_ea);
     case Axis::XYZ::Y:
-      return std::make_unique<PMLCorrectorY>(
-          globalENodeStartIndexMainAxis(), globalHNodeStartIndexMainAxis(),
-          nodeENodeStartIndexMainAxis(), nodeHNodeStartIndexMainAxis(), a_s,
-          a_n, b_s, b_n, c_e_s, c_n, c_s, c_n, offset.j(), _coeff_a_e,
-          _coeff_b_e, _coeff_a_h, _coeff_b_h, _c_ea_psi_hb, _c_eb_psi_ha,
-          _c_ha_psi_eb, _c_hb_psi_ea, _ea_psi_hb, _eb_psi_ha, _ha_psi_eb,
-          _hb_psi_ea, eaF(), ebF(), haF(), hbF());
+      return std::make_unique<PMLCorrector<Axis::XYZ::Y>>(
+          emfPtr(), t.value(), globalENodeStartIndexMainAxis(),
+          globalHNodeStartIndexMainAxis(), nodeENodeStartIndexMainAxis(),
+          nodeHNodeStartIndexMainAxis(), offset.j(), &_coeff_a_e, &_coeff_b_e,
+          &_coeff_a_h, &_coeff_b_h, &_c_ea_psi_hb, &_c_eb_psi_ha, &_c_ha_psi_eb,
+          &_c_hb_psi_ea, &_ea_psi_hb, &_eb_psi_ha, &_ha_psi_eb, &_hb_psi_ea);
     case Axis::XYZ::Z:
-      return std::make_unique<PMLCorrectorZ>(
-          globalENodeStartIndexMainAxis(), globalHNodeStartIndexMainAxis(),
-          nodeENodeStartIndexMainAxis(), nodeHNodeStartIndexMainAxis(), a_s,
-          a_n, b_s, b_n, c_e_s, c_n, c_s, c_n, offset.k(), _coeff_a_e,
-          _coeff_b_e, _coeff_a_h, _coeff_b_h, _c_ea_psi_hb, _c_eb_psi_ha,
-          _c_ha_psi_eb, _c_hb_psi_ea, _ea_psi_hb, _eb_psi_ha, _ha_psi_eb,
-          _hb_psi_ea, eaF(), ebF(), haF(), hbF());
+      return std::make_unique<PMLCorrector<Axis::XYZ::Z>>(
+          emfPtr(), t.value(), globalENodeStartIndexMainAxis(),
+          globalHNodeStartIndexMainAxis(), nodeENodeStartIndexMainAxis(),
+          nodeHNodeStartIndexMainAxis(), offset.k(), &_coeff_a_e, &_coeff_b_e,
+          &_coeff_a_h, &_coeff_b_h, &_c_ea_psi_hb, &_c_eb_psi_ha, &_c_ha_psi_eb,
+          &_c_hb_psi_ea, &_ea_psi_hb, &_eb_psi_ha, &_ha_psi_eb, &_hb_psi_ea);
     default:
       throw XFDTDPMLException("Invalid direction");
   }

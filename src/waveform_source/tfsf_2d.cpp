@@ -21,23 +21,33 @@ void TFSF2D::init(std::shared_ptr<GridSpace> grid_space,
 }
 
 std::unique_ptr<Corrector> TFSF2D::generateCorrector(const IndexTask &task) {
-  auto xn_task = nodeEzTaskXN(task);
-  auto xp_task = nodeEzTaskXP(task);
-  auto yn_task = nodeEzTaskYN(task);
-  auto yp_task = nodeEzTaskYP(task);
+  if (!task.valid()) {
+    return nullptr;
+  }
 
-  if (!xn_task.valid() && !xp_task.valid() && !yn_task.valid() &&
-      !yp_task.valid()) {
+  // node task to global task
+  auto offset = gridSpace()->globalBox().origin();
+
+  auto node_task =
+      makeIndexTask(task.xRange() + offset.i(), task.yRange() + offset.j(),
+                    task.zRange() + offset.k());
+  auto g_task = globalTask();
+
+  auto intersection_task = taskIntersection(node_task, g_task);
+
+  if (!intersection_task.has_value()) {
     return nullptr;
   }
 
   return std::make_unique<TFSF2DCorrector>(
-      globalBox().origin(), gridSpace(), calculationParam(), emf(),
-      waveform()->value(), xn_task, xp_task, yn_task, yp_task,
-      _projection_x_int, _projection_y_int, _projection_z_int,
-      _projection_x_half, _projection_y_half, _projection_z_half, _ex_inc,
-      _ey_inc, _ez_inc, _hx_inc, _hy_inc, _hz_inc, cax(), cbx(), cay(), cby(),
-      caz(), cbz());
+      intersection_task.value(), gridSpace().get(), calculationParam().get(),
+      emf().get(), &waveform()->value(), globalTask(),
+      gridSpace()->globalBox().origin().i(),
+      gridSpace()->globalBox().origin().j(), &_projection_x_int,
+      &_projection_y_int, &_projection_z_int, &_projection_x_half,
+      &_projection_y_half, &_projection_z_half, &_e_inc, &_h_inc, cax(), cbx(),
+      cay(), cby(), caz(), cbz(), _transform_e.x(), _transform_e.y(),
+      _transform_e.z(), _transform_h.x(), _transform_h.y(), _transform_h.z());
 }
 
 }  // namespace xfdtd
