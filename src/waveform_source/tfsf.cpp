@@ -204,6 +204,20 @@ Real TFSF::cbz() const {
          (constant::MU_0 * gridSpace()->basedDz());
 }
 
+auto TFSF::nodeTask() const -> IndexTask {
+  auto node_global_task = nodeGlobalTask();
+  if (!node_global_task.valid()) {
+    return {};
+  }
+
+  auto g_box = gridSpace()->globalBox();
+  auto offset = g_box.origin();
+  auto node_task = makeIndexTask(node_global_task.xRange() - offset.i(),
+                                 node_global_task.yRange() - offset.j(),
+                                 node_global_task.zRange() - offset.k());
+  return node_task;
+}
+
 auto TFSF::nodeGlobalTask() const -> IndexTask {
   auto g_box = gridSpace()->globalBox();
   auto g_task = makeTask(makeIndexRange(g_box.origin().i(), g_box.end().i()),

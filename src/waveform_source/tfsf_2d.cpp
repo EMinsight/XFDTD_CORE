@@ -40,9 +40,9 @@ std::unique_ptr<Corrector> TFSF2D::generateCorrector(const IndexTask &task) {
   }
 
   return std::make_unique<TFSF2DCorrector>(
-      intersection_task.value(), gridSpace().get(), calculationParam().get(),
-      emf().get(), &waveform()->value(), globalTask(),
-      gridSpace()->globalBox().origin().i(),
+      intersection_task.value(), nodeTask(), globalTask(),
+      gridSpace().get(), calculationParam().get(), emf().get(),
+      &waveform()->value(), gridSpace()->globalBox().origin().i(),
       gridSpace()->globalBox().origin().j(), &_projection_x_int,
       &_projection_y_int, &_projection_z_int, &_projection_x_half,
       &_projection_y_half, &_projection_z_half, &_e_inc, &_h_inc, cax(), cbx(),

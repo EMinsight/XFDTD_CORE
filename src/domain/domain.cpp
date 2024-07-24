@@ -166,6 +166,10 @@ auto Domain::toString() const -> std::string {
   return ss.str();
 }
 
+auto Domain::addCorrector(std::unique_ptr<Corrector> corrector) -> void {
+  _correctors.push_back(std::move(corrector));
+}
+
 void Domain::exchangeH() {
   if (!isMaster()) {
     return;

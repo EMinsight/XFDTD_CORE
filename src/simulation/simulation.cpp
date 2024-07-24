@@ -285,26 +285,8 @@ void Simulation::generateDomain() {
   */
   std::vector<std::unique_ptr<Corrector>> correctors;
 
-  for (auto&& w : _waveform_sources) {
-    auto c = w->generateCorrector(problem);
-    if (c == nullptr) {
-      continue;
-    }
-
-    correctors.emplace_back(std::move(c));
-  }
-
   for (auto&& o : _objects) {
     auto c = o->generateCorrector(problem);
-    if (c == nullptr) {
-      continue;
-    }
-
-    correctors.emplace_back(std::move(c));
-  }
-
-  for (auto&& b : _boundaries) {
-    auto c = b->generateDomainCorrector(problem);
     if (c == nullptr) {
       continue;
     }
@@ -327,6 +309,24 @@ void Simulation::generateDomain() {
       _domains.emplace_back(
           std::make_unique<Domain>(id, t, _grid_space, _calculation_param, _emf,
                                    std::move(updator), _barrier, false));
+    }
+
+    for (auto&& w : _waveform_sources) {
+      auto c = w->generateCorrector(t);
+      if (c == nullptr) {
+        continue;
+      }
+
+      _domains.back()->addCorrector(std::move(c));
+    }
+
+    for (auto&& b : _boundaries) {
+      auto c = b->generateDomainCorrector(t);
+      if (c == nullptr) {
+        continue;
+      }
+
+      _domains.back()->addCorrector(std::move(c));
     }
 
     ++id;
