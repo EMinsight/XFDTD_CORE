@@ -79,6 +79,10 @@ auto Vector::cross(const Vector& rhs) const -> Vector {
           x() * rhs.y() - y() * rhs.x()};
 }
 
+auto Vector::orthogonal(const Vector& rhs) const -> bool {
+  return floatCompareEqual(dot(rhs), 0);
+}
+
 void Vector::set(Real x, Real y, Real z) { _data = {x, y, z}; }
 
 void Vector::setX(Real x) { _data[0] = x; }

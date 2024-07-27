@@ -46,3 +46,6 @@ __pycache__/
 
 #
 .venv
+
+# model_support
+model_support/model
