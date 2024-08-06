@@ -8,42 +8,42 @@
 
 namespace xfdtd {
 
-auto MLorentzADEMethod::a(const MLorentzEqDecision& m_lorentz_equation, Real dt)
-    -> Array1D<Real> {
+auto MLorentzADEMethod::a(const MLorentzEqDecision& m_lorentz_equation,
+                          Real dt) -> Array1D<Real> {
   auto&& a_1 = m_lorentz_equation.a1() * constant::EPSILON_0;
   auto&& a_0 = m_lorentz_equation.a0() * constant::EPSILON_0;
   return ((a_1 / (dt * dt)) + (0.5 * a_0 / dt));
 }
 
-auto MLorentzADEMethod::b(const MLorentzEqDecision& m_lorentz_equation, Real dt)
-    -> Array1D<Real> {
+auto MLorentzADEMethod::b(const MLorentzEqDecision& m_lorentz_equation,
+                          Real dt) -> Array1D<Real> {
   auto&& a_1 = m_lorentz_equation.a1() * constant::EPSILON_0;
   return (-2 * a_1) / (dt * dt);
 }
 
-auto MLorentzADEMethod::c(const MLorentzEqDecision& m_lorentz_equation, Real dt)
-    -> Array1D<Real> {
+auto MLorentzADEMethod::c(const MLorentzEqDecision& m_lorentz_equation,
+                          Real dt) -> Array1D<Real> {
   auto&& a_1 = m_lorentz_equation.a1() * constant::EPSILON_0;
   auto&& a_0 = m_lorentz_equation.a0() * constant::EPSILON_0;
   return ((a_1 / (dt * dt)) - (0.5 * a_0 / dt));
 }
 
-auto MLorentzADEMethod::d(const MLorentzEqDecision& m_lorentz_equation, Real dt)
-    -> Array1D<Real> {
+auto MLorentzADEMethod::d(const MLorentzEqDecision& m_lorentz_equation,
+                          Real dt) -> Array1D<Real> {
   auto&& b_2 = m_lorentz_equation.b2();
   auto&& b_0 = m_lorentz_equation.b0();
   return ((2 * b_2 / (dt * dt)) - b_0);
 }
 
-auto MLorentzADEMethod::e(const MLorentzEqDecision& m_lorentz_equation, Real dt)
-    -> Array1D<Real> {
+auto MLorentzADEMethod::e(const MLorentzEqDecision& m_lorentz_equation,
+                          Real dt) -> Array1D<Real> {
   auto&& b_2 = m_lorentz_equation.b2();
   auto&& b_1 = m_lorentz_equation.b1();
   return ((-b_2 / (dt * dt)) + (b_1 / (2 * dt)));
 }
 
-auto MLorentzADEMethod::f(const MLorentzEqDecision& m_lorentz_equation, Real dt)
-    -> Array1D<Real> {
+auto MLorentzADEMethod::f(const MLorentzEqDecision& m_lorentz_equation,
+                          Real dt) -> Array1D<Real> {
   auto&& b_2 = m_lorentz_equation.b2();
   auto&& b_1 = m_lorentz_equation.b1();
   return ((b_2 / (dt * dt)) + (b_1 / (2 * dt)));
@@ -77,10 +77,9 @@ auto MLorentzADEMethod::init(Real dt) -> void {
   auto nv = 0.5 * _m_lorentz_equation->b1();
 }
 
-auto MLorentzADEMethod::correctCoeff(Index i, Index j, Index k,
-                                     const GridSpace* grid_space,
-                                     CalculationParam* calculation_param) const
-    -> void {
+auto MLorentzADEMethod::correctCoeff(
+    Index i, Index j, Index k, const GridSpace* grid_space,
+    CalculationParam* calculation_param) const -> void {
   Real sum_a_f = 0;
   for (Index p{0}; p < _a.size(); ++p) {
     sum_a_f += _a(p) / _f(p);
@@ -107,7 +106,7 @@ auto MLorentzADEMethod::correctCoeff(Index i, Index j, Index k,
   const auto& grid = grid_space->gridWithMaterial()(i, j, k);
   const auto sigma_e = calculation_param->materialParam()
                            ->materialArray()
-                           .at(grid->materialIndex())
+                           .at(grid.materialIndex())
                            ->emProperty()
                            .sigmaE();
   const auto dx = grid_space->hSizeX().at(i);

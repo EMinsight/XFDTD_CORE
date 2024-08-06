@@ -48,7 +48,7 @@ auto DebyeADEMethod::correctCoeff(Index i, Index j, Index k,
   const auto& grid = grid_space->gridWithMaterial()(i, j, k);
   const auto sigma_e = calculation_param->materialParam()
                            ->materialArray()
-                           .at(grid->materialIndex())
+                           .at(grid.materialIndex())
                            ->emProperty()
                            .sigmaE();
 

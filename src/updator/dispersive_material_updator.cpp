@@ -79,8 +79,7 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
       for (std::size_t k{ks}; k < ke; ++k) {
-        auto m_index =
-            _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k).materialIndex();
 
         if (m_index == -1 || _map[m_index] == -1) {
           ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
@@ -105,8 +104,7 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
       for (std::size_t k{ks}; k < ke; ++k) {
-        auto m_index =
-            _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k).materialIndex();
 
         if (m_index == -1 || _map[m_index] == -1) {
           ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
@@ -131,8 +129,7 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
   for (std::size_t i{is}; i < ie; ++i) {
     for (std::size_t j{js}; j < je; ++j) {
       for (std::size_t k{ks}; k < ke; ++k) {
-        auto m_index =
-            _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
+        auto m_index = _grid_space->gridWithMaterial()(i, j, k).materialIndex();
 
         if (m_index == -1 || _map[m_index] == -1) {
           ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
@@ -182,8 +179,8 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
 //     auto j = js;
 //     auto k = ks;
 //     for (std::size_t i{is}; i < ie; ++i) {
-//       auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
-//       if (m_index == -1 || _map[m_index] == -1) {
+//       auto m_index = _grid_space->gridWithMaterial()(i, j,
+//       k)->materialIndex(); if (m_index == -1 || _map[m_index] == -1) {
 //         ex(i, j, k) = eNext(cexe(i, j, k), ex(i, j, k), cexhy(i, j, k),
 //                             hy(i, j, k), hy(i, j, k - 1), cexhz(i, j, k),
 //                             hz(i, j, k), hz(i, j - 1, k));
@@ -198,7 +195,8 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
 //     auto i = is;
 //     auto k = ks;
 //     for (std::size_t j{js}; j < je; ++j) {
-//       auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
+//       auto m_index = _grid_space->gridWithMaterial()(i, j,
+//       k)->materialIndex();
 
 //       if (m_index == -1 || _map[m_index] == -1) {
 //         ey(i, j, k) = eNext(ceye(i, j, k), ey(i, j, k), ceyhz(i, j, k),
@@ -215,7 +213,8 @@ auto LinearDispersiveMaterialUpdator::updateE() -> void {
 //     auto i = is;
 //     auto j = js;
 //     for (std::size_t k{ks}; k < ke; ++k) {
-//       auto m_index = _grid_space->gridWithMaterial()(i, j, k)->materialIndex();
+//       auto m_index = _grid_space->gridWithMaterial()(i, j,
+//       k)->materialIndex();
 
 //       if (m_index == -1 || _map[m_index] == -1) {
 //         ez(i, j, k) = eNext(ceze(i, j, k), ez(i, j, k), cezhx(i, j, k),
@@ -378,7 +377,7 @@ auto LinearDispersiveMaterialUpdator1D::updateE() -> void {
   auto& ex{_emf->ex()};
 
   for (Index k{ks}; k < ke; ++k) {
-    auto m_index = _grid_space->gridWithMaterial()(0, 0, k)->materialIndex();
+    auto m_index = _grid_space->gridWithMaterial()(0, 0, k).materialIndex();
 
     if (m_index == -1 || _map[m_index] == -1) {
       ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k),
@@ -409,7 +408,8 @@ auto LinearDispersiveMaterialUpdator1D::updateE() -> void {
 //   auto m_index = _grid_space->gridWithMaterial()(0, 0, k)->materialIndex();
 
 //   if (m_index == -1 || _map[m_index] == -1) {
-//     ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
+//     ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0,
+//     k),
 //                         hy(0, 0, k - 1), 0.0, 0.0, 0.0);
 //     return;
 //   }

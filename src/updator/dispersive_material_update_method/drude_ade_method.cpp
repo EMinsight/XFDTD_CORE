@@ -41,14 +41,13 @@ auto DrudeADEMethod::init(Real dt) -> void {
   _coeff_j_sum_j = 0.5 * (1 + _coeff_j_j);
 }
 
-auto DrudeADEMethod::correctCoeff(Index i, Index j, Index k,
-                                  const GridSpace* grid_space,
-                                  CalculationParam* calculation_param) const
-    -> void {
+auto DrudeADEMethod::correctCoeff(
+    Index i, Index j, Index k, const GridSpace* grid_space,
+    CalculationParam* calculation_param) const -> void {
   const auto& grid = grid_space->gridWithMaterial()(i, j, k);
   const auto sigma_e = calculation_param->materialParam()
                            ->materialArray()
-                           .at(grid->materialIndex())
+                           .at(grid.materialIndex())
                            ->emProperty()
                            .sigmaE();
   const auto epsilon_inf = _epsilon_inf;

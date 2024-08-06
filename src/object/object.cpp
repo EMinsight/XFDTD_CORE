@@ -110,11 +110,11 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
   std::for_each(g_variety->gridWithMaterial().begin(),
                 g_variety->gridWithMaterial().end(),
                 [index, &grid_space = _grid_space, &shape = _shape](auto&& g) {
-                  if (!shape->isInside(grid_space->getGridCenterVector(*g),
+                  if (!shape->isInside(grid_space->getGridCenterVector(g),
                                        grid_space->eps())) {
                     return;
                   }
-                  g->setMaterialIndex(index);
+                  g.setMaterialIndex(index);
                 });
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_x);
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_y);
