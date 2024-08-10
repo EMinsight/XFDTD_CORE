@@ -4,31 +4,27 @@
 #include "xfdtd/common/type_define.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
+#include "xfdtd/util/transform.h"
 
 namespace xfdtd {
 
 class FDTDUpdateCoefficient {
  public:
-  template <EMF::Attribute attribute, Axis::XYZ>
-  auto coefficent() const {
-    if constexpr (attribute == EMF::Attribute::E) {
-      if constexpr (xyz == Axis::XYZ::X) {
-        return cexe();
-      } else if constexpr (xyz == Axis::XYZ::Y) {
-        return ceye();
-      } else if constexpr (xyz == Axis::XYZ::Z) {
-        return ceze();
-      }
-    } else {
-      if constexpr (xyz == Axis::XYZ::X) {
-        return chxh();
-      } else if constexpr (xyz == Axis::XYZ::Y) {
-        return chyh();
-      } else if constexpr (xyz == Axis::XYZ::Z) {
-        return chzh();
-      }
-    }
-  }
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeff() const -> const Array3D<Real>&;
+
+  template <EMF::Attribute c, Axis::XYZ xyz>
+  auto coeff() -> Array3D<Real>&;
+
+  template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b,
+            Axis::XYZ xyz_b>
+  auto coeff() const -> const Array3D<Real>&;
+
+  template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b,
+            Axis::XYZ xyz_b>
+  auto coeff() -> Array3D<Real>&;
+
+  auto save(const std::string& dir) const -> void;
 
  public:
   const Array3D<Real>& cexe() const;
@@ -124,6 +120,78 @@ class FDTDUpdateCoefficient {
   Array3D<Real> _chzex;
   Array3D<Real> _chzey;
 };
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeff() const -> const Array3D<Real>& {
+  constexpr auto f = transform::attributeXYZToField<c, xyz>();
+  if constexpr (f == EMF::Field::EX) {
+    return cexe();
+  } else if constexpr (f == EMF::Field::EY) {
+    return ceye();
+  } else if constexpr (f == EMF::Field::EZ) {
+    return ceze();
+  } else if constexpr (f == EMF::Field::HX) {
+    return chxh();
+  } else if constexpr (f == EMF::Field::HY) {
+    return chyh();
+  } else if constexpr (f == EMF::Field::HZ) {
+    return chzh();
+  } else {
+    static_assert(f == EMF::Field::EX || f == EMF::Field::EY ||
+                      f == EMF::Field::EZ || f == EMF::Field::HX ||
+                      f == EMF::Field::HY || f == EMF::Field::HZ,
+                  "FDTDUpdateCoefficient::coeff(): Invalid EMF::Field");
+  }
+}
+
+template <EMF::Attribute c, Axis::XYZ xyz>
+inline auto FDTDUpdateCoefficient::coeff() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(
+      static_cast<const FDTDUpdateCoefficient*>(this)->coeff<c, xyz>());
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b, Axis::XYZ xyz_b>
+auto FDTDUpdateCoefficient::coeff() const -> const Array3D<Real>& {
+  constexpr auto f = transform::attributeXYZToField<a, xyz_a>();
+  constexpr auto g = transform::attributeXYZToField<b, xyz_b>();
+  if constexpr (f == EMF::Field::EX && g == EMF::Field::HY) {
+    return cexhy();
+  } else if constexpr (f == EMF::Field::EX && g == EMF::Field::HZ) {
+    return cexhz();
+  } else if constexpr (f == EMF::Field::EY && g == EMF::Field::HZ) {
+    return ceyhz();
+  } else if constexpr (f == EMF::Field::EY && g == EMF::Field::HX) {
+    return ceyhx();
+  } else if constexpr (f == EMF::Field::EZ && g == EMF::Field::HX) {
+    return cezhx();
+  } else if constexpr (f == EMF::Field::EZ && g == EMF::Field::HY) {
+    return cezhy();
+  } else if constexpr (f == EMF::Field::HX && g == EMF::Field::EY) {
+    return chxey();
+  } else if constexpr (f == EMF::Field::HX && g == EMF::Field::EZ) {
+    return chxez();
+  } else if constexpr (f == EMF::Field::HY && g == EMF::Field::EZ) {
+    return chyez();
+  } else if constexpr (f == EMF::Field::HY && g == EMF::Field::EX) {
+    return chyex();
+  } else if constexpr (f == EMF::Field::HZ && g == EMF::Field::EX) {
+    return chzex();
+  } else if constexpr (f == EMF::Field::HZ && g == EMF::Field::EY) {
+    return chzey();
+  } else {
+    static_assert(f == EMF::Field::EX || f == EMF::Field::EY ||
+                      f == EMF::Field::EZ || f == EMF::Field::HX ||
+                      f == EMF::Field::HY || f == EMF::Field::HZ,
+                  "FDTDUpdateCoefficient::coeff(): Invalid EMF::Field");
+  }
+}
+
+template <EMF::Attribute a, Axis::XYZ xyz_a, EMF::Attribute b, Axis::XYZ xyz_b>
+auto FDTDUpdateCoefficient::coeff() -> Array3D<Real>& {
+  return const_cast<Array3D<Real>&>(
+      static_cast<const FDTDUpdateCoefficient*>(this)
+          ->coeff<a, xyz_a, b, xyz_b>());
+}
 
 }  // namespace xfdtd
 

@@ -35,6 +35,9 @@ def plot_mono_rcs(data_dir: str, incident_wave: np.ndarray, time: np.ndarray):
     freq_unit = 1e9
     dt = time[1] - time[0]
 
+    if not os.path.exists(data_dir):
+        raise FileNotFoundError(f"Data directory {data_dir} not found")
+
     w_theta = np.load(os.path.join(data_dir, "w_theta.npy"))
     u_phi = np.load(os.path.join(data_dir, "u_phi.npy"))
     w_phi = np.load(os.path.join(data_dir, "w_phi.npy"))
@@ -158,10 +161,13 @@ def dispersive_sphere_scatter(d_data_dir: str, n_data_dir: str):
     t_list.extend(t)
     f_list.extend(f)
 
-    t, f = plot_mono_rcs(os.path.join(d_data_dir, "td"), incident_wave, time)
+    try:
+        t, f = plot_mono_rcs(os.path.join(d_data_dir, "td"), incident_wave, time)
 
-    t_list.extend(t)
-    f_list.extend(f)
+        t_list.extend(t)
+        f_list.extend(f)
+    except FileNotFoundError:
+        print("Mono RCS data not found")
 
     return t_list, f_list
 

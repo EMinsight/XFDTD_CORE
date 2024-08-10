@@ -21,8 +21,8 @@ class LinearDispersiveMaterialEquation {
 
   virtual auto numPoles() const -> Index = 0;
 
-  virtual auto susceptibility(Real freq, Index p) const
-      -> std::complex<Real> = 0;
+  virtual auto susceptibility(Real freq,
+                              Index p) const -> std::complex<Real> = 0;
 };
 
 /**

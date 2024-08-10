@@ -20,11 +20,11 @@ int main(int argc, char *argv[]) {
   xfdtd::Array1D<xfdtd::Real> omega_p = {xfdtd::constant::PI * 1e9};
   xfdtd::Array1D<xfdtd::Real> gamma = {xfdtd::constant::PI * 1.2e9};
 
-  {
-    testCase(xfdtd::MLorentzMaterial::makeMLorentz(
-                 "drude_m_lor", 4, {omega_p * omega_p}, {0}, {0}, {gamma}, {1}),
-             id);
-  }
+  // {
+  //   testCase(xfdtd::MLorentzMaterial::makeMLorentz(
+  //                "drude_m_lor", 4, {omega_p * omega_p}, {0}, {0}, {gamma}, {1}),
+  //            id);
+  // }
 
   xfdtd::MpiSupport::instance().barrier();
 

@@ -3,6 +3,7 @@
 
 #include <xfdtd/boundary/pml.h>
 #include <xfdtd/common/constant.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/material/dispersive_material.h>
 #include <xfdtd/material/material.h>
@@ -23,7 +24,7 @@
 #include <xtensor/xnpy.hpp>
 
 inline void outputRelativePermittivity(
-    const xt::xarray<double>& freq,
+    const xfdtd::Array1D<xfdtd::Real>& freq,
     const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material,
     const std::string& file_name) {
   xt::dump_npy(file_name, xt::stack(xt::xtuple(
@@ -70,7 +71,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
   auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
       nffft_start, nffft_start, nffft_start, freq,
-      (sphere_scatter_dir).string())};
+      (sphere_scatter_dir / "fd").string())};
 
   auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
       std::make_unique<xfdtd::FieldMonitor>(

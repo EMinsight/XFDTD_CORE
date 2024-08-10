@@ -23,8 +23,6 @@ class XFDTDLinearDispersiveMaterialException : public XFDTDException {
 
 class LinearDispersiveMaterialEquation;
 
-class LinearDispersiveMaterialUpdateMethod;
-
 class LinearDispersiveMaterial : public Material {
  public:
   enum class Method { ADE };
@@ -33,15 +31,14 @@ class LinearDispersiveMaterial : public Material {
   LinearDispersiveMaterial(
       std::string_view name, Real epsilon_inf,
       std::shared_ptr<LinearDispersiveMaterialEquation> eq,
-      std::unique_ptr<LinearDispersiveMaterialUpdateMethod> update_method,
       ElectroMagneticProperty emp = ElectroMagneticProperty::air());
 
   LinearDispersiveMaterial(const LinearDispersiveMaterial&) = delete;
 
   LinearDispersiveMaterial(LinearDispersiveMaterial&&) noexcept = default;
 
-  auto operator=(const LinearDispersiveMaterial&)
-      -> LinearDispersiveMaterial& = delete;
+  auto operator=(const LinearDispersiveMaterial&) -> LinearDispersiveMaterial& =
+                                                         delete;
 
   LinearDispersiveMaterial& operator=(
       LinearDispersiveMaterial&& other) noexcept = default;
@@ -52,15 +49,12 @@ class LinearDispersiveMaterial : public Material {
 
   auto epsilonInf() const { return _epsilon_inf; }
 
+  auto equation() const { return _eq; }
+
   virtual std::complex<Real> susceptibility(Real freq, std::size_t p) const;
 
   virtual Array1D<std::complex<Real>> relativePermittivity(
       const Array1D<Real>& freq) const;
-
-  auto updateMethod() const
-      -> std::shared_ptr<LinearDispersiveMaterialUpdateMethod> {
-    return _update_method;
-  };
 
  protected:
   auto equationPtr() const { return _eq.get(); }
@@ -68,11 +62,9 @@ class LinearDispersiveMaterial : public Material {
  private:
   Real _epsilon_inf;
   std::shared_ptr<LinearDispersiveMaterialEquation> _eq;
-  std::shared_ptr<LinearDispersiveMaterialUpdateMethod> _update_method;
 };
 
 class MLorentzEqDecision;
-class MLorentzADEMethod;
 
 class MLorentzMaterial : public LinearDispersiveMaterial {
  public:
@@ -95,7 +87,6 @@ class MLorentzMaterial : public LinearDispersiveMaterial {
 using LorentzMedium = MLorentzMaterial;
 
 class DebyeEqDecision;
-class DebyeADEMethod;
 
 class DebyeMedium : public LinearDispersiveMaterial {
  public:
@@ -106,7 +97,6 @@ class DebyeMedium : public LinearDispersiveMaterial {
  public:
   DebyeMedium(std::string_view name, Real epsilon_inf,
               const std::shared_ptr<DebyeEqDecision>& eq,
-              std::unique_ptr<DebyeADEMethod> update_method,
               ElectroMagneticProperty emp = ElectroMagneticProperty::air());
 
   DebyeMedium(DebyeMedium&&) noexcept = default;
@@ -124,7 +114,6 @@ class DebyeMedium : public LinearDispersiveMaterial {
 };
 
 class DrudeEqDecision;
-class DrudeADEMethod;
 
 class DrudeMedium : public LinearDispersiveMaterial {
  public:
@@ -135,7 +124,6 @@ class DrudeMedium : public LinearDispersiveMaterial {
  public:
   DrudeMedium(std::string_view name, Real epsilon_inf,
               const std::shared_ptr<DrudeEqDecision>& eq,
-              std::unique_ptr<DrudeADEMethod> update_method,
               ElectroMagneticProperty emp = ElectroMagneticProperty::air());
 
   DrudeMedium(DrudeMedium&&) noexcept = default;
