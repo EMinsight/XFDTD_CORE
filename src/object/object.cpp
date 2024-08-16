@@ -95,8 +95,12 @@ std::string Object::name() const { return _name; }
 
 const std::unique_ptr<Shape>& Object::shape() const { return _shape; }
 
-void Object::defaultCorrectMaterialSpace(Index index) {
+auto Object::setMaterialIndex(Index index) -> void {
   _material_index = index;
+}
+
+void Object::defaultCorrectMaterialSpace(Index index) {
+  setMaterialIndex(index);
   auto em_property{_material->emProperty()};
   auto eps{em_property.epsilon()};
   auto mu{em_property.mu()};

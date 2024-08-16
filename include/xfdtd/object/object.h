@@ -80,6 +80,9 @@ class Object {
   auto materialIndex() const -> Index;
 
  protected:
+
+  auto setMaterialIndex(Index index) -> void;
+
   void defaultCorrectMaterialSpace(Index index = -1);
 
   Shape* shapePtr();

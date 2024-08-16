@@ -9,6 +9,7 @@
 
 #include "xfdtd/common/type_define.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
+#include "xfdtd/shape/cube.h"
 
 namespace xfdtd {
 
@@ -38,6 +39,39 @@ class FlowFieldEntry {
   Real _omega_p{}, _gamma{};
 };
 
+class FlowFieldShape : public Shape {
+ public:
+  FlowFieldShape(std::string_view flow_field_model_info_path);
+
+  ~FlowFieldShape() override;
+
+  auto clone() const -> std::unique_ptr<Shape> override { return {}; }
+
+  auto isInside(Real x, Real y, Real z, Real eps) const -> bool override {
+    return false;
+  }
+
+  auto isInside(const Vector& vector, Real eps) const -> bool override {
+    return false;
+  }
+
+  auto wrappedCube() const -> std::unique_ptr<Cube> override;
+
+  auto& flowFieldEntries() const { return _flow_field_entries; }
+
+  auto& flowFieldEntries() { return _flow_field_entries; }
+
+ private:
+  std::string _flow_field_model_info_path{};
+  std::vector<FlowFieldEntry> _flow_field_entries{};
+  std::unique_ptr<Cube> _cube;
+
+  auto readEntry(std::string_view path) const -> std::vector<FlowFieldEntry>;
+
+  auto generateCube(const std::vector<FlowFieldEntry>& flow_field_entries) const
+      -> std::unique_ptr<Cube>;
+};
+
 /**
  * @brief Read flow field
  * The format of the flow field is as follows:
@@ -53,53 +87,19 @@ class FlowField : public Object {
  public:
   FlowField(std::string_view name, std::string_view flow_field_model_info_path);
 
-  FlowField(const FlowField&) = delete;
-
-  FlowField(FlowField&&) noexcept = delete;
-
-  FlowField& operator=(const FlowField&) = delete;
-
-  FlowField& operator=(FlowField&&) noexcept = delete;
-
   virtual ~FlowField();
 
-  std::string toString() const override;
+  auto correctMaterialSpace(Index index) -> void override;
 
-  void init(std::shared_ptr<const GridSpace> grid_space,
-            std::shared_ptr<CalculationParam> calculation_param,
-            std::shared_ptr<EMF> emf) override;
+  auto handleDispersion(std::shared_ptr<ADEMethodStorage> ade_method_storage)
+      -> void override;
 
-  void correctMaterialSpace(std::size_t index) override;
+  auto& flowFieldShape() const { return *_flow_field_shape; }
 
-  void correctUpdateCoefficient() override;
-
-  auto flowFieldModelInfoPath() const -> std::string;
-
-  auto objectModelInfoPath() const -> std::string;
-
-  auto setFlowFieldModelInfoPath(std::string_view path) -> void;
-
-  auto setObjectModelInfoPath(std::string_view path) -> void;
+  auto& flowFieldShape() { return *_flow_field_shape; }
 
  private:
-  std::string _flow_field_model_info_path{};
-  std::vector<FlowFieldEntry> _flow_field_entries{};
-
-  auto readModelInfo(std::string_view path) -> std::unique_ptr<ModelShape>;
-
-  auto isInsideFlowField(const Vector& vector) const -> bool;
-
-  auto isInsideObject(const Vector& vector) const -> bool;
-
-  auto correctCoefficient(Index i, Index j, Index k,
-                          const FlowFieldEntry& entry) -> void;
-
-  struct DrudeMaterialParameter {
-    Real epsilon_inf, omega_p, gamma;
-  };
-
-  auto getDrudeMaterialParameter(Index i, Index j,
-                                 Index k) -> DrudeMaterialParameter;
+  FlowFieldShape* _flow_field_shape{};
 };
 
 }  // namespace xfdtd
