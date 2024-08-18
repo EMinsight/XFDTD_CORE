@@ -1,26 +1,21 @@
 #include <xfdtd/common/type_define.h>
 #include <xfdtd/material/dispersive_material.h>
+#include <xfdtd/material/dispersive_material_equation/dispersive_material_equation.h>
 
 #include <complex>
 #include <memory>
 #include <string_view>
 #include <utility>
 
-#include "material/dispersive_material_equation.h"
-#include "updator/dispersive_material_update_method/dispersive_material_update_method.h"
-#include "updator/dispersive_material_update_method/m_lorentz_ade_method.h"
-
 namespace xfdtd {
 
 LinearDispersiveMaterial::LinearDispersiveMaterial(
     std::string_view name, Real epsilon_inf,
     std::shared_ptr<LinearDispersiveMaterialEquation> eq,
-    std::unique_ptr<LinearDispersiveMaterialUpdateMethod> update_method,
     ElectroMagneticProperty emp)
     : Material{name, emp, true},
       _epsilon_inf{epsilon_inf},
-      _eq{std::move(eq)},
-      _update_method{std::move(update_method)} {}
+      _eq{std::move(eq)} {}
 
 LinearDispersiveMaterial::~LinearDispersiveMaterial() = default;
 
@@ -46,18 +41,14 @@ auto LinearDispersiveMaterial::relativePermittivity(
       freq);
 }
 
-auto MLorentzMaterial::makeMLorentz(std::string_view name, Real epsilon_inf,
-                                    Array1D<Real> a_0, Array1D<Real> a_1,
-                                    Array1D<Real> b_0, Array1D<Real> b_1,
-                                    Array1D<Real> b_2,
-                                    ElectroMagneticProperty emp)
-    -> std::unique_ptr<MLorentzMaterial> {
+auto MLorentzMaterial::makeMLorentz(
+    std::string_view name, Real epsilon_inf, Array1D<Real> a_0,
+    Array1D<Real> a_1, Array1D<Real> b_0, Array1D<Real> b_1, Array1D<Real> b_2,
+    ElectroMagneticProperty emp) -> std::unique_ptr<MLorentzMaterial> {
   auto eq = std::make_shared<MLorentzEqDecision>(std::move(a_0), std::move(a_1),
                                                  std::move(b_0), std::move(b_1),
                                                  std::move(b_2));
-  return std::make_unique<MLorentzMaterial>(
-      name, epsilon_inf, eq,
-      std::make_unique<MLorentzADEMethod>(epsilon_inf, eq), emp);
+  return std::make_unique<MLorentzMaterial>(name, epsilon_inf, eq, emp);
 }
 
 auto MLorentzMaterial::mLorentzEquationPtr() const -> MLorentzEqDecision* {

@@ -103,6 +103,8 @@ class TFSF : public WaveformSource {
 
   auto hInc() const -> const Array2D<Real> & { return _h_inc; }
 
+  auto nodeTask() const -> IndexTask;
+
  protected:
   void defaultInit(std::shared_ptr<GridSpace> grid_space,
                    std::shared_ptr<CalculationParam> calculation_param,

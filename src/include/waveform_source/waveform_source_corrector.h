@@ -13,12 +13,13 @@ namespace xfdtd {
 
 class WaveformSourceCorrector : public Corrector {
  public:
-  WaveformSourceCorrector(IndexTask task, IndexTask local_task,
-                          GridSpace* grid_space,
+  WaveformSourceCorrector(IndexTask task, IndexTask node_task,
+                          IndexTask global_task, GridSpace* grid_space,
                           CalculationParam* calculation_param, EMF* emf,
                           const Array1D<Real>* waveform)
       : _task{task},
-        _local_task{local_task},
+        _node_task{node_task},
+        _global_task{global_task},
         _grid_space{(grid_space)},
         _calculation_param{(calculation_param)},
         _emf{(emf)},
@@ -26,9 +27,11 @@ class WaveformSourceCorrector : public Corrector {
 
   ~WaveformSourceCorrector() override = default;
 
-  auto task() -> IndexTask { return _task; }
+  auto task() const -> IndexTask { return _task; }
 
-  auto localTask() -> IndexTask { return _local_task; }
+  auto nodeTask() const -> IndexTask { return _node_task; }
+
+  auto globalTask() const -> IndexTask { return _global_task; }
 
   auto gridSpace() const { return _grid_space; }
 
@@ -47,7 +50,7 @@ class WaveformSourceCorrector : public Corrector {
   std::string toString() const override { return "WaveformSourceCorrector"; }
 
  private:
-  IndexTask _task, _local_task;
+  IndexTask _task, _node_task, _global_task;
   GridSpace* _grid_space;
   CalculationParam* _calculation_param;
   EMF* _emf;

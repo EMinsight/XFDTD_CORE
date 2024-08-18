@@ -106,6 +106,8 @@ class Domain {
 
   auto toString() const -> std::string;
 
+  auto addCorrector(std::unique_ptr<Corrector> corrector) -> void;
+
  protected:
   void exchangeH();
 

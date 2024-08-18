@@ -259,21 +259,21 @@ std::unique_ptr<Corrector> PML::generateDomainCorrector(
   switch (mainAxis()) {
     case Axis::XYZ::X:
       return std::make_unique<PMLCorrector<Axis::XYZ::X>>(
-          emfPtr(), t.value(), globalENodeStartIndexMainAxis(),
+          emfPtr(), t.value(), _pml_node_task, globalENodeStartIndexMainAxis(),
           globalHNodeStartIndexMainAxis(), nodeENodeStartIndexMainAxis(),
           nodeHNodeStartIndexMainAxis(), offset.i(), &_coeff_a_e, &_coeff_b_e,
           &_coeff_a_h, &_coeff_b_h, &_c_ea_psi_hb, &_c_eb_psi_ha, &_c_ha_psi_eb,
           &_c_hb_psi_ea, &_ea_psi_hb, &_eb_psi_ha, &_ha_psi_eb, &_hb_psi_ea);
     case Axis::XYZ::Y:
       return std::make_unique<PMLCorrector<Axis::XYZ::Y>>(
-          emfPtr(), t.value(), globalENodeStartIndexMainAxis(),
+          emfPtr(), t.value(), _pml_node_task, globalENodeStartIndexMainAxis(),
           globalHNodeStartIndexMainAxis(), nodeENodeStartIndexMainAxis(),
           nodeHNodeStartIndexMainAxis(), offset.j(), &_coeff_a_e, &_coeff_b_e,
           &_coeff_a_h, &_coeff_b_h, &_c_ea_psi_hb, &_c_eb_psi_ha, &_c_ha_psi_eb,
           &_c_hb_psi_ea, &_ea_psi_hb, &_eb_psi_ha, &_ha_psi_eb, &_hb_psi_ea);
     case Axis::XYZ::Z:
       return std::make_unique<PMLCorrector<Axis::XYZ::Z>>(
-          emfPtr(), t.value(), globalENodeStartIndexMainAxis(),
+          emfPtr(), t.value(), _pml_node_task, globalENodeStartIndexMainAxis(),
           globalHNodeStartIndexMainAxis(), nodeENodeStartIndexMainAxis(),
           nodeHNodeStartIndexMainAxis(), offset.k(), &_coeff_a_e, &_coeff_b_e,
           &_coeff_a_h, &_coeff_b_h, &_c_ea_psi_hb, &_c_eb_psi_ha, &_c_ha_psi_eb,

@@ -33,8 +33,8 @@ std::unique_ptr<Corrector> TFSF3D::generateCorrector(const IndexTask& task) {
   }
 
   return std::make_unique<TFSF3DCorrector>(
-      intersection_task.value(), gridSpace().get(), calculationParam().get(),
-      emf().get(), &waveform()->value(), globalTask(),
+      intersection_task.value(), nodeTask(), globalTask(), gridSpace().get(),
+      calculationParam().get(), emf().get(), &waveform()->value(),
       gridSpace()->globalBox().origin().i(),
       gridSpace()->globalBox().origin().j(),
       gridSpace()->globalBox().origin().k(), &_projection_x_int,

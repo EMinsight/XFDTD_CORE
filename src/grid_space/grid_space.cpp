@@ -6,10 +6,12 @@
 #include <sstream>
 #include <utility>
 #include <xtensor.hpp>
+#include <xtensor/xbuilder.hpp>
 
 // #include "util/float_compare.h"
 #include "grid_space/grid_space_data.h"
 #include "xfdtd/common/type_define.h"
+#include "xfdtd/grid_space/grid.h"
 #include "xfdtd/shape/cube.h"
 #include "xfdtd/shape/shape.h"
 
@@ -354,12 +356,12 @@ void GridSpace::setMinDz(Real min_dz) { _min_dz = min_dz; }
 
 void GridSpace::generateMaterialGrid(std::size_t nx, std::size_t ny,
                                      std::size_t nz) {
-  _grid_with_material =
-      Array3D<std::shared_ptr<Grid>>::from_shape({nx, ny, nz});
-  for (auto i{0}; i < nx; ++i) {
-    for (auto j{0}; j < ny; ++j) {
-      for (auto k{0}; k < nz; ++k) {
-        _grid_with_material(i, j, k) = std::make_shared<Grid>(i, j, k);
+  // _grid_with_material = Array3D<Grid>::from_shape({nx, ny, nz});
+  _grid_with_material = xt::empty<Grid>({nx, ny, nz});
+  for (Index i{0}; i < nx; ++i) {
+    for (Index j{0}; j < ny; ++j) {
+      for (Index k{0}; k < nz; ++k) {
+        _grid_with_material(i, j, k) = Grid{i, j, k};
       }
     }
   }

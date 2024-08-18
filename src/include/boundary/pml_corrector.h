@@ -54,17 +54,18 @@ inline auto correctPML(auto&& field, auto&& psi, const auto& coeff_a,
 template <Axis::XYZ xyz>
 class PMLCorrector : public Corrector {
  public:
-  PMLCorrector(EMF* emf, IndexTask task, Index pml_global_e_start,
-               Index pml_global_h_start, Index pml_node_e_start,
-               Index pml_node_h_start, Index offset_c, Array1D<Real>* coeff_a_e,
-               Array1D<Real>* coeff_b_e, Array1D<Real>* coeff_a_h,
-               Array1D<Real>* coeff_b_h, Array3D<Real>* c_ea_psi_hb,
-               Array3D<Real>* c_eb_psi_ha, Array3D<Real>* c_ha_psi_eb,
-               Array3D<Real>* c_hb_psi_ea, Array3D<Real>* ea_psi_hb,
-               Array3D<Real>* eb_psi_ha, Array3D<Real>* ha_psi_eb,
-               Array3D<Real>* hb_psi_ea)
+  PMLCorrector(EMF* emf, IndexTask task, IndexTask node_task,
+               Index pml_global_e_start, Index pml_global_h_start,
+               Index pml_node_e_start, Index pml_node_h_start, Index offset_c,
+               Array1D<Real>* coeff_a_e, Array1D<Real>* coeff_b_e,
+               Array1D<Real>* coeff_a_h, Array1D<Real>* coeff_b_h,
+               Array3D<Real>* c_ea_psi_hb, Array3D<Real>* c_eb_psi_ha,
+               Array3D<Real>* c_ha_psi_eb, Array3D<Real>* c_hb_psi_ea,
+               Array3D<Real>* ea_psi_hb, Array3D<Real>* eb_psi_ha,
+               Array3D<Real>* ha_psi_eb, Array3D<Real>* hb_psi_ea)
       : _emf{emf},
         _task{task},
+        _node_task{node_task},
         _pml_global_e_start{pml_global_e_start},
         _pml_global_h_start{pml_global_h_start},
         _pml_node_e_start{pml_node_e_start},
@@ -91,6 +92,8 @@ class PMLCorrector : public Corrector {
 
   auto task() const { return _task; }
 
+  auto nodeTask() const -> IndexTask { return _node_task; }
+
   auto toString() const -> std::string override {
     std::stringstream ss;
     ss << "PMLCorrector " << Axis::toString(xyz) << " " << task().toString();
@@ -99,7 +102,7 @@ class PMLCorrector : public Corrector {
 
  private:
   EMF* _emf;
-  IndexTask _task;
+  IndexTask _task, _node_task;
 
   Index _pml_global_e_start, _pml_global_h_start;
   Index _pml_node_e_start, _pml_node_h_start;
@@ -180,18 +183,21 @@ inline auto PMLCorrector<xyz>::correctE() -> void {
   constexpr auto xyz_b = Axis::tangentialBAxis<xyz>();
   const auto pml_global_start = _pml_global_e_start;
   const auto pml_node_start = _pml_node_e_start;
+  const auto task = this->task();
+  if (!task.valid()) {
+    return;
+  }
 
-  auto is = task().xRange().start();
-  auto js = task().yRange().start();
-  auto ks = task().zRange().start();
+  auto is = task.xRange().start();
+  auto js = task.yRange().start();
+  auto ks = task.zRange().start();
 
   auto main_axis_offset = 0;
 
   {
     // c == 0?
-    auto [a, b, c] = transform::xYZToABC<Index, xyz>(task().xRange().start(),
-                                                     task().yRange().start(),
-                                                     task().zRange().start());
+    auto [a, b, c] = transform::xYZToABC<Index, xyz>(
+        task.xRange().start(), task.yRange().start(), task.zRange().start());
     if (c == 0) {
       auto [i, j, k] = transform::aBCToXYZ<Index, xyz>(a, b, c + 1);
       main_axis_offset = 1;
@@ -211,10 +217,30 @@ inline auto PMLCorrector<xyz>::correctE() -> void {
     const auto& dual_field = _emf->field<dual_attribute, xyz_b>();
     const auto& c_psi = cPsi<attribute, xyz_a>();
     // correct EA: [a_s, a_e), [b_s, b_e + 1), [c_s, c_e)
-    auto [a, b, c] = transform::xYZToABC<Index, xyz>(
-        task().xRange().end(), task().yRange().end(), task().zRange().end());
-    auto [ie, je, ke] =
-        transform::aBCToXYZ<Index, xyz>(a, b + 1, c + main_axis_offset);
+    auto [a, b, c] = transform::xYZToABC<Index, xyz>(nodeTask().xRange().end(),
+                                                     nodeTask().yRange().end(),
+                                                     nodeTask().zRange().end());
+    auto [ae, be, ce] = transform::xYZToABC<Index, xyz>(
+        task.xRange().end(), task.yRange().end(), task.zRange().end());
+
+    // auto [ie, je, ke] =
+    //     transform::aBCToXYZ<Index, xyz>(a, b + 1, c + main_axis_offset);
+    Index ie = 0;
+    Index je = 0;
+    Index ke = 0;
+    if (be == b) {
+      auto [i, j, k] =
+          transform::aBCToXYZ<Index, xyz>(ae, be + 1, ce + main_axis_offset);
+      ie = i;
+      je = j;
+      ke = k;
+    } else {
+      auto [i, j, k] =
+          transform::aBCToXYZ<Index, xyz>(ae, be, ce + main_axis_offset);
+      ie = i;
+      je = j;
+      ke = k;
+    }
 
     correctPML<attribute, xyz>(field, psi, coeff_a, coeff_b, dual_field, c_psi,
                                is, ie, js, je, ks, ke, pml_global_start,
@@ -229,10 +255,31 @@ inline auto PMLCorrector<xyz>::correctE() -> void {
     const auto& dual_field = _emf->field<dual_attribute, xyz_a>();
     const auto& c_psi = cPsi<attribute, xyz_b>();
     // correct EB: [a_s, a_e + 1), [b_s, b_e), [c_s, c_e)
-    auto [a, b, c] = transform::xYZToABC<Index, xyz>(
-        task().xRange().end(), task().yRange().end(), task().zRange().end());
-    auto [ie, je, ke] =
-        transform::aBCToXYZ<Index, xyz>(a + 1, b, c + main_axis_offset);
+    auto [a, b, c] = transform::xYZToABC<Index, xyz>(nodeTask().xRange().end(),
+                                                     nodeTask().yRange().end(),
+                                                     nodeTask().zRange().end());
+    auto [ae, be, ce] = transform::xYZToABC<Index, xyz>(
+        task.xRange().end(), task.yRange().end(), task.zRange().end());
+
+    // auto [ie, je, ke] =
+    //     transform::aBCToXYZ<Index, xyz>(a + 1, b, c + main_axis_offset);
+
+    Index ie = 0;
+    Index je = 0;
+    Index ke = 0;
+    if (ae == a) {
+      auto [i, j, k] =
+          transform::aBCToXYZ<Index, xyz>(ae + 1, be, ce + main_axis_offset);
+      ie = i;
+      je = j;
+      ke = k;
+    } else {
+      auto [i, j, k] =
+          transform::aBCToXYZ<Index, xyz>(ae, be, ce + main_axis_offset);
+      ie = i;
+      je = j;
+      ke = k;
+    }
 
     correctPML<attribute, xyz>(field, psi, coeff_a, coeff_b, dual_field, c_psi,
                                is, ie, js, je, ks, ke, pml_global_start,
@@ -248,10 +295,14 @@ inline auto PMLCorrector<xyz>::correctH() -> void {
   constexpr auto xyz_b = Axis::tangentialBAxis<xyz>();
   const auto pml_global_start = _pml_global_h_start;
   const auto pml_node_start = _pml_node_h_start;
+  const auto task = this->task();
+  if (!task.valid()) {
+    return;
+  }
 
-  const auto is = task().xRange().start();
-  const auto js = task().yRange().start();
-  const auto ks = task().zRange().start();
+  const auto is = task.xRange().start();
+  const auto js = task.yRange().start();
+  const auto ks = task.zRange().start();
 
   const auto offset_c = _offset_c;
 
@@ -263,9 +314,29 @@ inline auto PMLCorrector<xyz>::correctH() -> void {
     const auto& dual_field = _emf->field<dual_attribute, xyz_b>();
     const auto& c_psi = cPsi<attribute, xyz_a>();
     // correct HA: [a_s, a_e + 1), [b_s, b_e), [c_s, c_e)
-    auto [a, b, c] = transform::xYZToABC<Index, xyz>(
-        task().xRange().end(), task().yRange().end(), task().zRange().end());
-    auto [ie, je, ke] = transform::aBCToXYZ<Index, xyz>(a + 1, b, c);
+    // auto [a, b, c] = transform::xYZToABC<Index, xyz>(
+    //     task().xRange().end(), task().yRange().end(), task().zRange().end());
+    // auto [ie, je, ke] = transform::aBCToXYZ<Index, xyz>(a + 1, b, c);
+    auto [a, b, c] = transform::xYZToABC<Index, xyz>(nodeTask().xRange().end(),
+                                                     nodeTask().yRange().end(),
+                                                     nodeTask().zRange().end());
+    auto [ae, be, ce] = transform::xYZToABC<Index, xyz>(
+        task.xRange().end(), task.yRange().end(), task.zRange().end());
+
+    Index ie = 0;
+    Index je = 0;
+    Index ke = 0;
+    if (ae == a) {
+      auto [i, j, k] = transform::aBCToXYZ<Index, xyz>(ae + 1, be, ce);
+      ie = i;
+      je = j;
+      ke = k;
+    } else {
+      auto [i, j, k] = transform::aBCToXYZ<Index, xyz>(ae, be, ce);
+      ie = i;
+      je = j;
+      ke = k;
+    }
 
     correctPML<attribute, xyz>(field, psi, coeff_a, coeff_b, dual_field, c_psi,
                                is, ie, js, je, ks, ke, pml_global_start,
@@ -280,9 +351,29 @@ inline auto PMLCorrector<xyz>::correctH() -> void {
     const auto& dual_field = _emf->field<dual_attribute, xyz_a>();
     const auto& c_psi = cPsi<attribute, xyz_b>();
     // correct HB: [a_s, a_e), [b_s, b_e + 1), [c_s, c_e)
-    auto [a, b, c] = transform::xYZToABC<Index, xyz>(
-        task().xRange().end(), task().yRange().end(), task().zRange().end());
-    auto [ie, je, ke] = transform::aBCToXYZ<Index, xyz>(a, b + 1, c);
+    // auto [a, b, c] = transform::xYZToABC<Index, xyz>(
+    //     task().xRange().end(), task().yRange().end(), task().zRange().end());
+    // auto [ie, je, ke] = transform::aBCToXYZ<Index, xyz>(a, b + 1, c);
+    auto [a, b, c] = transform::xYZToABC<Index, xyz>(nodeTask().xRange().end(),
+                                                     nodeTask().yRange().end(),
+                                                     nodeTask().zRange().end());
+    auto [ae, be, ce] = transform::xYZToABC<Index, xyz>(
+        task.xRange().end(), task.yRange().end(), task.zRange().end());
+
+    Index ie = 0;
+    Index je = 0;
+    Index ke = 0;
+    if (be == b) {
+      auto [i, j, k] = transform::aBCToXYZ<Index, xyz>(ae, be + 1, ce);
+      ie = i;
+      je = j;
+      ke = k;
+    } else {
+      auto [i, j, k] = transform::aBCToXYZ<Index, xyz>(ae, be, ce);
+      ie = i;
+      je = j;
+      ke = k;
+    }
 
     correctPML<attribute, xyz>(field, psi, coeff_a, coeff_b, dual_field, c_psi,
                                is, ie, js, je, ks, ke, pml_global_start,

@@ -1,5 +1,6 @@
 #include <xfdtd/common/type_define.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/material/ade_method/ade_method.h>
 #include <xfdtd/material/dispersive_material.h>
 #include <xfdtd/object/object.h>
 #include <xfdtd/shape/shape.h>
@@ -10,7 +11,6 @@
 #include <utility>
 
 #include "corrector/corrector.h"
-#include "updator/dispersive_material_update_method/dispersive_material_update_method.h"
 
 namespace xfdtd {
 
@@ -40,15 +40,46 @@ void Object::init(std::shared_ptr<const GridSpace> grid_space,
       _grid_space->globalGridSpace()->getGridBoxWithoutCheck(shape().get());
 }
 
-void Object::correctMaterialSpace(std::size_t index) {
+void Object::correctMaterialSpace(Index index) {
   defaultCorrectMaterialSpace(index);
 }
 
-void Object::correctUpdateCoefficient() {
+void Object::correctUpdateCoefficient() {}
+
+void Object::handleDispersion(
+    std::shared_ptr<ADEMethodStorage> ade_method_storage) {
   auto dispersion{_material->dispersion()};
-  if (dispersion) {
-    handleDispersion();
+  if (!dispersion) {
     return;
+  }
+
+  auto nx = _grid_space->sizeX();
+  auto ny = _grid_space->sizeY();
+  auto nz = _grid_space->sizeZ();
+
+  auto linear_dispersive_material =
+      dynamic_cast<LinearDispersiveMaterial*>(_material.get());
+
+  auto num_pole = linear_dispersive_material;
+
+  for (Index i{0}; i < nx; ++i) {
+    for (Index j{0}; j < ny; ++j) {
+      for (Index k{0}; k < nz; ++k) {
+        if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}),
+                              _grid_space->eps())) {
+          continue;
+        }
+
+        const auto& grid = _grid_space->gridWithMaterial()(i, j, k);
+        auto material_index = grid.materialIndex();
+        if (material_index != materialIndex()) {
+          continue;
+        }
+
+        ade_method_storage->correctCoeff(i, j, k, *linear_dispersive_material,
+                                         _grid_space, _calculation_param);
+      }
+    }
   }
 }
 
@@ -56,8 +87,7 @@ void Object::correctE() {}
 
 void Object::correctH() {}
 
-std::unique_ptr<Corrector> Object::generateCorrector(
-    const Task<std::size_t>& task) {
+std::unique_ptr<Corrector> Object::generateCorrector(const Task<Index>& task) {
   return nullptr;
 }
 
@@ -65,7 +95,12 @@ std::string Object::name() const { return _name; }
 
 const std::unique_ptr<Shape>& Object::shape() const { return _shape; }
 
-void Object::defaultCorrectMaterialSpace(std::size_t index) {
+auto Object::setMaterialIndex(Index index) -> void {
+  _material_index = index;
+}
+
+void Object::defaultCorrectMaterialSpace(Index index) {
+  setMaterialIndex(index);
   auto em_property{_material->emProperty()};
   auto eps{em_property.epsilon()};
   auto mu{em_property.mu()};
@@ -110,11 +145,11 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
   std::for_each(g_variety->gridWithMaterial().begin(),
                 g_variety->gridWithMaterial().end(),
                 [index, &grid_space = _grid_space, &shape = _shape](auto&& g) {
-                  if (!shape->isInside(grid_space->getGridCenterVector(*g),
+                  if (!shape->isInside(grid_space->getGridCenterVector(g),
                                        grid_space->eps())) {
                     return;
                   }
-                  g->setMaterialIndex(index);
+                  g.setMaterialIndex(index);
                 });
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_x);
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_y);
@@ -130,43 +165,11 @@ void Object::defaultCorrectMaterialSpace(std::size_t index) {
   correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_z);
 }
 
+auto Object::materialIndex() const -> Index { return _material_index; }
+
 Shape* Object::shapePtr() { return _shape.get(); }
 
 Material* Object::materialPtr() { return _material.get(); }
-
-void Object::handleDispersion() {
-  if (_grid_space->type() != GridSpace::Type::UNIFORM) {
-    throw XFDTDObjectException{
-        "handleDispersion(): Non-uniform grid space is not supported yet"};
-  }
-
-  auto nx = _grid_space->sizeX();
-  auto ny = _grid_space->sizeY();
-  auto nz = _grid_space->sizeZ();
-
-  if (auto m = dynamic_cast<LinearDispersiveMaterial*>(_material.get());
-      m != nullptr) {
-    const auto dt = calculationParamPtr()->timeParam()->dt();
-    m->updateMethod()->init(dt);
-
-    for (Index i{0}; i < nx; ++i) {
-      for (Index j{0}; j < ny; ++j) {
-        for (Index k{0}; k < nz; ++k) {
-          if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}),
-                                _grid_space->eps())) {
-            continue;
-          }
-          m->updateMethod()->correctCoeff(i, j, k, gridSpacePtr(),
-                                          calculationParamPtr());
-        }
-      }
-    }
-
-    return;
-  }
-
-  throw XFDTDObjectException{"handleDispersion(): Unsupported material"};
-}
 
 void Object::initTimeDependentVariable() {}
 

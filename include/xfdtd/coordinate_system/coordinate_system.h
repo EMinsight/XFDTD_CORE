@@ -76,6 +76,8 @@ class Vector {
 
   auto cross(const Vector& rhs) const -> Vector;
 
+  auto orthogonal(const Vector& rhs) const -> bool;
+
   void set(Real x, Real y, Real z);
 
   void setX(Real x);

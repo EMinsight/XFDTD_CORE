@@ -1,5 +1,6 @@
 #include <xfdtd/boundary/pml.h>
 #include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/grid_space/grid_space_generator.h>
@@ -7,6 +8,7 @@
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/nffft/nffft.h>
 #include <xfdtd/object/lumped_element/pec_plane.h>
+#include <xfdtd/object/object.h>
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/parallel/parallelized_config.h>
 #include <xfdtd/simulation/simulation.h>
@@ -25,11 +27,12 @@
 
 #include "corrector/corrector.h"
 #include "domain/domain.h"
+#include "updator/ade_updator/debye_ade_updator.h"
+#include "updator/ade_updator/drude_ade_updator.h"
+#include "updator/ade_updator/m_lor_ade_updator.h"
 #include "updator/basic_updator.h"
-#include "updator/dispersive_material_updator.h"
 #include "updator/updator.h"
 #include "util/decompose_task.h"
-#include "xfdtd/common/type_define.h"
 
 namespace xfdtd {
 
@@ -87,7 +90,7 @@ const std::shared_ptr<GridSpace>& Simulation::gridSpace() const {
 
 const std::shared_ptr<EMF>& Simulation::emf() const { return _emf; }
 
-void Simulation::run(std::size_t time_step) {
+void Simulation::run(Index time_step) {
   _start_time = std::chrono::high_resolution_clock::now();
   if (isRoot()) {
     std::cout << "Simulation start...\n";
@@ -126,7 +129,7 @@ void Simulation::run(std::size_t time_step) {
 
   {
     std::vector<std::thread> threads;
-    for (std::size_t i = 1; i < _domains.size(); ++i) {
+    for (Index i = 1; i < _domains.size(); ++i) {
       threads.emplace_back([&domain = _domains[i]]() { domain->run(); });
     }
 
@@ -257,9 +260,9 @@ void Simulation::generateDomain() {
 
   auto num_thread = numThread();
 
-  IndexTask problem = makeTask(makeRange<std::size_t>(0, _grid_space->sizeX()),
-                               makeRange<std::size_t>(0, _grid_space->sizeY()),
-                               makeRange<std::size_t>(0, _grid_space->sizeZ()));
+  IndexTask problem = makeTask(makeRange<Index>(0, _grid_space->sizeX()),
+                               makeRange<Index>(0, _grid_space->sizeY()),
+                               makeRange<Index>(0, _grid_space->sizeZ()));
 
   // auto tasks = std::vector<IndexTask>{
   //     makeTask(makeRange<std::size_t>(0, _grid_space->sizeX()),
@@ -285,15 +288,6 @@ void Simulation::generateDomain() {
   */
   std::vector<std::unique_ptr<Corrector>> correctors;
 
-  for (auto&& w : _waveform_sources) {
-    auto c = w->generateCorrector(problem);
-    if (c == nullptr) {
-      continue;
-    }
-
-    correctors.emplace_back(std::move(c));
-  }
-
   for (auto&& o : _objects) {
     auto c = o->generateCorrector(problem);
     if (c == nullptr) {
@@ -303,17 +297,8 @@ void Simulation::generateDomain() {
     correctors.emplace_back(std::move(c));
   }
 
-  for (auto&& b : _boundaries) {
-    auto c = b->generateDomainCorrector(problem);
-    if (c == nullptr) {
-      continue;
-    }
-
-    correctors.emplace_back(std::move(c));
-  }
-
   bool master = true;
-  std::size_t id = {0};
+  Index id = {0};
   for (const auto& t : tasks) {
     auto updator = makeUpdator(t);
 
@@ -327,6 +312,24 @@ void Simulation::generateDomain() {
       _domains.emplace_back(
           std::make_unique<Domain>(id, t, _grid_space, _calculation_param, _emf,
                                    std::move(updator), _barrier, false));
+    }
+
+    for (auto&& w : _waveform_sources) {
+      auto c = w->generateCorrector(t);
+      if (c == nullptr) {
+        continue;
+      }
+
+      _domains.back()->addCorrector(std::move(c));
+    }
+
+    for (auto&& b : _boundaries) {
+      auto c = b->generateDomainCorrector(t);
+      if (c == nullptr) {
+        continue;
+      }
+
+      _domains.back()->addCorrector(std::move(c));
     }
 
     ++id;
@@ -379,9 +382,9 @@ void Simulation::globalGridSpaceDecomposition() {
   auto divide_nz = MpiSupport::instance().config().numZ();
 
   auto global_problem =
-      makeIndexTask(makeRange<std::size_t>(0, _global_grid_space->sizeX()),
-                    makeRange<std::size_t>(0, _global_grid_space->sizeY()),
-                    makeRange<std::size_t>(0, _global_grid_space->sizeZ()));
+      makeIndexTask(makeRange<Index>(0, _global_grid_space->sizeX()),
+                    makeRange<Index>(0, _global_grid_space->sizeY()),
+                    makeRange<Index>(0, _global_grid_space->sizeZ()));
 
   auto global_task =
       decomposeTask(global_problem, divide_nx, divide_ny, divide_nz);
@@ -391,8 +394,8 @@ void Simulation::globalGridSpaceDecomposition() {
   auto overlap_y = (1 <= divide_ny) ? 1 : 0;
   auto overlap_z = (1 <= divide_nz) ? 1 : 0;
 
-  auto overlap_offset = std::tuple<std::size_t, std::size_t, std::size_t>{
-      overlap_x, overlap_y, overlap_z};
+  auto overlap_offset =
+      std::tuple<Index, Index, Index>{overlap_x, overlap_y, overlap_z};
 
   auto x_start = (my_task.xRange().start() == 0)
                      ? 0
@@ -420,10 +423,9 @@ void Simulation::globalGridSpaceDecomposition() {
     Note: Don't update front() and back(). (0) is the overlap with the previous
     calculation node. And (nx) is the overlap with the next calculation
     node. */
-  auto my_task_with_overlap =
-      makeIndexTask(makeRange<std::size_t>(x_start, x_end),
-                    makeRange<std::size_t>(y_start, y_end),
-                    makeRange<std::size_t>(z_start, z_end));
+  auto my_task_with_overlap = makeIndexTask(makeRange<Index>(x_start, x_end),
+                                            makeRange<Index>(y_start, y_end),
+                                            makeRange<Index>(z_start, z_end));
 
   _grid_space = _global_grid_space->subGridSpace(
       my_task_with_overlap._x_range.start(),
@@ -451,7 +453,7 @@ void Simulation::generateFDTDUpdateCoefficient() {
 }
 
 void Simulation::correctMaterialSpace() {
-  std::size_t m_index = {0};
+  Index m_index = {0};
   for (auto&& o : _objects) {
     if (std::dynamic_pointer_cast<PecPlane>(o) != nullptr) {
       continue;
@@ -492,6 +494,8 @@ void Simulation::correctUpdateCoefficient() {
   for (auto&& s : _waveform_sources) {
     s->correctUpdateCoefficient();
   }
+
+  buildDispersiveSpace();
 }
 
 std::unique_ptr<TimeParam> Simulation::makeTimeParam() {
@@ -553,18 +557,122 @@ std::unique_ptr<Updator> Simulation::makeUpdator(const IndexTask& task) {
   }
 
   // Contains linear dispersive material
-  if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE) {
-    return std::make_unique<LinearDispersiveMaterialUpdator>(
-        _calculation_param->materialParam()->materialArray(), _grid_space,
-        _calculation_param, _emf, task);
-  }
-  if (_grid_space->dimension() == GridSpace::Dimension::ONE) {
-    return std::make_unique<LinearDispersiveMaterialUpdator1D>(
-        _calculation_param->materialParam()->materialArray(), _grid_space,
-        _calculation_param, _emf, task);
+  if (dispersion && _grid_space->dimension() == GridSpace::Dimension::THREE &&
+      _ade_method_storage != nullptr) {
+    auto drude_ade_method_storage =
+        std::dynamic_pointer_cast<DrudeADEMethodStorage>(_ade_method_storage);
+    auto debye_ade_method_storage =
+        std::dynamic_pointer_cast<DebyeADEMethodStorage>(_ade_method_storage);
+    auto m_lor_ade_method_storage =
+        std::dynamic_pointer_cast<MLorentzADEMethodStorage>(
+            _ade_method_storage);
+
+    if (drude_ade_method_storage != nullptr) {
+      return std::make_unique<DrudeADEUpdator3D>(_grid_space,
+                                                 _calculation_param, _emf, task,
+                                                 drude_ade_method_storage);
+    }
+
+    if (debye_ade_method_storage != nullptr) {
+      return std::make_unique<DebyeADEUpdator3D>(_grid_space,
+                                                 _calculation_param, _emf, task,
+                                                 debye_ade_method_storage);
+    }
+
+    if (m_lor_ade_method_storage != nullptr) {
+      return std::make_unique<MLorentzUpdator>(_grid_space, _calculation_param,
+                                               _emf, task,
+                                               m_lor_ade_method_storage);
+    }
   }
 
   throw XFDTDSimulationException("don't support this type of updator yet.");
+}
+
+auto Simulation::buildDispersiveSpace() -> void {
+  auto nx = _grid_space->sizeX();
+  auto ny = _grid_space->sizeY();
+  auto nz = _grid_space->sizeZ();
+  // find max number of poles
+  Index num_pole = {0};
+  for (const auto& m : _calculation_param->materialParam()->materialArray()) {
+    if (!m->dispersion()) {
+      continue;
+    }
+
+    auto dispersive_material =
+        std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
+    if (dispersive_material == nullptr) {
+      continue;
+    }
+
+    num_pole = std::max(num_pole, dispersive_material->numPoles());
+  }
+
+  if (num_pole == 0) {
+    return;
+  }
+
+  bool is_drude = false;
+  bool is_debye = false;
+  bool is_lor = false;
+
+  for (const auto& m : _calculation_param->materialParam()->materialArray()) {
+    if (!m->dispersion()) {
+      continue;
+    }
+
+    auto dispersive_material =
+        std::dynamic_pointer_cast<LinearDispersiveMaterial>(m);
+    if (dispersive_material == nullptr) {
+      continue;
+    }
+
+    auto drude_material = std::dynamic_pointer_cast<DrudeMedium>(m);
+    if (drude_material != nullptr) {
+      is_drude = true;
+      continue;
+    }
+
+    auto debye_material = std::dynamic_pointer_cast<DebyeMedium>(m);
+    if (debye_material != nullptr) {
+      is_debye = true;
+      continue;
+    }
+
+    auto lor_material = std::dynamic_pointer_cast<MLorentzMaterial>(m);
+    if (lor_material != nullptr) {
+      is_lor = true;
+      continue;
+    }
+  }
+
+  if (!is_drude && !is_debye && !is_lor) {
+    return;
+  }
+
+  auto is_only_drude = is_drude && !is_debye && !is_lor;
+  auto is_only_debye = !is_drude && is_debye && !is_lor;
+
+  std::shared_ptr<ADEMethodStorage> storage{};
+
+  if (is_only_drude) {
+    storage = std::make_shared<DrudeADEMethodStorage>(num_pole, nx, ny, nz);
+  } else if (is_only_debye) {
+    storage = std::make_shared<DebyeADEMethodStorage>(num_pole, nx, ny, nz);
+  } else {
+    storage = std::make_shared<MLorentzADEMethodStorage>(num_pole, nx, ny, nz);
+  }
+
+  if (storage == nullptr) {
+    return;
+  }
+
+  for (auto&& o : _objects) {
+    o->handleDispersion(storage);
+  }
+
+  _ade_method_storage = storage;
 }
 
 }  // namespace xfdtd

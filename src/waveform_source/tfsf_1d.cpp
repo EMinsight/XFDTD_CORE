@@ -45,8 +45,8 @@ auto TFSF1D::generateCorrector(const IndexTask &task)
   }
 
   return std::make_unique<TFSF1DCorrector>(
-      intersection_task.value(), gridSpace().get(), calculationParam().get(),
-      emf().get(), &waveform()->value(), globalTask(),
+      intersection_task.value(), nodeTask(), globalTask(), gridSpace().get(),
+      calculationParam().get(), emf().get(), &waveform()->value(),
       gridSpace()->globalBox().origin().k(), &_projection_x_int,
       &_projection_y_int, &_projection_z_int, &_projection_x_half,
       &_projection_y_half, &_projection_z_half, &_e_inc, &_h_inc, cax(), cbx(),

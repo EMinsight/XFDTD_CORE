@@ -1,19 +1,19 @@
 #ifndef _XFDTD_CORE_OBJECT_H_
 #define _XFDTD_CORE_OBJECT_H_
 
+#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/common/index_task.h>
+#include <xfdtd/common/type_define.h>
+#include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/material/material.h>
+#include <xfdtd/shape/shape.h>
 
-#include <cstddef>
 #include <memory>
 
-#include <xfdtd/common/type_define.h>
-#include <xfdtd/common/index_task.h>
-#include "xfdtd/calculation_param/calculation_param.h"
-#include "xfdtd/electromagnetic_field/electromagnetic_field.h"
-#include "xfdtd/material/material.h"
-#include "xfdtd/shape/shape.h"
-
 namespace xfdtd {
+
+class ADEMethodStorage;
 
 class XFDTDObjectException : public XFDTDException {
  public:
@@ -44,9 +44,12 @@ class Object {
                     std::shared_ptr<CalculationParam> calculation_param,
                     std::shared_ptr<EMF> emf);
 
-  virtual void correctMaterialSpace(std::size_t index);
+  virtual void correctMaterialSpace(Index index);
 
   virtual void correctUpdateCoefficient();
+
+  virtual void handleDispersion(
+      std::shared_ptr<ADEMethodStorage> ade_method_storage);
 
   virtual void initTimeDependentVariable();
 
@@ -54,8 +57,7 @@ class Object {
 
   virtual void correctH();
 
-  virtual std::unique_ptr<Corrector> generateCorrector(
-      const Task<std::size_t>& task);
+  virtual std::unique_ptr<Corrector> generateCorrector(const Task<Index>& task);
 
   std::string name() const;
 
@@ -75,14 +77,17 @@ class Object {
 
   std::shared_ptr<EMF> emf() const { return _emf; }
 
+  auto materialIndex() const -> Index;
+
  protected:
-  void defaultCorrectMaterialSpace(std::size_t index = -1);
+
+  auto setMaterialIndex(Index index) -> void;
+
+  void defaultCorrectMaterialSpace(Index index = -1);
 
   Shape* shapePtr();
 
   Material* materialPtr();
-
-  void handleDispersion();
 
   const GridSpace* gridSpacePtr() const;
 
@@ -103,6 +108,7 @@ class Object {
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
 
+  Index _material_index;
   std::unique_ptr<GridBox> _grid_box;
   GridBox _global_grid_box;
 };

@@ -43,3 +43,9 @@ tmp/
 
 # Python cache
 __pycache__/
+
+#
+.venv
+
+# model_support
+model_support/model

@@ -11,10 +11,10 @@ namespace xfdtd {
 
 class TFSFCorrector : public WaveformSourceCorrector {
  public:
-  TFSFCorrector(IndexTask task, GridSpace* grid_space,
-                CalculationParam* calculation_param, EMF* emf,
-                const Array1D<Real>* waveform, IndexTask total_task,
-                Index node_offset_i, Index node_offset_j, Index node_offset_k,
+  TFSFCorrector(IndexTask task, IndexTask node_task, IndexTask global_task,
+                GridSpace* grid_space, CalculationParam* calculation_param,
+                EMF* emf, const Array1D<Real>* waveform, Index node_offset_i,
+                Index node_offset_j, Index node_offset_k,
                 const Array1D<Real>* projection_x_int,
                 const Array1D<Real>* projection_y_int,
                 const Array1D<Real>* projection_z_int,
@@ -26,9 +26,9 @@ class TFSFCorrector : public WaveformSourceCorrector {
                 Real transform_e_y = 0.0, Real transform_e_z = 0.0,
                 Real transform_h_x = 0.0, Real transform_h_y = 0.0,
                 Real transform_h_z = 0.0)
-      : WaveformSourceCorrector{task, {},      grid_space, calculation_param,
-                                emf,  waveform},
-        _total_task{total_task},
+      : WaveformSourceCorrector{task,       node_task,         global_task,
+                                grid_space, calculation_param, emf,
+                                waveform},
         _node_offset_i{node_offset_i},
         _node_offset_j{node_offset_j},
         _node_offset_k{node_offset_k},
@@ -51,14 +51,49 @@ class TFSFCorrector : public WaveformSourceCorrector {
         _transform_e_z{transform_e_z},
         _transform_h_x{transform_h_x},
         _transform_h_y{transform_h_y},
-        _transform_h_z{transform_h_z} {}
+        _transform_h_z{transform_h_z} {
+    auto is = this->task().xRange().start();
+    auto js = this->task().yRange().start();
+    auto ks = this->task().zRange().start();
+    auto ie = this->task().xRange().end();
+    auto je = this->task().yRange().end();
+    auto ke = this->task().zRange().end();
+
+    _xn = is == globalTask().xRange().start();
+    _xp = ie == globalTask().xRange().end();
+    _yn = js == globalTask().yRange().start();
+    _yp = je == globalTask().yRange().end();
+    _zn = ks == globalTask().zRange().start();
+    _zp = ke == globalTask().zRange().end();
+  }
 
   ~TFSFCorrector() override = default;
 
+  template <Axis::Direction direction>
+  auto checkUpdate() const -> bool {
+    if constexpr (direction == Axis::Direction::XN) {
+      return _xn;
+    } else if constexpr (direction == Axis::Direction::XP) {
+      return _xp;
+    } else if constexpr (direction == Axis::Direction::YN) {
+      return _yn;
+    } else if constexpr (direction == Axis::Direction::YP) {
+      return _yp;
+    } else if constexpr (direction == Axis::Direction::ZN) {
+      return _zn;
+    } else if constexpr (direction == Axis::Direction::ZP) {
+      return _zp;
+    }
+  }
+
   template <Axis::Direction direction, EMF::Attribute attribute,
             Axis::XYZ field_xyz>
-  auto correctTFSF(IndexTask task, Index offset_i, Index offset_j,
+  auto correctTFSF(IndexTask task_in_global, Index offset_i, Index offset_j,
                    Index offset_k) {
+    if (!checkUpdate<direction>()) {
+      return;
+    }
+
     constexpr auto xyz = Axis::fromDirectionToXYZ<direction>();
     constexpr auto dual_xyz_a = Axis::tangentialAAxis<xyz>();
     constexpr auto dual_xyz_b = Axis::tangentialBAxis<xyz>();
@@ -74,9 +109,11 @@ class TFSFCorrector : public WaveformSourceCorrector {
     constexpr auto dual_attribute = EMF::dualAttribute(attribute);
 
     auto [as, bs, cs] = transform::xYZToABC<Index, xyz>(
-        task.xRange().start(), task.yRange().start(), task.zRange().start());
+        task_in_global.xRange().start(), task_in_global.yRange().start(),
+        task_in_global.zRange().start());
     auto [ae, be, ce] = transform::xYZToABC<Index, xyz>(
-        task.xRange().end(), task.yRange().end(), task.zRange().end());
+        task_in_global.xRange().end(), task_in_global.yRange().end(),
+        task_in_global.zRange().end());
 
     // EA: [as, ae), [bs, be+1), [c]
     // EB: [as, ae+1), [bs, be), [c]
@@ -88,20 +125,22 @@ class TFSFCorrector : public WaveformSourceCorrector {
             ? 1
             : 0;
     constexpr auto offset_b = offset_a == 1 ? 0 : 1;
-    ae += offset_a;
-    be += offset_b;
-    cs = (Axis::directionNegative<direction>()) ? cs : ce;
-    ce = cs + 1;
-
-    if constexpr (Axis::directionNegative<direction>()) {
-      if (cs != getStart<xyz>()) {
-        return;
-      }
-    } else {
-      if (cs != getEnd<xyz>()) {
-        return;
+    // ae += offset_a;
+    // be += offset_b;
+    if constexpr (offset_a == 1) {
+      if (ae == getNodeGlobalEnd<dual_xyz_a>()) {
+        ae += offset_a;
       }
     }
+
+    if constexpr (offset_b == 1) {
+      if (be == getNodeGlobalEnd<dual_xyz_b>()) {
+        be += offset_b;
+      }
+    }
+
+    cs = (Axis::directionNegative<direction>()) ? cs : ce;
+    ce = cs + 1;
 
     // E in total field need add incident for forward H.
     // H in scattered field need deduct incident for backward E.
@@ -255,37 +294,37 @@ class TFSFCorrector : public WaveformSourceCorrector {
 
   Real cbz() const { return _cbz; }
 
-  auto globalStartI() const { return _total_task.xRange().start(); }
+  auto globalStartI() const { return globalTask().xRange().start(); }
 
-  auto globalStartJ() const { return _total_task.yRange().start(); }
+  auto globalStartJ() const { return globalTask().yRange().start(); }
 
-  auto globalStartK() const { return _total_task.zRange().start(); }
+  auto globalStartK() const { return globalTask().zRange().start(); }
 
-  auto globalEndI() const { return _total_task.xRange().end(); }
+  auto globalEndI() const { return globalTask().xRange().end(); }
 
-  auto globalEndJ() const { return _total_task.yRange().end(); }
+  auto globalEndJ() const { return globalTask().yRange().end(); }
 
-  auto globalEndK() const { return _total_task.zRange().end(); }
+  auto globalEndK() const { return globalTask().zRange().end(); }
 
   template <Axis::XYZ xyz>
-  auto getStart() const {
+  auto getNodeGlobalStart() const {
     if constexpr (xyz == Axis::XYZ::X) {
-      return globalStartI();
+      return nodeTask().xRange().start() + _node_offset_i;
     } else if constexpr (xyz == Axis::XYZ::Y) {
-      return globalStartJ();
+      return nodeTask().yRange().start() + _node_offset_j;
     } else if constexpr (xyz == Axis::XYZ::Z) {
-      return globalStartK();
+      return nodeTask().zRange().start() + _node_offset_k;
     }
   }
 
   template <Axis::XYZ xyz>
-  auto getEnd() const {
+  auto getNodeGlobalEnd() const {
     if constexpr (xyz == Axis::XYZ::X) {
-      return globalEndI();
+      return nodeTask().xRange().end() + _node_offset_i;
     } else if constexpr (xyz == Axis::XYZ::Y) {
-      return globalEndJ();
+      return nodeTask().yRange().end() + _node_offset_j;
     } else if constexpr (xyz == Axis::XYZ::Z) {
-      return globalEndK();
+      return nodeTask().zRange().end() + _node_offset_k;
     }
   }
 
@@ -295,7 +334,7 @@ class TFSFCorrector : public WaveformSourceCorrector {
   Index _node_offset_i, _node_offset_j, _node_offset_k;
 
  private:
-  IndexTask _total_task;
+  bool _xn{false}, _xp{false}, _yn{false}, _yp{false}, _zn{false}, _zp{false};
 
   const Array1D<Real>* _projection_x_int;
   const Array1D<Real>* _projection_y_int;
@@ -313,10 +352,10 @@ class TFSFCorrector : public WaveformSourceCorrector {
 
 class TFSF1DCorrector : public TFSFCorrector {
  public:
-  TFSF1DCorrector(IndexTask task, GridSpace* grid_space,
-                  CalculationParam* calculation_param, EMF* emf,
-                  const Array1D<Real>* waveform, IndexTask total_task,
-                  Index node_offset_k, const Array1D<Real>* projection_x_int,
+  TFSF1DCorrector(IndexTask task, IndexTask node_task, IndexTask global_task,
+                  GridSpace* grid_space, CalculationParam* calculation_param,
+                  EMF* emf, const Array1D<Real>* waveform, Index node_offset_k,
+                  const Array1D<Real>* projection_x_int,
                   const Array1D<Real>* projection_y_int,
                   const Array1D<Real>* projection_z_int,
                   const Array1D<Real>* projection_x_half,
@@ -327,11 +366,12 @@ class TFSF1DCorrector : public TFSFCorrector {
                   Real transform_e_z, Real transform_h_x, Real transform_h_y,
                   Real transform_h_z, bool forward)
       : TFSFCorrector{task,
+                      node_task,
+                      global_task,
                       grid_space,
                       calculation_param,
                       emf,
                       waveform,
-                      total_task,
                       0,
                       0,
                       node_offset_k,
@@ -369,11 +409,10 @@ class TFSF1DCorrector : public TFSFCorrector {
 
 class TFSF2DCorrector : public TFSFCorrector {
  public:
-  TFSF2DCorrector(IndexTask task, GridSpace* grid_space,
-                  CalculationParam* calculation_param, EMF* emf,
-                  const Array1D<Real>* waveform, IndexTask total_task,
-                  Index node_offset_i, Index node_offset_j,
-                  const Array1D<Real>* projection_x_int,
+  TFSF2DCorrector(IndexTask task, IndexTask node_task, IndexTask global_task,
+                  GridSpace* grid_space, CalculationParam* calculation_param,
+                  EMF* emf, const Array1D<Real>* waveform, Index node_offset_i,
+                  Index node_offset_j, const Array1D<Real>* projection_x_int,
                   const Array1D<Real>* projection_y_int,
                   const Array1D<Real>* projection_z_int,
                   const Array1D<Real>* projection_x_half,
@@ -384,11 +423,12 @@ class TFSF2DCorrector : public TFSFCorrector {
                   Real transform_e_z, Real transform_h_x, Real transform_h_y,
                   Real transform_h_z)
       : TFSFCorrector{task,
+                      node_task,
+                      global_task,
                       grid_space,
                       calculation_param,
                       emf,
                       waveform,
-                      total_task,
                       node_offset_i,
                       node_offset_j,
                       0,
@@ -424,49 +464,7 @@ class TFSF2DCorrector : public TFSFCorrector {
 
 class TFSF3DCorrector : public TFSFCorrector {
  public:
-  TFSF3DCorrector(IndexTask task, GridSpace* grid_space,
-                  CalculationParam* calculation_param, EMF* emf,
-                  const Array1D<Real>* waveform, IndexTask total_task,
-                  Index node_offset_i, Index node_offset_j, Index node_offset_k,
-                  const Array1D<Real>* projection_x_int,
-                  const Array1D<Real>* projection_y_int,
-                  const Array1D<Real>* projection_z_int,
-                  const Array1D<Real>* projection_x_half,
-                  const Array1D<Real>* projection_y_half,
-                  const Array1D<Real>* projection_z_half, Array2D<Real>* e_inc,
-                  Array2D<Real>* h_inc, Real cax, Real cbx, Real cay, Real cby,
-                  Real caz, Real cbz, Real transform_e_x, Real transform_e_y,
-                  Real transform_e_z, Real transform_h_x, Real transform_h_y,
-                  Real transform_h_z)
-      : TFSFCorrector{task,
-                      grid_space,
-                      calculation_param,
-                      emf,
-                      waveform,
-                      total_task,
-                      node_offset_i,
-                      node_offset_j,
-                      node_offset_k,
-                      projection_x_int,
-                      projection_y_int,
-                      projection_z_int,
-                      projection_x_half,
-                      projection_y_half,
-                      projection_z_half,
-                      e_inc,
-                      h_inc,
-                      cax,
-                      cbx,
-                      cay,
-                      cby,
-                      caz,
-                      cbz,
-                      transform_e_x,
-                      transform_e_y,
-                      transform_e_z,
-                      transform_h_x,
-                      transform_h_y,
-                      transform_h_z} {};
+  using TFSFCorrector::TFSFCorrector;
 
   ~TFSF3DCorrector() override = default;
 

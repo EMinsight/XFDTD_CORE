@@ -9,7 +9,6 @@
 #include <xfdtd/shape/cube.h>
 #include <xfdtd/shape/shape.h>
 
-#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -62,7 +61,11 @@ class GridSpace {
 
   Real minDz() const;
 
-  auto& gridWithMaterial() const { return _grid_with_material; }
+  auto gridWithMaterial() const -> const Array3D<Grid>& {
+    return _grid_with_material;
+  }
+
+  auto gridWithMaterial() -> Array3D<Grid>& { return _grid_with_material; }
 
   std::shared_ptr<GridSpace> globalGridSpace() const;
 
@@ -226,7 +229,7 @@ class GridSpace {
   Array1D<Real> _e_size_x, _e_size_y, _e_size_z;
   Array1D<Real> _h_size_x, _h_size_y, _h_size_z;
 
-  Array<std::shared_ptr<Grid>> _grid_with_material;
+  Array3D<Grid> _grid_with_material;
 
   std::weak_ptr<GridSpace> _global_grid_space;
 

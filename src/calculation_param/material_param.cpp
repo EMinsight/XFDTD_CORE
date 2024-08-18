@@ -1,4 +1,4 @@
-#include <xfdtd/calculation_param/calculation_param.h>
+#include <xfdtd/calculation_param/material_param.h>
 #include <xfdtd/common/constant.h>
 #include <xfdtd/coordinate_system/coordinate_system.h>
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
@@ -329,8 +329,8 @@ Array3D<Real>& MaterialParam::property(MaterialParam::Attribute attribute,
 }
 
 template <EMF::Attribute a, Axis::XYZ xyz>
-inline static auto makeArr(std::size_t nx, std::size_t ny, std::size_t nz)
-    -> Array3D<Real> {
+inline static auto makeArr(std::size_t nx, std::size_t ny,
+                           std::size_t nz) -> Array3D<Real> {
   if constexpr (a == EMF::Attribute::E) {
     if constexpr (xyz == Axis::XYZ::X) {
       const auto e_x_n = basic::GridStructure::exSize(nx, ny, nz);

@@ -6,6 +6,7 @@
 #include <xfdtd/electromagnetic_field/electromagnetic_field.h>
 #include <xfdtd/exception/exception.h>
 #include <xfdtd/grid_space/grid_space.h>
+#include <xfdtd/material/ade_method/ade_method.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/network/network.h>
 #include <xfdtd/nffft/nffft.h>
@@ -15,7 +16,6 @@
 
 #include <barrier>
 #include <chrono>
-#include <cstddef>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -60,7 +60,7 @@ class Simulation {
 
   void addNF2FF(std::shared_ptr<NFFFT> nffft);
 
-  void run(std::size_t time_step);
+  void run(Index time_step);
 
   const std::shared_ptr<CalculationParam>& calculationParam() const;
 
@@ -84,6 +84,10 @@ class Simulation {
 
   auto nf2ffs() -> std::vector<std::shared_ptr<NFFFT>> { return _nfffts; }
 
+  auto aDEMethodStorage() -> std::shared_ptr<ADEMethodStorage> {
+    return _ade_method_storage;
+  }
+
  private:
   Real _dx, _dy, _dz;
   Real _cfl;
@@ -104,6 +108,7 @@ class Simulation {
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
+  std::shared_ptr<ADEMethodStorage> _ade_method_storage{};
 
   std::vector<std::unique_ptr<Domain>> _domains;
 
@@ -128,6 +133,8 @@ class Simulation {
   void correctMaterialSpace();
 
   void correctUpdateCoefficient();
+
+  auto buildDispersiveSpace() -> void;
 
   std::unique_ptr<Updator> makeUpdator(const IndexTask& task);
 };
