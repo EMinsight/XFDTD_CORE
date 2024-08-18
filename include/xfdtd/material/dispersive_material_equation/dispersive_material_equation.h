@@ -5,6 +5,9 @@
 #include <xfdtd/common/type_define.h>
 #include <xfdtd/material/dispersive_material.h>
 
+#include <string>
+#include <string_view>
+
 namespace xfdtd {
 
 class XFDTDLinearDispersiveMaterialEquationException
@@ -53,6 +56,22 @@ class MLorentzEqDecision : public LinearDispersiveMaterialEquation {
   auto numPoles() const -> Index override { return _num_p; }
 
   auto susceptibility(Real freq, Index p) const -> std::complex<Real> override;
+
+  class StabilityCondition {
+   public:
+    StabilityCondition(std::string_view message, bool is_stable)
+        : _message{message}, _is_stable{is_stable} {}
+
+    auto message() const { return _message; }
+
+    auto isStable() const { return _is_stable; }
+
+   private:
+    std::string _message;
+    bool _is_stable;
+  };
+
+  auto stabilityCondition(Real dt) const -> StabilityCondition;
 
  private:
   Array1D<Real> _a_0;
