@@ -65,11 +65,6 @@ void Object::handleDispersion(
   for (Index i{0}; i < nx; ++i) {
     for (Index j{0}; j < ny; ++j) {
       for (Index k{0}; k < nz; ++k) {
-        if (!_shape->isInside(_grid_space->getGridCenterVector({i, j, k}),
-                              _grid_space->eps())) {
-          continue;
-        }
-
         const auto& grid = _grid_space->gridWithMaterial()(i, j, k);
         auto material_index = grid.materialIndex();
         if (material_index != materialIndex()) {
@@ -95,9 +90,7 @@ std::string Object::name() const { return _name; }
 
 const std::unique_ptr<Shape>& Object::shape() const { return _shape; }
 
-auto Object::setMaterialIndex(Index index) -> void {
-  _material_index = index;
-}
+auto Object::setMaterialIndex(Index index) -> void { _material_index = index; }
 
 void Object::defaultCorrectMaterialSpace(Index index) {
   setMaterialIndex(index);
@@ -122,22 +115,6 @@ void Object::defaultCorrectMaterialSpace(Index index) {
   // // remove const
   auto g_variety = std::const_pointer_cast<GridSpace>(_grid_space);
 
-  auto correct_func = [&grid_space = _grid_space, &shape = _shape](
-                          Index is, Index ie, Index js, Index je, Index ks,
-                          Index ke, const auto& value, auto&& arr) {
-    for (auto i{is}; i < ie; ++i) {
-      for (auto j{js}; j < je; ++j) {
-        for (auto k{ks}; k < ke; ++k) {
-          if (!shape->isInside(grid_space->getGridCenterVector({i, j, k}),
-                               grid_space->eps())) {
-            continue;
-          }
-          arr(i, j, k) = value;
-        }
-      }
-    }
-  };
-
   auto nx = _grid_space->sizeX();
   auto ny = _grid_space->sizeY();
   auto nz = _grid_space->sizeZ();
@@ -151,6 +128,22 @@ void Object::defaultCorrectMaterialSpace(Index index) {
                   }
                   g.setMaterialIndex(index);
                 });
+  auto correct_func = [&grid_space = _grid_space, &shape = _shape, this](
+                          Index is, Index ie, Index js, Index je, Index ks,
+                          Index ke, const auto& value, auto&& arr) {
+    for (auto i{is}; i < ie; ++i) {
+      for (auto j{js}; j < je; ++j) {
+        for (auto k{ks}; k < ke; ++k) {
+          if (grid_space->gridWithMaterial()(i, j, k).materialIndex() !=
+              materialIndex()) {
+            continue;
+          }
+          arr(i, j, k) = value;
+        }
+      }
+    }
+  };
+
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_x);
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_y);
   correct_func(0, nx, 0, ny, 0, nz, eps, eps_z);
