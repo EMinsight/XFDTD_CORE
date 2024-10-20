@@ -96,22 +96,35 @@ void Simulation::run(Index time_step) {
     std::cout << "Simulation start...\n";
   }
 
-  init();
-  _calculation_param->timeParam()->setTimeParamRunRange(time_step);
-  // do final check
-  for (auto&& o : _objects) {
-    o->initTimeDependentVariable();
-  }
-  for (auto&& w : _waveform_sources) {
-    w->initTimeDependentVariable();
-  }
-  for (auto&& n : _nfffts) {
-    n->initTimeDependentVariable();
-  }
-  for (auto&& m : _monitors) {
-    m->initTimeDependentVariable();
-  }
+  init(time_step);
+  run();
 
+  _end_time = std::chrono::high_resolution_clock::now();
+  if (isRoot()) {
+    std::cerr << "\n" << std::flush;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::cout << "\n"
+              << "Elapsed time: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(
+                     _end_time - _start_time)
+                     .count()
+              << " ms" << " or "
+              << std::chrono::duration_cast<std::chrono::seconds>(_end_time -
+                                                                  _start_time)
+                     .count()
+              << " s" << " or "
+              << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
+                                                                  _start_time)
+                     .count()
+              << " m" << " or "
+              << std::chrono::duration_cast<std::chrono::hours>(_end_time -
+                                                                _start_time)
+                     .count()
+              << " h." << "\n";
+  }
+}
+
+auto Simulation::run() -> void {
   if (isRoot()) {
     // global grid space and thread config
     {
@@ -152,30 +165,6 @@ void Simulation::run(Index time_step) {
   }
 
   MpiSupport::instance().barrier();
-
-  _end_time = std::chrono::high_resolution_clock::now();
-  if (isRoot()) {
-    std::cerr << "\n" << std::flush;
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    std::cout << "\n"
-              << "Elapsed time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     _end_time - _start_time)
-                     .count()
-              << " ms" << " or "
-              << std::chrono::duration_cast<std::chrono::seconds>(_end_time -
-                                                                  _start_time)
-                     .count()
-              << " s" << " or "
-              << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
-                                                                  _start_time)
-                     .count()
-              << " m" << " or "
-              << std::chrono::duration_cast<std::chrono::hours>(_end_time -
-                                                                _start_time)
-                     .count()
-              << " h." << "\n";
-  }
 }
 
 void Simulation::init() {

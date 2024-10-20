@@ -62,6 +62,8 @@ class Simulation {
 
   void run(Index time_step);
 
+  auto run() -> void;
+
   const std::shared_ptr<CalculationParam>& calculationParam() const;
 
   const std::shared_ptr<GridSpace>& gridSpace() const;
@@ -108,7 +110,7 @@ class Simulation {
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
-  std::shared_ptr<ADEMethodStorage> _ade_method_storage{};
+  std::shared_ptr<ADEMethodStorage> _ade_method_storage;
 
   std::vector<std::unique_ptr<Domain>> _domains;
 

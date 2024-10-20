@@ -42,6 +42,39 @@ Domain::Domain(std::size_t id, IndexTask task,
       _master{master} {}
 
 void Domain::run() {
+//   // run info
+//   {
+//     std::stringstream ss;
+//     ss << "Domain " << _id << " is running ";
+//     ss << "Size: " << _task.toString() << "\n";
+//     std::cerr << ss.str();
+//   }
+
+// #ifdef __linux__
+//   auto cpu_id = (_id) % std::thread::hardware_concurrency();
+//   constexpr auto cpu_logical_cores = 2;
+//   constexpr auto cpu_physical_cores = 1;
+//   auto cpu_offset = std::thread::hardware_concurrency() / cpu_logical_cores;
+//   // if (cpu_id % 2 != 0) {
+//   //   cpu_id = (cpu_id - 1) + std::thread::hardware_concurrency() / 2;
+//   // }
+
+//   cpu_set_t mask;
+//   CPU_ZERO(&mask);
+//   CPU_SET(cpu_id, &mask);
+//   // set for thread
+//   if (int rc = pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);
+//       rc != 0) {
+//     std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+//   }
+
+//   // get affinity
+//   std::stringstream ss;
+//   ss << "Thread " << _id << " is running on CPU " << sched_getcpu() << "\n";
+//   std::cerr << ss.str();
+
+// #endif
+
   if (isMaster() && MpiSupport::instance().isRoot()) {
     _start_time = std::chrono::system_clock::now();
   }

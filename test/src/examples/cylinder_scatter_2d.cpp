@@ -19,30 +19,30 @@
 
 void cylinderScatter2D() {
   xfdtd::MpiSupport::setMpiParallelDim(1, 2, 2);
-  constexpr double center_frequency{12e9};
-  constexpr double max_frequency{20e9};
-  constexpr double min_lambda{3e8 / max_frequency};
-  constexpr double bandwidth{2 * center_frequency};
-  constexpr double dx{min_lambda / 20};
-  constexpr double dy{dx};
-  constexpr double tau{1.7 / (max_frequency - center_frequency)};
-  constexpr double t_0{0.8 * tau};
-  constexpr double cylinder_radius{0.03};
+  constexpr xfdtd::Real center_frequency{12e9};
+  constexpr xfdtd::Real max_frequency{20e9};
+  constexpr xfdtd::Real min_lambda{3e8 / max_frequency};
+  constexpr xfdtd::Real bandwidth{2 * center_frequency};
+  constexpr xfdtd::Real dx{min_lambda / 20};
+  constexpr xfdtd::Real dy{dx};
+  constexpr xfdtd::Real tau{1.7 / (max_frequency - center_frequency)};
+  constexpr xfdtd::Real t_0{0.8 * tau};
+  constexpr xfdtd::Real cylinder_radius{0.03};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{-175 * dx, -175 * dy,
-                        -std::numeric_limits<double>::infinity()},
+                        -std::numeric_limits<xfdtd::Real>::infinity()},
           xfdtd::Vector{330 * dx, 350 * dy,
-                        std::numeric_limits<double>::infinity()}),
+                        std::numeric_limits<xfdtd::Real>::infinity()}),
       xfdtd::Material::createAir())};
 
   auto cylinder{std::make_shared<xfdtd::Object>(
       "cylinder",
       std::make_unique<xfdtd::Cylinder>(
-          xfdtd::Vector{0.0, 0.0, -std::numeric_limits<double>::infinity()},
-          cylinder_radius, std::numeric_limits<double>::infinity(),
+          xfdtd::Vector{0.0, 0.0, -std::numeric_limits<xfdtd::Real>::infinity()},
+          cylinder_radius, std::numeric_limits<xfdtd::Real>::infinity(),
           xfdtd::Axis::Axis::ZP),
       xfdtd::Material::createPec())};
 
@@ -54,7 +54,7 @@ void cylinderScatter2D() {
       std::make_unique<xfdtd::FieldMonitor>(
           std::make_unique<xfdtd::Cube>(
               xfdtd::Vector{-175 * dx, -175 * dy,
-                            -std::numeric_limits<double>::infinity()},
+                            -std::numeric_limits<xfdtd::Real>::infinity()},
               xfdtd::Vector{330 * dx, 350 * dy, xfdtd::constant::INF}),
           xfdtd::EMF::Field::EZ, "", ""),
       20, "movie", "./data/cylinder_scatter_2d")};
