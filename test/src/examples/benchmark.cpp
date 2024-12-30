@@ -90,6 +90,7 @@ void dielectricSphereScatter(int argc, char* argv[]) {
     s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
     s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
   }
+  s.addDefaultVisitor();
   s.run(time_steps);
 }
 

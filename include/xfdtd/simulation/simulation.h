@@ -12,6 +12,7 @@
 #include <xfdtd/nffft/nffft.h>
 #include <xfdtd/object/object.h>
 #include <xfdtd/parallel/parallelized_config.h>
+#include <xfdtd/simulation/simulation_flag.h>
 #include <xfdtd/waveform_source/waveform_source.h>
 
 #include <barrier>
@@ -60,6 +61,10 @@ class Simulation {
 
   void addNF2FF(std::shared_ptr<NFFFT> nffft);
 
+  auto addVisitor(std::shared_ptr<SimulationFlagVisitor> visitor) -> void;
+
+  auto addDefaultVisitor() -> void;
+
   void run(Index time_step);
 
   auto run() -> void;
@@ -96,6 +101,8 @@ class Simulation {
   ThreadConfig _thread_config;
   std::barrier<> _barrier;  // move to thread config
 
+  std::vector<std::shared_ptr<SimulationFlagVisitor>> _visitors;
+
   std::vector<std::shared_ptr<xfdtd::Object>> _objects;
   std::vector<std::shared_ptr<WaveformSource>> _waveform_sources;
   std::vector<std::shared_ptr<Boundary>> _boundaries;
@@ -119,6 +126,8 @@ class Simulation {
   std::unique_ptr<TimeParam> makeTimeParam();
 
   std::unique_ptr<MaterialParam> makeMaterialParam();
+
+  auto sendFlag(SimulationInitFlag flag) -> void;
 
   void generateDomain();
 
