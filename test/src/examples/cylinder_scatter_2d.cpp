@@ -18,6 +18,7 @@
 #include "xfdtd/waveform_source/tfsf_2d.h"
 
 void cylinderScatter2D() {
+  xfdtd::MpiSupport::init();
   xfdtd::MpiSupport::setMpiParallelDim(1, 2, 2);
   constexpr xfdtd::Real center_frequency{12e9};
   constexpr xfdtd::Real max_frequency{20e9};
@@ -41,7 +42,8 @@ void cylinderScatter2D() {
   auto cylinder{std::make_shared<xfdtd::Object>(
       "cylinder",
       std::make_unique<xfdtd::Cylinder>(
-          xfdtd::Vector{0.0, 0.0, -std::numeric_limits<xfdtd::Real>::infinity()},
+          xfdtd::Vector{0.0, 0.0,
+                        -std::numeric_limits<xfdtd::Real>::infinity()},
           cylinder_radius, std::numeric_limits<xfdtd::Real>::infinity(),
           xfdtd::Axis::Axis::ZP),
       xfdtd::Material::createPec())};
@@ -71,8 +73,6 @@ void cylinderScatter2D() {
 }
 
 int main(int argc, char* argv[]) {
-  xfdtd::MpiSupport::instance(argc, argv);
-
   cylinderScatter2D();
   return 0;
 }
