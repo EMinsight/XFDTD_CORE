@@ -223,8 +223,6 @@ We suggest that you set the thread dimension to 1 in the X and Y direction and s
 
 XFDTD CORE support MPI parallel computing. You can use the following command to compile the project with MPI.
 
-First build XFDTD_CORE with MPI
-
 In XFDTD_CORE project directory
 
 ```bash
@@ -233,16 +231,8 @@ cmake --build ./build
 cmake --build ./build --target install
 ```
 
-And then you can return to your project directory and use the following `CMakeLists.txt` file to compile your project with MPI.
+And then build your project with XFDTD_CORE. Run it.
 
-You need to link your target with `MPI::MPI_CXX` library.
-
-```cmake
-# You can check if the MPI is enabled by checking the XFDTD_CORE_WITH_MPI variable.
-if(XFDTD_CORE_WITH_MPI)
-  target_link_libraries(your_target PRIVATE MPI::MPI_CXX)
-endif()
-```
 
 ```bash
 mpiexec -n ${num_of_core} ./build/your_executable
@@ -271,12 +261,6 @@ mpiexec -n 4 ./build/your_executable
 ### CUDA
 
 You can see the project [xfdtd_cuda](https://github.com/Mrwatermolen/XFDTD_CUDA) for the CUDA version of the XFDTD project.
-
-## More Examples
-
-See the `examples` folder for more examples.
-
-[Example README](./examples/RAEDME.md)
 
 ## Known Issues
 
