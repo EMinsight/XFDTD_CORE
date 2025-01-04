@@ -212,7 +212,7 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
                     Index end) -> void override {
     switch (flag) {
       case SimulationIteratorFlag::NextStep: {
-        auto current_time = std::chrono::system_clock::now();
+        auto current_time = std::chrono::high_resolution_clock::now();
         std::stringstream ss;
         ss << "\r" << "Progress: " << cur << "/" << end << ". ";
         ss << "Elapsed time: ";
