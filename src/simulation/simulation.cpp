@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <ratio>
@@ -150,7 +151,7 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
     switch (flag) {
       case SimulationInitFlag::SimulationStart: {
         _simulation_start_time = std::chrono::high_resolution_clock::now();
-        std::cout << "Simulation start\n";
+        std::cerr << "Simulation start\n";
         break;
       }
       case SimulationInitFlag::SimulationEnd: {
@@ -165,11 +166,11 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 elapsed_time));
         ss << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
         break;
       }
       case SimulationInitFlag::InitStart: {
-        std::cout << "Simulation init start\n";
+        std::cerr << "Simulation init start\n";
         _init_start_time = std::chrono::high_resolution_clock::now();
         break;
       }
@@ -183,11 +184,11 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 elapsed_time));
         ss << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
         break;
       }
       case SimulationInitFlag::UpdateStart:
-        std::cout << "Simulation update start\n";
+        std::cerr << "Simulation update start\n";
         _update_start_time = std::chrono::high_resolution_clock::now();
         break;
       case SimulationInitFlag::UpdateEnd: {
@@ -200,7 +201,7 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 elapsed_time));
         ss << "\n";
-        std::cout << ss.str();
+        std::cerr << ss.str();
         break;
       }
 
@@ -214,12 +215,29 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
     switch (flag) {
       case SimulationIteratorFlag::NextStep: {
         auto current_time = std::chrono::high_resolution_clock::now();
+
+        int bar_width = 50;
+        float progress = static_cast<float>(cur) / end;
+
         std::stringstream ss;
-        auto progress_max_size = 11 + 2 * std::to_string(end).size() + 3;
-        progress_max_size += 100;
         ss << "\r";
-        ss << std::setw(progress_max_size) << std::left;
-        ss << "Progress: " << cur << "/" << end << ". ";
+        ss << "Progress: [";
+
+        int pos = bar_width * progress;
+        for (int i = 0; i < bar_width; ++i) {
+          if (i < pos) {
+            ss << "=";
+          } else if (i == pos) {
+            ss << ">";
+          } else {
+            ss << " ";
+          }
+        }
+        ss << "] ";
+
+        ss << std::setw(3) << static_cast<int>(progress * 100.0) << "% ";
+        ss << cur << "/" << end << " ";
+
         ss << "Elapsed time: ";
         ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
             std::chrono::duration_cast<std::chrono::milliseconds>(
