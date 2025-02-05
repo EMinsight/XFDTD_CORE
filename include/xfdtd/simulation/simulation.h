@@ -95,6 +95,10 @@ class Simulation {
     return _ade_method_storage;
   }
 
+  auto visitors() -> std::vector<std::shared_ptr<SimulationFlagVisitor>> {
+    return _visitors;
+  }
+
  private:
   Real _dx, _dy, _dz;
   Real _cfl;

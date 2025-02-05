@@ -135,7 +135,8 @@ static auto timeToString(const cur& duration) -> std::string {
   }
 
   if constexpr (std::is_same<next, std::chrono::hours>::value) {
-    return timeToString<next, std::chrono::days>(
+    // Stop recursion
+    return timeToString<next, std::chrono::hours>(
                std::chrono::duration_cast<next>(duration)) +
            " " + std::to_string(duration.count() % limit) + " " + str_unit;
   }
@@ -214,12 +215,16 @@ class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
       case SimulationIteratorFlag::NextStep: {
         auto current_time = std::chrono::high_resolution_clock::now();
         std::stringstream ss;
-        ss << "\r" << "Progress: " << cur << "/" << end << ". ";
+        auto progress_max_size = 11 + 2 * std::to_string(end).size() + 3;
+        progress_max_size += 100;
+        ss << "\r";
+        ss << std::setw(progress_max_size) << std::left;
+        ss << "Progress: " << cur << "/" << end << ". ";
         ss << "Elapsed time: ";
         ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 current_time - _update_start_time));
-        ss << " ";
+        ss << ". ";
 
         ss << "Estimated remaining time: ";
         ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
