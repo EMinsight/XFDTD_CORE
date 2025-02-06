@@ -12,11 +12,15 @@
 #include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/parallel/parallelized_config.h>
 #include <xfdtd/simulation/simulation.h>
+#include <xfdtd/simulation/simulation_flag.h>
 #include <xfdtd/waveform_source/waveform_source.h>
 
 #include <chrono>
 #include <cstdlib>
+#include <iomanip>
+#include <iostream>
 #include <memory>
+#include <ratio>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -80,6 +84,193 @@ void Simulation::addNF2FF(std::shared_ptr<NFFFT> nffft) {
   _nfffts.emplace_back(std::move(nffft));
 }
 
+auto Simulation::addVisitor(std::shared_ptr<SimulationFlagVisitor> visitor)
+    -> void {
+  _visitors.emplace_back(std::move(visitor));
+}
+
+template <typename T>
+static auto timeUnit() {
+  if constexpr (std::is_same<T, std::chrono::milliseconds>::value) {
+    return "ms";
+  }
+  if constexpr (std::is_same<T, std::chrono::seconds>::value) {
+    return "s";
+  }
+  if constexpr (std::is_same<T, std::chrono::minutes>::value) {
+    return "m";
+  }
+  if constexpr (std::is_same<T, std::chrono::hours>::value) {
+    return "h";
+  }
+
+  return "unknown";
+}
+
+template <typename cur, typename next>
+static auto timeToString(const cur& duration) -> std::string {
+  constexpr auto ratio =
+      std::ratio_divide<typename cur::period, typename next::period>();
+  constexpr auto limit = ratio.den;
+
+  if (std::same_as<cur, next>) {
+    return std::to_string(duration.count()) + " " + timeUnit<cur>();
+  }
+
+  auto str_unit = timeUnit<cur>();
+
+  if (duration.count() < limit) {
+    return std::to_string(duration.count()) + " " + str_unit;
+  }
+
+  if constexpr (std::is_same<next, std::chrono::seconds>::value) {
+    return timeToString<next, std::chrono::minutes>(
+               std::chrono::duration_cast<next>(duration)) +
+           " " + std::to_string(duration.count() % limit) + " " + str_unit;
+  }
+
+  if constexpr (std::is_same<next, std::chrono::minutes>::value) {
+    return timeToString<next, std::chrono::hours>(
+               std::chrono::duration_cast<next>(duration)) +
+           " " + std::to_string(duration.count() % limit) + " " + str_unit;
+  }
+
+  if constexpr (std::is_same<next, std::chrono::hours>::value) {
+    // Stop recursion
+    return timeToString<next, std::chrono::hours>(
+               std::chrono::duration_cast<next>(duration)) +
+           " " + std::to_string(duration.count() % limit) + " " + str_unit;
+  }
+
+  return "unknown";
+}
+
+class DefaultSimulationFlagVisitor : public SimulationFlagVisitor {
+ public:
+  auto initStep(SimulationInitFlag flag) -> void override {
+    switch (flag) {
+      case SimulationInitFlag::SimulationStart: {
+        _simulation_start_time = std::chrono::high_resolution_clock::now();
+        std::cerr << "Simulation start\n";
+        break;
+      }
+      case SimulationInitFlag::SimulationEnd: {
+        _simulation_start_time.time_since_epoch();
+        auto elapsed_time =
+            std::chrono::high_resolution_clock::now() - _simulation_start_time;
+
+        std::stringstream ss;
+        ss << "Simulation end\n";
+        ss << "Elapsed time: ";
+        ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                elapsed_time));
+        ss << "\n";
+        std::cerr << ss.str();
+        break;
+      }
+      case SimulationInitFlag::InitStart: {
+        std::cerr << "Simulation init start\n";
+        _init_start_time = std::chrono::high_resolution_clock::now();
+        break;
+      }
+      case SimulationInitFlag::InitEnd: {
+        auto elapsed_time =
+            std::chrono::high_resolution_clock::now() - _init_start_time;
+        std::stringstream ss;
+        ss << "Simulation init end\n";
+        ss << "Elapsed time: ";
+        ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                elapsed_time));
+        ss << "\n";
+        std::cerr << ss.str();
+        break;
+      }
+      case SimulationInitFlag::UpdateStart:
+        std::cerr << "Simulation update start\n";
+        _update_start_time = std::chrono::high_resolution_clock::now();
+        break;
+      case SimulationInitFlag::UpdateEnd: {
+        auto elapsed_time =
+            std::chrono::high_resolution_clock::now() - _update_start_time;
+        std::stringstream ss;
+        ss << "Simulation update end\n";
+        ss << "Elapsed time: ";
+        ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                elapsed_time));
+        ss << "\n";
+        std::cerr << ss.str();
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+  auto iteratorStep(SimulationIteratorFlag flag, Index cur, Index start,
+                    Index end) -> void override {
+    switch (flag) {
+      case SimulationIteratorFlag::NextStep: {
+        auto current_time = std::chrono::high_resolution_clock::now();
+
+        int bar_width = 50;
+        float progress = static_cast<float>(cur) / end;
+
+        std::stringstream ss;
+        ss << "\r";
+        ss << "Progress: [";
+
+        int pos = bar_width * progress;
+        for (int i = 0; i < bar_width; ++i) {
+          if (i < pos) {
+            ss << "=";
+          } else if (i == pos) {
+            ss << ">";
+          } else {
+            ss << " ";
+          }
+        }
+        ss << "] ";
+
+        ss << std::setw(3) << static_cast<int>(progress * 100.0) << "% ";
+        ss << cur << "/" << end << " ";
+
+        ss << "Elapsed time: ";
+        ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                current_time - _update_start_time));
+        ss << ". ";
+
+        ss << "Estimated remaining time: ";
+        ss << timeToString<std::chrono::milliseconds, std::chrono::seconds>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                (current_time - _update_start_time) * (end - cur) /
+                (cur - start)));
+
+        if (cur == end) {
+          ss << "\n";
+        }
+
+        std::cerr << ss.str() << std::flush;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
+ private:
+  std::chrono::high_resolution_clock::time_point _simulation_start_time,
+      _init_start_time, _update_start_time;
+};
+
+auto Simulation::addDefaultVisitor() -> void {
+  _visitors.emplace_back(std::make_shared<DefaultSimulationFlagVisitor>());
+}
+
 const std::shared_ptr<CalculationParam>& Simulation::calculationParam() const {
   return _calculation_param;
 }
@@ -91,42 +282,13 @@ const std::shared_ptr<GridSpace>& Simulation::gridSpace() const {
 const std::shared_ptr<EMF>& Simulation::emf() const { return _emf; }
 
 void Simulation::run(Index time_step) {
-  _start_time = std::chrono::high_resolution_clock::now();
-  if (isRoot()) {
-    std::cout << "Simulation start...\n";
-  }
+  sendFlag(SimulationInitFlag::SimulationStart);
+  init(time_step);
+  run();
+  sendFlag(SimulationInitFlag::SimulationEnd);
+}
 
-  init();
-  _calculation_param->timeParam()->setTimeParamRunRange(time_step);
-  // do final check
-  for (auto&& o : _objects) {
-    o->initTimeDependentVariable();
-  }
-  for (auto&& w : _waveform_sources) {
-    w->initTimeDependentVariable();
-  }
-  for (auto&& n : _nfffts) {
-    n->initTimeDependentVariable();
-  }
-  for (auto&& m : _monitors) {
-    m->initTimeDependentVariable();
-  }
-
-  if (isRoot()) {
-    // global grid space and thread config
-    {
-      std::stringstream ss;
-      ss << "\n";
-      ss << "Global grid space: \n";
-      ss << _global_grid_space->toString();
-      ss << "\n";
-
-      ss << "\n";
-      ss << _thread_config.toString() << "\n";
-      std::cout << ss.str() << std::flush;
-    }
-  }
-
+auto Simulation::run() -> void {
   {
     std::vector<std::thread> threads;
     for (Index i = 1; i < _domains.size(); ++i) {
@@ -152,30 +314,6 @@ void Simulation::run(Index time_step) {
   }
 
   MpiSupport::instance().barrier();
-
-  _end_time = std::chrono::high_resolution_clock::now();
-  if (isRoot()) {
-    std::cerr << "\n" << std::flush;
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    std::cout << "\n"
-              << "Elapsed time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     _end_time - _start_time)
-                     .count()
-              << " ms" << " or "
-              << std::chrono::duration_cast<std::chrono::seconds>(_end_time -
-                                                                  _start_time)
-                     .count()
-              << " s" << " or "
-              << std::chrono::duration_cast<std::chrono::minutes>(_end_time -
-                                                                  _start_time)
-                     .count()
-              << " m" << " or "
-              << std::chrono::duration_cast<std::chrono::hours>(_end_time -
-                                                                _start_time)
-                     .count()
-              << " h." << "\n";
-  }
 }
 
 void Simulation::init() {
@@ -250,6 +388,16 @@ auto Simulation::init(Index time_step) -> void {
   }
 }
 
+auto Simulation::sendFlag(SimulationInitFlag flag) -> void {
+  if (!isRoot()) {
+    return;
+  }
+
+  for (auto&& v : _visitors) {
+    v->initStep(flag);
+  }
+}
+
 void Simulation::generateDomain() {
   if (std::thread::hardware_concurrency() < numThread()) {
     std::stringstream ss;
@@ -308,6 +456,11 @@ void Simulation::generateDomain() {
           _waveform_sources, std::move(correctors), _monitors, _nfffts,
           _barrier, master));
       master = false;
+
+      for (auto&& v : _visitors) {
+        _domains.back()->addVisitor(v);
+      }
+
     } else {
       _domains.emplace_back(
           std::make_unique<Domain>(id, t, _grid_space, _calculation_param, _emf,

@@ -123,7 +123,7 @@ auto FDPlaneData::calculatePotential(
   const auto je = task.yRange().end();
   const auto ke = task.zRange().end();
 
-  auto wave_number = 2.0 * constant::PI * _freq / constant::C_0;
+  Real wave_number = 2.0 * constant::PI * _freq / constant::C_0;
   auto&& cos_t = xt::cos(theta);
   auto&& sin_t{xt::sin(theta)};
   auto&& cos_p{xt::cos(phi)};

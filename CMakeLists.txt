@@ -29,10 +29,6 @@ option(XFDTD_CORE_WITH_MPI "Enable MPI support" OFF)
 # option to enable single precision commnad: cmake -D
 # XFDTD_CORE_SINGLE_PRECISION=ON
 option(XFDTD_CORE_SINGLE_PRECISION "Enable single precision" OFF)
-if(XFDTD_CORE_SINGLE_PRECISION)
-  message(STATUS "XFDTD Core Single precision is enabled")
-  add_definitions(-DXFDTD_CORE_SINGLE_PRECISION)
-endif()
 
 # ##############################################################################
 # DEPENDENCIES
@@ -41,6 +37,7 @@ endif()
 find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
 
+set(XFDTD_CORE_PUBLIC_DEFINATIONS "")
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
 set(XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR ${xtensor_INCLUDE_DIRS})
@@ -49,14 +46,19 @@ set(XFDTD_CORE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(XFDTD_CORE_THIRD_PARTY_LIB xtensor)
 
 if(XFDTD_CORE_WITH_MPI)
-  message(STATUS "XFDTD Core MPI support enabled")
+  message(STATUS "XFDTD Core MPI support is enabled")
   find_package(MPI REQUIRED)
-  add_definitions(-DXFDTD_CORE_WITH_MPI)
+  set(XFDTD_CORE_DEFINATIONS ${XFDTD_CORE_DEFINATIONS} XFDTD_CORE_WITH_MPI)
   set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB} MPI::MPI_CXX)
   set(XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR ${XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR}
                                          ${MPI_CXX_INCLUDE_DIRS})
 endif()
+if(XFDTD_CORE_SINGLE_PRECISION)
+  message(STATUS "XFDTD Core Single precision is enabled")
+  set(XFDTD_CORE_DEFINATIONS ${XFDTD_CORE_DEFINATIONS} XFDTD_CORE_SINGLE_PRECISION)
+endif()
 
+add_compile_definitions(${XFDTD_CORE_DEFINATIONS})
 include_directories(
   ${XFDTD_CORE_PUBLIC_INCLUDE_DIR} ${XFDTD_CORE_PRIVATE_INCLUDE_DIR}
   ${XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR})

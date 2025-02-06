@@ -26,12 +26,6 @@ cmake -DCMAKE_INSTALL_PREFIX=/path/to/install
 cmake --build build --target install
 ```
 
-make `MPI` to `ON` if you want to use MPI.
-
-```bash
-cmake -DXFDTD_CORE_WITH_MPI=ON -S . -B build
-```
-
 ### Use in your project
 
 Here is a example to simulate a dielectric sphere scatter a plane wave.
@@ -58,11 +52,6 @@ find_package(xfdtd_core REQUIRED)
 
 set(XFDTD_EXAMPLE_LIBRARIES xfdtd::xfdtd_core)
 
-# check for MPI
-if(XFDTD_CORE_WITH_MPI)
-  set(XFDTD_EXAMPLE_LIBRARIES ${XFDTD_EXAMPLE_LIBRARIES} MPI::MPI_CXX)
-endif()
-
 add_executable(xfdtd_first_example main.cpp)
 
 target_link_libraries(xfdtd_first_example PRIVATE ${XFDTD_EXAMPLE_LIBRARIES})
@@ -73,25 +62,22 @@ The `main.cpp` file:
 
 ```cpp
 #include <xfdtd/boundary/pml.h>
+#include <xfdtd/common/type_define.h>
 #include <xfdtd/monitor/field_monitor.h>
 #include <xfdtd/monitor/movie_monitor.h>
 #include <xfdtd/object/object.h>
-#include <xfdtd/parallel/mpi_support.h>
 #include <xfdtd/shape/sphere.h>
 #include <xfdtd/simulation/simulation.h>
 #include <xfdtd/waveform_source/tfsf_3d.h>
 
 int main() {
-  xfdtd::MpiSupport::setMpiParallelDim(
-      1, 1, 2); // Set MPI parallel dim (1x1x2). If you don't want to use MPI,
-                // it will do nothing.
-  constexpr double dl {7.5e-3}; // set the grid resolution
+  xfdtd::Real dl{7.5e-3};  // set the grid resolution
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.175, -0.175, -0.175},
                                     xfdtd::Vector{0.35, 0.35, 0.35}),
-      xfdtd::Material::createAir())}; // create calculation domain
+      xfdtd::Material::createAir())};  // create calculation domain
 
   auto dielectric_sphere{std::make_shared<xfdtd::Object>(
       "dielectric_sphere",
@@ -99,15 +85,17 @@ int main() {
       std::make_unique<xfdtd::Material>(
           "a", xfdtd::ElectroMagneticProperty{3, 2, 0, 0}))};
 
-  constexpr auto l_min{dl * 20};
-  constexpr auto tau{l_min / 6e8};
-  constexpr auto t_0{4.5 * tau};
-  constexpr std::size_t tfsf_start{
-      static_cast<size_t>(15)}; // Set TFSF start index
+  xfdtd::Real l_min{dl * 20};
+  xfdtd::Real tau{l_min / 6e8};
+  xfdtd::Real t_0{4.5 * tau};
+  xfdtd::Index tfsf_start{15};  // Set TFSF start index
+  xfdtd::Real theta{0};
+  xfdtd::Real phi{0};
+  xfdtd::Real psi{0};
   auto tfsf{std::make_shared<xfdtd::TFSF3D>(
-      tfsf_start, tfsf_start, tfsf_start, 0, 0, 0,
+      tfsf_start, tfsf_start, tfsf_start, theta, phi, psi,
       xfdtd::Waveform::gaussian(
-          tau, t_0))}; // Add TFSF source with Gaussian waveform
+          tau, t_0))};  // Add TFSF source with Gaussian waveform
 
   // Create movie monitor for Ex field in XZ plane
   auto movie_ex_xz{std::make_shared<xfdtd::MovieMonitor>(
@@ -117,8 +105,8 @@ int main() {
           xfdtd::EMF::Field::EX, "", ""),
       10, "movie", "./data/dielectric_sphere_scatter/movie_ex_xz")};
 
-  // Create simulation object with 2 threads
-  auto s{xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}}};
+  // Create simulation object with cfl is 0.9
+  auto s{xfdtd::Simulation{dl, dl, dl, 0.9}};
   s.addObject(domain);
   s.addObject(dielectric_sphere);
   s.addWaveformSource(tfsf);
@@ -130,9 +118,9 @@ int main() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
   s.addMonitor(movie_ex_xz);
-  s.run(2000); // Run simulation for 2000 steps
+  s.addDefaultVisitor(); // Add progress bar
+  s.run(2000);  // Run simulation for 2000 steps
 }
-
 ```
 
 build the project:
@@ -213,19 +201,17 @@ You can use the following code to set the thread number while creating the simul
 ```cpp
 #include <xfdtd/simulation/simulation.h>
 
-// Create simulation object with 2 threads in X direction, 1 thread in Y direction and 1 thread in Z direction
-auto s{xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{2, 1, 1}}};
+// Create simulation object with 1 threads in X direction, 1 thread in Y direction and 2 thread in Z direction
+auto s{xfdtd::Simulation{dl, dl, dl, 0.9, xfdtd::ThreadConfig{1, 1, 2}}};
 ```
 
-We suggest that you set the thread dimension to 1 in the X and Y direction and set 2 or 4 in the Z direction.
+We suggest that you set the thread dimension to 1 in the X and Y direction and set num what you want in the Z direction.
 
 ### Use MPI
 
 XFDTD CORE support MPI parallel computing. You can use the following command to compile the project with MPI.
 
-First build XFDTD_CORE with MPI
-
-In XFDTD_CORE project directory
+In XFDTD_CORE project directory. Build with MPI.
 
 ```bash
 cmake -DXFDTD_CORE_WITH_MPI=ON -B ./build
@@ -233,16 +219,8 @@ cmake --build ./build
 cmake --build ./build --target install
 ```
 
-And then you can return to your project directory and use the following `CMakeLists.txt` file to compile your project with MPI.
+And then build your project with XFDTD_CORE. Run it.
 
-You need to link your target with `MPI::MPI_CXX` library.
-
-```cmake
-# You can check if the MPI is enabled by checking the XFDTD_CORE_WITH_MPI variable.
-if(XFDTD_CORE_WITH_MPI)
-  target_link_libraries(your_target PRIVATE MPI::MPI_CXX)
-endif()
-```
 
 ```bash
 mpiexec -n ${num_of_core} ./build/your_executable
@@ -257,8 +235,8 @@ If you want to config the MPI parallel dim, you can use the following code.
 some code
 */
 
-// before you create the simulation
-// set MPI parallel dim (2x2x1)
+// before you run the simulation
+// set MPI parallel dim (2x2x1) with 2 threads in X direction, 2 thread in Y direction and 1 thread in Z direction
 xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
 ```
 
@@ -272,16 +250,9 @@ mpiexec -n 4 ./build/your_executable
 
 You can see the project [xfdtd_cuda](https://github.com/Mrwatermolen/XFDTD_CUDA) for the CUDA version of the XFDTD project.
 
-## More Examples
-
-See the `examples` folder for more examples.
-
-[Example README](./examples/RAEDME.md)
-
 ## Known Issues
 
 1. S11 parameter calculation is not correct.
-2. Can't see the std::cout output in the console when using MPI in Linux.
 
 ## Acknowledgement
 

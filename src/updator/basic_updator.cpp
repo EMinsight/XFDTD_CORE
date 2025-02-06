@@ -7,6 +7,7 @@
 #include "updator/update_scheme.h"
 #include "updator/updator.h"
 #include "xfdtd/calculation_param/calculation_param.h"
+#include "xfdtd/common/type_define.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/util/fdtd_basic.h"
 
@@ -100,7 +101,8 @@ void BasicUpdatorTEM::updateE() {
 
   for (std::size_t k{ks}; k < ke; ++k) {
     ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
-                        hy(0, 0, k - 1), 0.0, 0.0, 0.0);
+                        hy(0, 0, k - 1), static_cast<Real>(0.0),
+                        static_cast<Real>(0.0), static_cast<Real>(0.0));
   }
 
   // updateEEdge();
@@ -119,7 +121,8 @@ void BasicUpdatorTEM::updateE() {
 //   const auto& hy{_emf->hy()};
 //   auto& ex{_emf->ex()};
 //   auto k = ks;
-//   ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0, k),
+//   ex(0, 0, k) = eNext(cexe(0, 0, k), ex(0, 0, k), cexhy(0, 0, k), hy(0, 0,
+//   k),
 //                       hy(0, 0, k - 1), 0.0, 0.0, 0.0);
 // }
 

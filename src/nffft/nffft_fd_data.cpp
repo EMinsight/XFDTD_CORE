@@ -5,6 +5,8 @@
 #include <xfdtd/nffft/nffft.h>
 #include <xfdtd/util/transform.h>
 
+#include "xfdtd/common/type_define.h"
+
 namespace xfdtd {
 
 FDPlaneData::FDPlaneData(std::shared_ptr<const GridSpace> grid_space,
@@ -65,10 +67,11 @@ auto FDPlaneData::initDFT(std::size_t total_time_step, Real dt) -> void {
   _transform_h = xt::zeros<std::complex<Real>>({total_time_step});
 
   for (std::size_t t{0}; t < total_time_step; ++t) {
-    _transform_e(t) = dt * std::exp(-constant::II * 2.0 * constant::PI *
-                                    (_freq * (t + 1) * dt));
-    _transform_h(t) = dt * std::exp(-constant::II * 2.0 * constant::PI *
-                                    (_freq * (t + 0.5) * dt));
+    _transform_e(t) = dt * std::exp(-constant::II * static_cast<Real>(2.0) *
+                                    constant::PI * (_freq * (t + 1) * dt));
+    _transform_h(t) =
+        dt * std::exp(-constant::II * static_cast<Real>(2.0) * constant::PI *
+                      (_freq * (t + static_cast<Real>(0.5)) * dt));
   }
 }
 

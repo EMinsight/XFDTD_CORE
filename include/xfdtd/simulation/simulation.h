@@ -12,6 +12,7 @@
 #include <xfdtd/nffft/nffft.h>
 #include <xfdtd/object/object.h>
 #include <xfdtd/parallel/parallelized_config.h>
+#include <xfdtd/simulation/simulation_flag.h>
 #include <xfdtd/waveform_source/waveform_source.h>
 
 #include <barrier>
@@ -60,7 +61,13 @@ class Simulation {
 
   void addNF2FF(std::shared_ptr<NFFFT> nffft);
 
+  auto addVisitor(std::shared_ptr<SimulationFlagVisitor> visitor) -> void;
+
+  auto addDefaultVisitor() -> void;
+
   void run(Index time_step);
+
+  auto run() -> void;
 
   const std::shared_ptr<CalculationParam>& calculationParam() const;
 
@@ -88,11 +95,17 @@ class Simulation {
     return _ade_method_storage;
   }
 
+  auto visitors() -> std::vector<std::shared_ptr<SimulationFlagVisitor>> {
+    return _visitors;
+  }
+
  private:
   Real _dx, _dy, _dz;
   Real _cfl;
   ThreadConfig _thread_config;
   std::barrier<> _barrier;  // move to thread config
+
+  std::vector<std::shared_ptr<SimulationFlagVisitor>> _visitors;
 
   std::vector<std::shared_ptr<xfdtd::Object>> _objects;
   std::vector<std::shared_ptr<WaveformSource>> _waveform_sources;
@@ -108,7 +121,7 @@ class Simulation {
   std::shared_ptr<GridSpace> _grid_space;
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
-  std::shared_ptr<ADEMethodStorage> _ade_method_storage{};
+  std::shared_ptr<ADEMethodStorage> _ade_method_storage;
 
   std::vector<std::unique_ptr<Domain>> _domains;
 
@@ -117,6 +130,8 @@ class Simulation {
   std::unique_ptr<TimeParam> makeTimeParam();
 
   std::unique_ptr<MaterialParam> makeMaterialParam();
+
+  auto sendFlag(SimulationInitFlag flag) -> void;
 
   void generateDomain();
 

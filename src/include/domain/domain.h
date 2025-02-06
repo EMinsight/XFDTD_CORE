@@ -4,6 +4,7 @@
 #include <xfdtd/grid_space/grid_space.h>
 #include <xfdtd/monitor/monitor.h>
 #include <xfdtd/nffft/nffft.h>
+#include <xfdtd/simulation/simulation_flag.h>
 #include <xfdtd/waveform_source/waveform_source.h>
 
 #include <barrier>
@@ -108,6 +109,8 @@ class Domain {
 
   auto addCorrector(std::unique_ptr<Corrector> corrector) -> void;
 
+  auto addVisitor(std::shared_ptr<SimulationFlagVisitor> visitor) -> void;
+
  protected:
   void exchangeH();
 
@@ -118,14 +121,18 @@ class Domain {
   std::shared_ptr<CalculationParam> _calculation_param;
   std::shared_ptr<EMF> _emf;
   std::unique_ptr<Updator> _updator;
-  std::vector<std::shared_ptr<WaveformSource>> _waveform_sources{};
-  std::vector<std::unique_ptr<Corrector>> _correctors{};
-  std::vector<std::shared_ptr<Monitor>> _monitors{};
-  std::vector<std::shared_ptr<NFFFT>> _nfffts{};
+  std::vector<std::shared_ptr<WaveformSource>> _waveform_sources;
+  std::vector<std::unique_ptr<Corrector>> _correctors;
+  std::vector<std::shared_ptr<Monitor>> _monitors;
+  std::vector<std::shared_ptr<NFFFT>> _nfffts;
+  std::vector<std::shared_ptr<SimulationFlagVisitor>> _simulation_flag_visitors;
   std::barrier<>& _barrier;
   bool _master = false;
 
-  std::chrono::time_point<std::chrono::system_clock> _start_time;
+  auto sendInitFlag(SimulationInitFlag flag) -> void;
+
+  auto sendIteratorFlag(SimulationIteratorFlag flag, Index cur, Index start,
+                        Index end) -> void;
 };
 
 }  // namespace xfdtd

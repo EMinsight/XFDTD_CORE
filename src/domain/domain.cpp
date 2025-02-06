@@ -1,6 +1,7 @@
 #include "domain/domain.h"
 
 #include <xfdtd/parallel/mpi_support.h>
+#include <xfdtd/simulation/simulation_flag.h>
 #include <xfdtd/util/fdtd_basic.h>
 
 #include <cstdlib>
@@ -42,11 +43,48 @@ Domain::Domain(std::size_t id, IndexTask task,
       _master{master} {}
 
 void Domain::run() {
-  if (isMaster() && MpiSupport::instance().isRoot()) {
-    _start_time = std::chrono::system_clock::now();
-  }
+  //   // run info
+  //   {
+  //     std::stringstream ss;
+  //     ss << "Domain " << _id << " is running ";
+  //     ss << "Size: " << _task.toString() << "\n";
+  //     std::cerr << ss.str();
+  //   }
+
+  // #ifdef __linux__
+  //   auto cpu_id = (_id) % std::thread::hardware_concurrency();
+  //   constexpr auto cpu_logical_cores = 2;
+  //   constexpr auto cpu_physical_cores = 1;
+  //   auto cpu_offset = std::thread::hardware_concurrency() /
+  //   cpu_logical_cores;
+  //   // if (cpu_id % 2 != 0) {
+  //   //   cpu_id = (cpu_id - 1) + std::thread::hardware_concurrency() / 2;
+  //   // }
+
+  //   cpu_set_t mask;
+  //   CPU_ZERO(&mask);
+  //   CPU_SET(cpu_id, &mask);
+  //   // set for thread
+  //   if (int rc = pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);
+  //       rc != 0) {
+  //     std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+  //   }
+
+  //   // get affinity
+  //   std::stringstream ss;
+  //   ss << "Thread " << _id << " is running on CPU " << sched_getcpu() <<
+  //   "\n"; std::cerr << ss.str();
+
+  // #endif
+
+  sendInitFlag(SimulationInitFlag::UpdateStart);
 
   while (!isCalculationDone()) {
+    sendIteratorFlag(SimulationIteratorFlag::UpdateHSStart,
+                     _calculation_param->timeParam()->currentTimeStep(),
+                     _calculation_param->timeParam()->startTimeStep(),
+                     _calculation_param->timeParam()->endTimeStep());
+
     updateH();
 
     threadSynchronize();
@@ -57,7 +95,17 @@ void Domain::run() {
 
     exchangeH();
 
+    sendIteratorFlag(SimulationIteratorFlag::UpdateHSEnd,
+                     _calculation_param->timeParam()->currentTimeStep(),
+                     _calculation_param->timeParam()->startTimeStep(),
+                     _calculation_param->timeParam()->endTimeStep());
+
     synchronize();
+
+    sendIteratorFlag(SimulationIteratorFlag::UpdateEStart,
+                     _calculation_param->timeParam()->currentTimeStep(),
+                     _calculation_param->timeParam()->startTimeStep(),
+                     _calculation_param->timeParam()->endTimeStep());
 
     updateE();
 
@@ -67,6 +115,11 @@ void Domain::run() {
 
     threadSynchronize();
 
+    sendIteratorFlag(SimulationIteratorFlag::UpdateEEnd,
+                     _calculation_param->timeParam()->currentTimeStep(),
+                     _calculation_param->timeParam()->startTimeStep(),
+                     _calculation_param->timeParam()->endTimeStep());
+
     record();
 
     synchronize();
@@ -74,7 +127,14 @@ void Domain::run() {
     nextStep();
 
     threadSynchronize();
+
+    sendIteratorFlag(SimulationIteratorFlag::NextStep,
+                     _calculation_param->timeParam()->currentTimeStep(),
+                     _calculation_param->timeParam()->startTimeStep(),
+                     _calculation_param->timeParam()->endTimeStep());
   }
+
+  sendInitFlag(SimulationInitFlag::UpdateEnd);
 }
 
 bool Domain::isCalculationDone() const {
@@ -124,28 +184,6 @@ void Domain::record() {
 }
 
 void Domain::nextStep() {
-  if (isMaster() && MpiSupport::instance().isRoot()) {
-    auto current_time = std::chrono::system_clock::now();
-    std::stringstream ss;
-    ss << "\r"
-       << "Progress: " << _calculation_param->timeParam()->currentTimeStep() + 1
-       << "/" << _calculation_param->timeParam()->endTimeStep() << ". ";
-    ss << "Elapsed time: "
-       << std::chrono::duration_cast<std::chrono::seconds>(current_time -
-                                                           _start_time)
-              .count()
-       << "s. ";
-    ss << "Estimated remaining time: "
-       << std::chrono::duration_cast<std::chrono::seconds>(
-              (current_time - _start_time) *
-              (_calculation_param->timeParam()->endTimeStep() -
-               _calculation_param->timeParam()->currentTimeStep()) /
-              (_calculation_param->timeParam()->currentTimeStep() + 1))
-              .count()
-       << "s.";
-    std::cerr << ss.str() << std::flush;
-  }
-
   if (isMaster()) {
     _calculation_param->timeParam()->nextStep();
   }
@@ -168,6 +206,32 @@ auto Domain::toString() const -> std::string {
 
 auto Domain::addCorrector(std::unique_ptr<Corrector> corrector) -> void {
   _correctors.push_back(std::move(corrector));
+}
+
+auto Domain::addVisitor(std::shared_ptr<SimulationFlagVisitor> visitor)
+    -> void {
+  _simulation_flag_visitors.emplace_back(std::move(visitor));
+}
+
+auto Domain::sendInitFlag(SimulationInitFlag flag) -> void {
+  if (!isMaster() || !MpiSupport::instance().isRoot()) {
+    return;
+  }
+
+  for (auto&& v : _simulation_flag_visitors) {
+    v->initStep(flag);
+  }
+}
+
+auto Domain::sendIteratorFlag(SimulationIteratorFlag flag, Index cur,
+                              Index start, Index end) -> void {
+  if (!isMaster() || !MpiSupport::instance().isRoot()) {
+    return;
+  }
+
+  for (auto&& v : _simulation_flag_visitors) {
+    v->iteratorStep(flag, cur, start, end);
+  }
 }
 
 void Domain::exchangeH() {

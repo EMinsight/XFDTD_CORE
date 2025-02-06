@@ -39,16 +39,15 @@ set(XFDTD_CORE_LIBS
     xfdtd_waveform_source
 )
 
+target_compile_definitions(xfdtd_core PUBLIC ${XFDTD_CORE_DEFINATIONS})
+
 target_link_libraries(xfdtd_core PUBLIC ${XFDTD_CORE_THIRD_PARTY_LIB}
                                         ${XFDTD_CORE_LIBS})
 
-target_include_directories(
-  xfdtd_core PUBLIC $<BUILD_INTERFACE:${XFDTD_CORE_PUBLIC_INCLUDE_DIR}>
+target_include_directories(xfdtd_core PUBLIC $<BUILD_INTERFACE:${XFDTD_CORE_PUBLIC_INCLUDE_DIR}>
                     $<INSTALL_INTERFACE:include>)
 
-target_include_directories(
-  xfdtd_core PRIVATE $<BUILD_INTERFACE:${XFDTD_CORE_PRIVATE_INCLUDE_DIR}>
-                     $<INSTALL_INTERFACE:include>)
+target_include_directories(xfdtd_core PRIVATE ${XFDTD_CORE_PRIVATE_INCLUDE_DIR})
 
 install(
   TARGETS xfdtd_core ${XFDTD_CORE_LIBS}

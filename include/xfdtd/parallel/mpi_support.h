@@ -15,14 +15,32 @@ namespace xfdtd {
 
 class XFDTDMpiSupportException : public XFDTDException {
  public:
-  explicit XFDTDMpiSupportException(
-      const std::string& message = "XFDTD Mpi Support Exception")
-      : XFDTDException(message) {}
+  explicit XFDTDMpiSupportException(const std::string& message = "")
+      : XFDTDException{message} {}
 };
 
 class MpiSupport {
  public:
-  static auto setMpiParallelDim(int nx, int ny, int nz) -> void;
+  /**
+   * @brief prepare MPI environment
+   *
+   * @return true If MPI is initialized successfully or already initialized.
+   * @return false If MPI is failed to initialize or not compiled with MPI.
+   */
+  static auto init(int argc = 0, char** argv = nullptr) -> bool;
+
+  /**
+   * @brief Set the dimension of the MPI parallel layout. It will change the
+   * configuration of MPI whether it returns true or false. It's not valid to
+   * call this after geting the MpiSupport instance.
+   *
+   * @return true if the dimension is matched with the number of processes.
+   */
+  static auto setMpiParallelDim(int nx, int ny, int nz) -> bool;
+
+  static auto globalRank() -> int;
+
+  static auto globalSize() -> int;
 
  public:
   class Block {
@@ -242,8 +260,8 @@ class MpiSupport {
   auto iSend(const MpiConfig& config, const Real* buf, int count,
              const Block& block, int dest, int tag) -> std::size_t;
 
-  auto recv(const MpiConfig& config, void* buf, int count, int source, int tag)
-      -> void;
+  auto recv(const MpiConfig& config, void* buf, int count, int source,
+            int tag) -> void;
 
   auto recv(const MpiConfig& config, void* buf, int count,
             const TypeGuard& type, int source, int tag) -> void;
@@ -251,8 +269,8 @@ class MpiSupport {
   auto recv(const MpiConfig& config, Real* buf, int count, const Block& block,
             int source, int tag) -> void;
 
-  auto iRecv(const MpiConfig& config, void* buf, int count, int source, int tag)
-      -> std::size_t;
+  auto iRecv(const MpiConfig& config, void* buf, int count, int source,
+             int tag) -> std::size_t;
 
   auto iRecv(const MpiConfig& config, void* buf, int count,
              const TypeGuard& type, int source, int tag) -> std::size_t;
@@ -273,23 +291,6 @@ class MpiSupport {
                 int dest, int send_tag, Real* recv_buf, int recv_count,
                 const Block& recv_block, int source, int recv_tag) -> void;
 
-  // auto iSendRecv(const MpiConfig& config, const void* send_buf, int
-  // send_count,
-  //                int dest, int send_tag, void* recv_buf, int recv_count,
-  //                int source, int recv_tag) -> std::size_t;
-
-  // auto iSendRecv(const MpiConfig& config, const void* send_buf, int
-  // send_count,
-  //                const TypeGuard& send_type, int dest, int send_tag,
-  //                void* recv_buf, int recv_count, const TypeGuard& recv_type,
-  //                int source, int recv_tag) -> std::size_t;
-
-  // auto iSendRecv(const MpiConfig& config, const Real* send_buf, int
-  // send_count,
-  //                int dest, int send_tag, Real* recv_buf, int recv_count,
-  //                const Block& recv_block, int source, int recv_tag)
-  //     -> std::size_t;
-
   auto gather(const MpiConfig& config, const void* send_buf, int send_count,
               void* recv_buf, int recv_count, int root) -> void;
 
@@ -298,8 +299,8 @@ class MpiSupport {
               const TypeGuard& recv_type, int root) -> void;
 
   auto gather(const MpiConfig& config, const Real* send_buf, int send_count,
-              Real* recv_buf, int recv_count, const Block& recv_block, int root)
-      -> void;
+              Real* recv_buf, int recv_count, const Block& recv_block,
+              int root) -> void;
 
   auto iGather(const MpiConfig& config, const void* send_buf, int send_count,
                void* recv_buf, int recv_count, int root) -> std::size_t;
@@ -322,6 +323,8 @@ class MpiSupport {
                  std::complex<Real>* recv_buf, int count) const -> void;
 
  private:
+  inline static int global_rank{0};
+  inline static int global_size{1};
   inline static int config_nx{1};
   inline static int config_ny{1};
   inline static int config_nz{1};
@@ -334,10 +337,6 @@ class MpiSupport {
   };
   // this is a guard to finalize MPI when the program ends
   MpiGuard _guard{};
-
-  int _global_rank{0};
-
-  int _global_size{1};
 
   MpiConfig _config;
 
@@ -371,8 +370,6 @@ class MpiSupport {
 #if defined(XFDTD_CORE_WITH_MPI)
   std::vector<MPI_Request> _requests;
 #endif
-
-  auto mpiInit(int argc, char** argv) -> void;
 };
 
 }  // namespace xfdtd

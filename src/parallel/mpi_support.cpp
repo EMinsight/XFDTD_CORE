@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -15,25 +16,60 @@
 
 namespace xfdtd {
 
+auto MpiSupport::init(int argc, char** argv) -> bool {
+#if defined(XFDTD_CORE_WITH_MPI)
+  int flag;
+  MPI_Initialized(&flag);
+  if (flag != 0) {
+    return true;
+  }
+
+  flag = MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &global_size);
+  return flag == MPI_SUCCESS;
+#else
+  return false;
+#endif
+}
+
 auto MpiSupport::instance(int argc, char** argv) -> MpiSupport& {
-  static MpiSupport instance(argc, argv);
+  static MpiSupport instance{argc, argv};
   return instance;
 }
 
 MpiSupport::~MpiSupport() { waitAll(); }
 
-auto MpiSupport::setMpiParallelDim(int nx, int ny, int nz) -> void {
-  static bool is_set = false;
-  if (is_set) {
-    return;
-  }
+auto MpiSupport::setMpiParallelDim(int nx, int ny, int nz) -> bool {
   config_nx = nx;
   config_ny = ny;
   config_nz = nz;
+  return global_size == config_nx * config_ny * config_nz;
 }
 
 MpiSupport::MpiSupport(int argc, char** argv) {
-  mpiInit(argc, argv);
+#if defined(XFDTD_CORE_WITH_MPI)
+  init(argc, argv);
+
+  if (global_size != config_nx * config_ny * config_nz) {
+    if (global_rank == 0) {
+      std::stringstream ss;
+      ss << "The configuration of MPI (" << config_nx << " x " << config_ny
+         << " x " << config_nz
+         << ") is not matched with the number of processes (" << global_size
+         << "). Set the layout of MPI configuration to " << global_size
+         << " x 1 x 1.\n";
+      std::cerr << ss.str();
+    }
+    config_nx = global_size;
+    config_ny = 1;
+    config_nz = 1;
+  }
+
+  _config =
+      MpiConfig::makeXFDTDComm(global_rank, 0, config_nx, config_ny, config_nz);
+
+#endif
 }
 
 auto MpiSupport::abort(int error_code) const -> void {
@@ -54,13 +90,13 @@ inline static auto getAddress(const Real* ptr) -> ptrdiff_t {
   return reinterpret_cast<ptrdiff_t>(ptr);
 }
 
-inline static auto getRealAddressOffset(const Real* ptr_a, const Real* ptr_b)
-    -> ptrdiff_t {
+inline static auto getRealAddressOffset(const Real* ptr_a,
+                                        const Real* ptr_b) -> ptrdiff_t {
   return getAddress(ptr_a) - getAddress(ptr_b);
 }
 
-auto MpiSupport::generateSlice(std::size_t nx, std::size_t ny, std::size_t nz)
-    -> void {
+auto MpiSupport::generateSlice(std::size_t nx, std::size_t ny,
+                               std::size_t nz) -> void {
   _hy_xn_s_block = Block::makeRowMajorXSlice(1, ny + 1, nz, (ny + 1) * nz);
   _hy_xn_r_block = Block::makeRowMajorXSlice(1, ny + 1, nz, 0);
 
@@ -203,43 +239,6 @@ auto MpiSupport::waitAll() -> void {
     }
   }
   _requests.clear();
-#endif
-}
-
-auto MpiSupport::mpiInit(int argc, char** argv) -> void {
-#if defined(XFDTD_CORE_WITH_MPI)
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &_global_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &_global_size);
-
-  if (_global_size != config_nx * config_ny * config_nz) {
-    if (_global_rank == 0) {
-      std::stringstream ss;
-      ss << "Info: MPI configuration "
-         << "(" << config_nx << " x " << config_ny << " x " << config_nz << ") "
-         << "is not matched with the number of "
-            "processes. "
-            "Set the layout of MPI configuration to "
-         << _global_size << " x " << 1 << " x " << 1 << ".\n";
-
-      std::cout << ss.str();
-    }
-    config_nx = _global_size;
-    config_ny = 1;
-    config_nz = 1;
-  }
-
-  _config = MpiConfig::makeXFDTDComm(_global_rank, 0, config_nx, config_ny,
-                                     config_nz);
-
-  if (isRoot()) {
-    std::stringstream ss;
-    ss << "Info: MPI configuration "
-       << "(" << config_nx << " x " << config_ny << " x " << config_nz << ") "
-       << "is set.\n";
-    std::cout << ss.str();
-  }
-
 #endif
 }
 

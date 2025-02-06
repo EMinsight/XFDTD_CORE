@@ -18,7 +18,7 @@ inline Array1D<std::complex<Real>> dft(const Arr &time_domain_data, Real dt,
     for (size_t j{0}; j < time_domain_data.size(); ++j) {
       auto t{(j + 1) * dt + time_shift};
       sum += time_domain_data(j) *
-             std::exp(-2.0 * constant::II * constant::PI * frequencies(i) * t);
+             std::exp(-static_cast<Real>(2.0) * constant::II * constant::PI * frequencies(i) * t);
     }
     res(i) = sum * dt;
   }
