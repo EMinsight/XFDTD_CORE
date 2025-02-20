@@ -8,7 +8,8 @@ class Grid {
  public:
   Grid() = default;
 
-  Grid(Index i, Index j, Index k, Index material_index = -1);
+  Grid(Index i, Index j, Index k,
+       Index material_index = static_cast<Index>(-1));
 
   Grid(const Grid&) = default;
 
@@ -37,7 +38,7 @@ class Grid {
   std::string toString() const;
 
  private:
-  Index _i{0}, _j{0}, _k{0}, _material_index{static_cast<size_t>(-1)};
+  Index _i{0}, _j{0}, _k{0}, _material_index{static_cast<Index>(-1)};
 };
 }  // namespace xfdtd
 
