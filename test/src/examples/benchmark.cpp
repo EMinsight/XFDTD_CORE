@@ -6,6 +6,7 @@
 
 #include "argparse.hpp"
 #include "xfdtd/boundary/pml.h"
+#include "xfdtd/common/type_define.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
 #include "xfdtd/object/object.h"
@@ -23,8 +24,8 @@ void dielectricSphereScatter(int argc, char* argv[]) {
 
   program.add_argument("-d", "--dl")
       .help("Grid resolution")
-      .default_value(5e-3)
-      .scan<'g', double>();
+      .default_value(xfdtd::Real{5e-3})
+      .scan<'g', xfdtd::Real>();
 
   program.add_argument("-m_c", "--mpi_config")
       .help("MPI configuration")
@@ -54,7 +55,7 @@ void dielectricSphereScatter(int argc, char* argv[]) {
   }
 
   auto time_steps = program.get<int>("-t");
-  auto dl = program.get<double>("-d");
+  auto dl = program.get<xfdtd::Real>("-d");
   auto mpi_config = program.get<std::vector<int>>("-m_c");
   auto thread_config = program.get<std::vector<int>>("-t_c");
   auto with_pml = program.get<bool>("--with_pml");

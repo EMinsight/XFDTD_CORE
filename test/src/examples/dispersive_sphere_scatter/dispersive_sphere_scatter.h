@@ -33,7 +33,7 @@ inline void outputRelativePermittivity(
 
 inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
                           std::string_view dir,
-                          const xt::xarray<double>& freq) {
+                          const xt::xarray<xfdtd::Real>& freq) {
   const std::filesystem::path sphere_scatter_dir{dir};
 
   if (xfdtd::MpiSupport::instance().isRoot()) {
@@ -46,7 +46,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
               << "\n";
   }
 
-  constexpr double dl{7.5e-3};
+  constexpr xfdtd::Real dl{7.5e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -54,7 +54,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
                                     xfdtd::Vector{0.35, 0.35, 0.35}),
       xfdtd::Material::createAir())};
 
-  constexpr double radius = 1e-1;
+  constexpr xfdtd::Real radius = 1e-1;
   auto sphere = std::make_shared<xfdtd::Object>(
       "scatter",
       std::make_unique<xfdtd::Sphere>(xfdtd::Vector{0, 0, 0}, radius),
@@ -110,15 +110,15 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       "xy");
 
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
-      "xz");
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      0, "xz");
 
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
 
   if (!xfdtd::MpiSupport::instance().isRoot()) {
@@ -137,7 +137,7 @@ inline void runSimulation(std::shared_ptr<xfdtd::Material> sphere_material,
 
 inline void testCase(
     const std::shared_ptr<xfdtd::LinearDispersiveMaterial>& material, int id,
-    double concerned_freq = 1e9) {
+    xfdtd::Real concerned_freq = 1e9) {
   xfdtd::MpiSupport::setMpiParallelDim(1, 2, 2);
 
   std::filesystem::path data_dir =
@@ -187,7 +187,8 @@ inline void testCase(
 
   if (xfdtd::MpiSupport::instance().isRoot()) {
     outputRelativePermittivity(
-        xt::linspace<double>(concerned_freq / 100, 5 * concerned_freq, 100),
+        xt::linspace<xfdtd::Real>(concerned_freq / 100, 5 * concerned_freq,
+                                  100),
         material, (data_dir / "relative_permittivity.npy").string());
   }
 }
