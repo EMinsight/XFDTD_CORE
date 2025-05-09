@@ -32,8 +32,13 @@ option(XFDTD_CORE_SINGLE_PRECISION "Enable single precision" OFF)
 # DEPENDENCIES
 # ##############################################################################
 
-find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
+set(XFDTD_CORE_REQUIRED_MAX_XTENSOR_VERSION 0.25.0)
+if (xtensor_FOUND)
+  if (xtensor_VERSION VERSION_GREATER XFDTD_CORE_REQUIRED_MAX_XTENSOR_VERSION)
+    message(FATAL_ERROR "xtensor version ${xtensor_VERSION} is not supported, please use version < ${XFDTD_CORE_REQUIRED_MAX_XTENSOR_VERSION}")
+  endif()
+endif()
 
 set(XFDTD_CORE_PUBLIC_DEFINATIONS "")
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
