@@ -1,5 +1,4 @@
-#include <xfdtd/parallel/parallelized_config.h>
-
+#include <filesystem>
 #include <memory>
 #include <xtensor.hpp>
 #include <xtensor/xnpy.hpp>
@@ -19,7 +18,7 @@
 #include "xfdtd/simulation/simulation.h"
 
 void quarterWaveTransformer() {
-  constexpr double size{2e-4};
+  constexpr xfdtd::Real size{2e-4};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -54,7 +53,7 @@ void quarterWaveTransformer() {
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{0 * size, 0, 0},
                                     xfdtd::Vector{10e-3, 18e-3, 0}))};
 
-  constexpr double l_min{size * 30};
+  constexpr xfdtd::Real l_min{size * 30};
   auto tau{l_min / 6e8};
   auto t_0{4.5 * tau};
   auto v_source{std::make_shared<xfdtd::VoltageSource>(
@@ -128,7 +127,7 @@ void quarterWaveTransformer() {
   auto port_1{std::make_shared<xfdtd::Port>(1, true, 50, c1, v1)};
   auto port_2{std::make_shared<xfdtd::Port>(2, false, 100, c2, v2)};
   auto network{
-      std::make_shared<xfdtd::Network>("./data/quarter_wave_transformer")};
+      std::make_shared<xfdtd::Network>("./tmp/data/quarter_wave_transformer")};
   network->addPort(port_1);
   network->addPort(port_2);
   network->setFrequencies(xt::arange(2e7, 8e9, 1e7));
@@ -159,14 +158,11 @@ void quarterWaveTransformer() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::YP));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
 
+  s.addDefaultVisitor();
   s.run(5000);
-  if (xfdtd::MpiSupport::instance().isRoot()) {
-    std::cout << "Output Data..."
-              << "\n";
-  }
 
   network->output();
-  auto output_dir{std::string{"./data/quarter_wave_transformer"}};
+  auto output_dir{std::string{"./tmp/data/quarter_wave_transformer"}};
   v1->setOutputDir(output_dir);
   v2->setOutputDir(output_dir);
   c1->setOutputDir(output_dir);
@@ -175,14 +171,12 @@ void quarterWaveTransformer() {
   v2->output();
   c1->output();
   c2->output();
-  xt::dump_npy(output_dir + "/v_source.npy",
+  if (!xfdtd::MpiSupport::instance().isRoot()) {
+    return;
+  }
+  xt::dump_npy((std::filesystem::path{output_dir} / "v_source.npy").string(),
                xt::stack(xt::xtuple(v_source->waveform()->time(),
                                     v_source->waveform()->value())));
-
-  if (xfdtd::MpiSupport::instance().isRoot()) {
-    std::cout << "Output Data Finished"
-              << "\n";
-  }
 }
 
 int main() { quarterWaveTransformer(); }

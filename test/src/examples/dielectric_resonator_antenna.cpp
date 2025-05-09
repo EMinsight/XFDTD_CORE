@@ -20,9 +20,9 @@
 #include "xfdtd/waveform/waveform.h"
 
 void dielectricResonatorAntenna() {
-  constexpr double dx{0.715e-3};
-  constexpr double dy{0.508e-3};
-  constexpr double dz{0.5e-3};
+  constexpr xfdtd::Real dx{0.715e-3};
+  constexpr xfdtd::Real dy{0.508e-3};
+  constexpr xfdtd::Real dz{0.5e-3};
 
   auto domain_cube{std::make_unique<xfdtd::Cube>(
       xfdtd::Vector{-8e-3 - 10 * dx, -6e-3 - 10 * dy, -10 * dz},
@@ -78,17 +78,17 @@ void dielectricResonatorAntenna() {
 
   auto movie{std::make_shared<xfdtd::MovieMonitor>(
       std::move(e_monitor), 10, "movie",
-      "./data/dielectric_resonator_antenna/movie")};
+      "./tmp/data/dielectric_resonator_antenna/movie")};
 
   auto port_1{std::make_shared<xfdtd::Port>(1, true, 50, c1, v1)};
 
   auto network{std::make_shared<xfdtd::Network>(
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1},
-      xt::linspace(2e9, 6e9, 100), "./data/dielectric_resonator_antenna")};
+      xt::linspace(2e9, 6e9, 100), "./tmp/data/dielectric_resonator_antenna")};
 
   auto nffft{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
-      13, 13, 13, xt::xarray<double>{3.5e9, 4.3e9},
-      "./data/dielectric_resonator_antenna")};
+      13, 13, 13, xt::xarray<xfdtd::Real>{3.5e9, 4.3e9},
+      "./tmp/data/dielectric_resonator_antenna")};
 
   auto s{xfdtd::Simulation{dx, dy, dz, 0.9}};
   s.addObject(domain);
@@ -110,20 +110,20 @@ void dielectricResonatorAntenna() {
   s.run(5000);
 
   network->output();
-  v1->setOutputDir("./data/dielectric_resonator_antenna");
+  v1->setOutputDir("./tmp/data/dielectric_resonator_antenna");
   v1->output();
-  c1->setOutputDir("./data/dielectric_resonator_antenna");
+  c1->setOutputDir("./tmp/data/dielectric_resonator_antenna");
   c1->output();
   nffft->outputRadiationPower();
   nffft->processFarField(
       xfdtd::constant::PI * 0.5,
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       "xy_plane", domain_cube->center());
   nffft->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
-      "xz_plane", domain_cube->center());
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      0, "xz_plane", domain_cube->center());
   nffft->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz_plane", domain_cube->center());
 }
 

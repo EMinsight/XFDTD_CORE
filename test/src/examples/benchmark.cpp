@@ -2,7 +2,6 @@
 #include <memory>
 #include <sstream>
 #include <vector>
-#include <xtensor/xnpy.hpp>
 
 #include "argparse.hpp"
 #include "xfdtd/boundary/pml.h"

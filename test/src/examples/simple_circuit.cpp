@@ -1,7 +1,4 @@
-
-
 #include <memory>
-#include <xtensor/xnpy.hpp>
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/material/material.h"
@@ -17,63 +14,65 @@
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 
-constexpr static double SIZE{1e-3};
+const static std::string OUT_DIR{"./tmp/data/simple_circuit/"};
 
-constexpr static double ORIGIN_A{-3 * SIZE};
-constexpr static double ORIGIN_B{-3 * SIZE};
-constexpr static double ORIGIN_C{-3 * SIZE};
+constexpr static xfdtd::Real SIZE{1e-3};
 
-constexpr static double LENGTH_A{14 * SIZE};
-constexpr static double LENGTH_B{8 * SIZE};
-constexpr static double LENGTH_C{10 * SIZE};
+constexpr static xfdtd::Real ORIGIN_A{-3 * SIZE};
+constexpr static xfdtd::Real ORIGIN_B{-3 * SIZE};
+constexpr static xfdtd::Real ORIGIN_C{-3 * SIZE};
 
-constexpr static double PLANE_O_A{0 * SIZE};
-constexpr static double PLANE_O_B{0 * SIZE};
-constexpr static double PLANE_O_C{0 * SIZE};
+constexpr static xfdtd::Real LENGTH_A{14 * SIZE};
+constexpr static xfdtd::Real LENGTH_B{8 * SIZE};
+constexpr static xfdtd::Real LENGTH_C{10 * SIZE};
 
-constexpr static double PLANE_L_A{8 * SIZE};
-constexpr static double PLANE_L_B{2 * SIZE};
-constexpr static double PLANE_L_C{0 * SIZE};
+constexpr static xfdtd::Real PLANE_O_A{0 * SIZE};
+constexpr static xfdtd::Real PLANE_O_B{0 * SIZE};
+constexpr static xfdtd::Real PLANE_O_C{0 * SIZE};
 
-constexpr static double PLANE1_O_A{0 * SIZE};
-constexpr static double PLANE1_O_B{0 * SIZE};
-constexpr static double PLANE1_O_C{4 * SIZE};
+constexpr static xfdtd::Real PLANE_L_A{8 * SIZE};
+constexpr static xfdtd::Real PLANE_L_B{2 * SIZE};
+constexpr static xfdtd::Real PLANE_L_C{0 * SIZE};
 
-constexpr static double PLANE1_L_A{8 * SIZE};
-constexpr static double PLANE1_L_B{2 * SIZE};
-constexpr static double PLANE1_L_C{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_O_A{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_O_B{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_O_C{4 * SIZE};
 
-constexpr static double V_SOURCE_O_A{0 * SIZE};
-constexpr static double V_SOURCE_O_B{0 * SIZE};
-constexpr static double V_SOURCE_O_C{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_L_A{8 * SIZE};
+constexpr static xfdtd::Real PLANE1_L_B{2 * SIZE};
+constexpr static xfdtd::Real PLANE1_L_C{0 * SIZE};
 
-constexpr static double V_SOURCE_L_A{0 * SIZE};
-constexpr static double V_SOURCE_L_B{2 * SIZE};
-constexpr static double V_SOURCE_L_C{4 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_O_A{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_O_B{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_O_C{0 * SIZE};
 
-constexpr static double RESISTOR_O_A{8 * SIZE};
-constexpr static double RESISTOR_O_B{0 * SIZE};
-constexpr static double RESISTOR_O_C{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_L_A{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_L_B{2 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_L_C{4 * SIZE};
 
-constexpr static double RESISTOR_L_A{0 * SIZE};
-constexpr static double RESISTOR_L_B{2 * SIZE};
-constexpr static double RESISTOR_L_C{4 * SIZE};
+constexpr static xfdtd::Real RESISTOR_O_A{8 * SIZE};
+constexpr static xfdtd::Real RESISTOR_O_B{0 * SIZE};
+constexpr static xfdtd::Real RESISTOR_O_C{0 * SIZE};
 
-constexpr static double V_MONITOR_O_A{5 * SIZE};
-constexpr static double V_MONITOR_O_B{0 * SIZE};
-constexpr static double V_MONITOR_O_C{0 * SIZE};
+constexpr static xfdtd::Real RESISTOR_L_A{0 * SIZE};
+constexpr static xfdtd::Real RESISTOR_L_B{2 * SIZE};
+constexpr static xfdtd::Real RESISTOR_L_C{4 * SIZE};
 
-constexpr static double V_MONITOR_L_A{0 * SIZE};
-constexpr static double V_MONITOR_L_B{2 * SIZE};
-constexpr static double V_MONITOR_L_C{4 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_O_A{5 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_O_B{0 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_O_C{0 * SIZE};
 
-constexpr static double I_MONITOR_O_A{5 * SIZE};
-constexpr static double I_MONITOR_O_B{0 * SIZE};
-constexpr static double I_MONITOR_O_C{3 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_L_A{0 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_L_B{2 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_L_C{4 * SIZE};
 
-constexpr static double I_MONITOR_L_A{0 * SIZE};
-constexpr static double I_MONITOR_L_B{2 * SIZE};
-constexpr static double I_MONITOR_L_C{1 * SIZE};
+constexpr static xfdtd::Real I_MONITOR_O_A{5 * SIZE};
+constexpr static xfdtd::Real I_MONITOR_O_B{0 * SIZE};
+constexpr static xfdtd::Real I_MONITOR_O_C{3 * SIZE};
+
+constexpr static xfdtd::Real I_MONITOR_L_A{0 * SIZE};
+constexpr static xfdtd::Real I_MONITOR_L_B{2 * SIZE};
+constexpr static xfdtd::Real I_MONITOR_L_C{1 * SIZE};
 
 void simpleCircuitX() {
   auto domain{std::make_shared<xfdtd::Object>(
@@ -112,14 +111,14 @@ void simpleCircuitX() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_MONITOR_O_C, V_MONITOR_O_A, V_MONITOR_O_B},
           xfdtd::Vector{V_MONITOR_L_C, V_MONITOR_L_A, V_MONITOR_L_B}),
-      xfdtd::Axis::Direction::XP, "./data/simple_circuit")};
+      xfdtd::Axis::Direction::XP, OUT_DIR)};
 
   auto circuit_i_monitor{std::make_shared<xfdtd::CurrentMonitor>(
       "i_monitor",
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{I_MONITOR_O_C, I_MONITOR_O_A, I_MONITOR_O_B},
           xfdtd::Vector{I_MONITOR_L_C, I_MONITOR_L_A, I_MONITOR_L_B}),
-      xfdtd::Axis::Direction::YP, "./data/simple_circuit")};
+      xfdtd::Axis::Direction::YP, OUT_DIR)};
 
   auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98}};
   s.addObject(domain);
@@ -172,14 +171,14 @@ void simpleCircuitY() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_MONITOR_O_B, V_MONITOR_O_C, V_MONITOR_O_A},
           xfdtd::Vector{V_MONITOR_L_B, V_MONITOR_L_C, V_MONITOR_L_A}),
-      xfdtd::Axis::Direction::YP, "./data/simple_circuit")};
+      xfdtd::Axis::Direction::YP, OUT_DIR)};
 
   auto circuit_i_monitor{std::make_shared<xfdtd::CurrentMonitor>(
       "i_monitor",
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{I_MONITOR_O_B, I_MONITOR_O_C, I_MONITOR_O_A},
           xfdtd::Vector{I_MONITOR_L_B, I_MONITOR_L_C, I_MONITOR_L_A}),
-      xfdtd::Axis::Direction::ZP, "./data/simple_circuit")};
+      xfdtd::Axis::Direction::ZP, OUT_DIR)};
 
   auto s{xfdtd::Simulation{SIZE, SIZE, SIZE, 0.9}};
   s.addObject(domain);
@@ -232,14 +231,14 @@ void simpleCircuitZ() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_MONITOR_O_A, V_MONITOR_O_B, V_MONITOR_O_C},
           xfdtd::Vector{V_MONITOR_L_A, V_MONITOR_L_B, V_MONITOR_L_C}),
-      xfdtd::Axis::Direction::ZP, "./data/simple_circuit")};
+      xfdtd::Axis::Direction::ZP, OUT_DIR)};
 
   auto circuit_i_monitor{std::make_shared<xfdtd::CurrentMonitor>(
       "i_monitor",
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{I_MONITOR_O_A, I_MONITOR_O_B, I_MONITOR_O_C},
           xfdtd::Vector{I_MONITOR_L_A, I_MONITOR_L_B, I_MONITOR_L_C}),
-      xfdtd::Axis::Direction::XP, "./data/simple_circuit")};
+      xfdtd::Axis::Direction::XP, OUT_DIR)};
 
   auto s{
       xfdtd::Simulation{SIZE, SIZE, SIZE, 0.90, xfdtd::ThreadConfig{1, 1, 1}}};
@@ -250,10 +249,10 @@ void simpleCircuitZ() {
   s.addObject(v_source);
   s.addObject(resistor);
   s.addMonitor(circuit_v_monitor);
-  //   s.addMonitor(circuit_i_monitor);
+  s.addMonitor(circuit_i_monitor);
   s.run(5000);
 
-  //   circuit_i_monitor->output();
+  circuit_i_monitor->output();
   circuit_v_monitor->output();
 }
 

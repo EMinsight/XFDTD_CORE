@@ -1,5 +1,3 @@
-
-
 #include <memory>
 
 #include "xfdtd/boundary/pml.h"
@@ -18,9 +16,9 @@
 #include "xfdtd/waveform/waveform.h"
 
 void microstripLine() {
-  constexpr double dx{0.203e-3};
-  constexpr double dy{0.203e-3};
-  constexpr double dz{0.1325e-3};
+  constexpr xfdtd::Real dx{0.203e-3};
+  constexpr xfdtd::Real dy{0.203e-3};
+  constexpr xfdtd::Real dz{0.1325e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",

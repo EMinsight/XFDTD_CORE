@@ -13,7 +13,7 @@
 #include "xfdtd/waveform_source/tfsf_3d.h"
 
 void dielectricCubeScatter() {
-  constexpr double dl{5e-3};
+  constexpr xfdtd::Real dl{5e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -37,8 +37,8 @@ void dielectricCubeScatter() {
       xfdtd::Waveform::gaussian(tau, t_0))};
 
   auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
-      13, 13, 13, xt::xarray<double>{1e9},
-      "./data/dielectric_cube_scatter/fd")};
+      13, 13, 13, xt::xarray<xfdtd::Real>{1e9},
+      "./tmp/data/dielectric_cube_scatter/fd")};
 
   auto s{xfdtd::Simulation{dl, dl, dl, 0.9}};
   s.addObject(domain);
@@ -55,19 +55,19 @@ void dielectricCubeScatter() {
 
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       "xy");
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
-      "xz");
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      0, "xz");
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
 
   auto time{tfsf_3d->waveform()->time()};
   auto incident_wave_data{tfsf_3d->waveform()->value()};
-  xt::dump_npy("./data/dielectric_cube_scatter/time.npy", time);
-  xt::dump_npy("./data/dielectric_cube_scatter/incident_wave.npy",
+  xt::dump_npy("./tmp/data/dielectric_cube_scatter/time.npy", time);
+  xt::dump_npy("./tmp/data/dielectric_cube_scatter/incident_wave.npy",
                incident_wave_data);
 }
 

@@ -18,7 +18,7 @@
 #include "xfdtd/simulation/simulation.h"
 
 void halfWaveDipole() {
-  constexpr double dl{2.5e-4};
+  constexpr xfdtd::Real dl{2.5e-4};
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
       std::make_unique<xfdtd::Cube>(
@@ -34,9 +34,9 @@ void halfWaveDipole() {
       "arm_1",
       std::make_unique<xfdtd::Cylinder>(xfdtd::Vector{0, 0, -5.125e-3}, 5e-5,
                                         39 * dl, xfdtd::Axis::ZP))};
-  constexpr double l_min{dl * 30};
-  constexpr double tau{l_min / 6e8};
-  constexpr double t_0{4.5 * tau};
+  constexpr xfdtd::Real l_min{dl * 30};
+  constexpr xfdtd::Real tau{l_min / 6e8};
+  constexpr xfdtd::Real t_0{4.5 * tau};
   auto v_s{std::make_shared<xfdtd::VoltageSource>(
       "v_s",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{0, 0, -dl},
@@ -57,10 +57,10 @@ void halfWaveDipole() {
   auto port{std::make_shared<xfdtd::Port>(1, true, 50, c1, v1)};
   auto network{std::make_shared<xfdtd::Network>(
       std::vector<std::shared_ptr<xfdtd::Port>>{port},
-      xt::arange<double>(2e7, 2e10, 2e7), "./data/half_wave_dipole")};
+      xt::arange<xfdtd::Real>(2e7, 2e10, 2e7), "./tmp/data/half_wave_dipole")};
 
   auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
-      13, 13, 13, xt::xarray<double>{7e9}, "./data/half_wave_dipole")};
+      13, 13, 13, xt::xarray<xfdtd::Real>{7e9}, "./tmp/data/half_wave_dipole")};
 
   auto s{xfdtd::Simulation{dl, dl, dl, 0.9}};
   s.addObject(domain);
@@ -87,13 +87,13 @@ void halfWaveDipole() {
   nffft_fd->outputRadiationPower();
   nffft_fd->processFarField(
       xfdtd::constant::PI * 0.5,
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       "xy");
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
-      "xz");
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      0, "xz");
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
 }
 
