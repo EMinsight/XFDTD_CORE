@@ -125,8 +125,8 @@ void Port::calculateSParameters(const Array1D<Real>& frequencies) {
              -1.5 * dt)};  // TODO(franzero): why -1.5*dt?
   auto v{dft(voltage, dt, frequencies)};
 
-  _a = 0.5 * (v + z * i) / k;
-  _b = 0.5 * (v - std::conj(z) * i) / k;
+  _a = Real{0.5} * (v + z * i) / k;
+  _b = Real{0.5} * (v - std::conj(z) * i) / k;
 }
 
 }  // namespace xfdtd
