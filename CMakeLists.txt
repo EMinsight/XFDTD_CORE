@@ -24,9 +24,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-# option to enable MPI support commnad: cmake -D XFDTD_CORE_WITH_MPI=ON
 option(XFDTD_CORE_WITH_MPI "Enable MPI support" OFF)
-# option to enable single precision commnad: cmake -D
 # XFDTD_CORE_SINGLE_PRECISION=ON
 option(XFDTD_CORE_SINGLE_PRECISION "Enable single precision" OFF)
 
@@ -34,8 +32,13 @@ option(XFDTD_CORE_SINGLE_PRECISION "Enable single precision" OFF)
 # DEPENDENCIES
 # ##############################################################################
 
-find_package(xtl REQUIRED)
 find_package(xtensor REQUIRED)
+set(XFDTD_CORE_REQUIRED_MAX_XTENSOR_VERSION 0.25.0)
+if (xtensor_FOUND)
+  if (xtensor_VERSION VERSION_GREATER XFDTD_CORE_REQUIRED_MAX_XTENSOR_VERSION)
+    message(FATAL_ERROR "xtensor version ${xtensor_VERSION} is not supported, please use version < ${XFDTD_CORE_REQUIRED_MAX_XTENSOR_VERSION}")
+  endif()
+endif()
 
 set(XFDTD_CORE_PUBLIC_DEFINATIONS "")
 set(XFDTD_CORE_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
@@ -43,7 +46,32 @@ set(XFDTD_CORE_PRIVATE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
 set(XFDTD_CORE_THIRD_PARTY_INCLUDE_DIR ${xtensor_INCLUDE_DIRS})
 set(XFDTD_CORE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
-set(XFDTD_CORE_THIRD_PARTY_LIB xtensor)
+set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB} xtensor)
+
+set(XFDTD_CORE_NEED_LINKER_TBB OFF)
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  # VS 2017 or later
+  set(XFDTD_CORE_DEFINATIONS ${XFDTD_CORE_DEFINATIONS} XFDTD_CORE_PSTL_ENABLE)
+  message(STATUS "XFDTD Core PSTL support is enabled")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    # TODO: mingw64 works
+    set(XFDTD_CORE_NEED_LINKER_TBB OFF)
+  else()
+    set(XFDTD_CORE_NEED_LINKER_TBB ON)
+  endif()
+endif()
+
+if (XFDTD_CORE_NEED_LINKER_TBB)
+  find_package(TBB QUIET)
+  if (NOT TBB_FOUND)
+    set(XFDTD_CORE_NEED_LINKER_TBB OFF)
+  else()
+    set(XFDTD_CORE_DEFINATIONS ${XFDTD_CORE_DEFINATIONS} XFDTD_CORE_PSTL_ENABLE)
+    set(XFDTD_CORE_THIRD_PARTY_LIB ${XFDTD_CORE_THIRD_PARTY_LIB} TBB::tbb)
+    message(STATUS "XFDTD Core PSTL support is enabled")
+  endif()
+endif()
 
 if(XFDTD_CORE_WITH_MPI)
   message(STATUS "XFDTD Core MPI support is enabled")

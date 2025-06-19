@@ -1,8 +1,7 @@
-#include <xfdtd/boundary/pml.h>
-
 #include <limits>
 #include <memory>
 
+#include "xfdtd/boundary/pml.h"
 #include "xfdtd/common/constant.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
@@ -59,7 +58,7 @@ void cylinderScatter2D() {
                             -std::numeric_limits<xfdtd::Real>::infinity()},
               xfdtd::Vector{330 * dx, 350 * dy, xfdtd::constant::INF}),
           xfdtd::EMF::Field::EZ, "", ""),
-      20, "movie", "./data/cylinder_scatter_2d")};
+      20, "movie", "./tmp/data/cylinder_scatter_2d")};
   auto s{xfdtd::Simulation{dx, dy, 1, 0.8, xfdtd::ThreadConfig{2, 1, 1}}};
   s.addObject(domain);
   s.addObject(cylinder);

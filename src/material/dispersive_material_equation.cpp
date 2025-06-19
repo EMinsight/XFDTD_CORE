@@ -32,11 +32,11 @@ MLorentzEqDecision::MLorentzEqDecision(Array1D<Real> a_0, Array1D<Real> a_1,
   _num_p = _a_0.size();
 }
 
-auto MLorentzEqDecision::susceptibility(Real freq,
-                                        Index p) const -> std::complex<Real> {
+auto MLorentzEqDecision::susceptibility(Real freq, Index p) const
+    -> std::complex<Real> {
   auto omega = static_cast<Real>(2.0) * constant::PI * freq;
   return (_a_1.at(p) * constant::II * omega + _a_0.at(p)) /
-         (_b_2.at(p) * std::pow((constant::II * omega), 2) +
+         (_b_2.at(p) * (constant::II * omega) * (constant::II * omega) +
           _b_1.at(p) * (constant::II * omega) + _b_0.at(p));
 };
 

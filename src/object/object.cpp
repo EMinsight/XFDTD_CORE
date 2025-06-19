@@ -7,6 +7,9 @@
 
 #include <algorithm>
 #include <cstdlib>
+#ifdef XFDTD_CORE_PSTL_ENABLE
+#include <execution>
+#endif
 #include <memory>
 #include <utility>
 
@@ -59,23 +62,39 @@ void Object::handleDispersion(
 
   auto linear_dispersive_material =
       dynamic_cast<LinearDispersiveMaterial*>(_material.get());
+  // if par_unseq is implemented, use it
+#ifdef XFDTD_CORE_PSTL_ENABLE
+  std::for_each(std::execution::par_unseq,
+                _grid_space->gridWithMaterial().begin(),
+                _grid_space->gridWithMaterial().end(),
+                [linear_dispersive_material, nx, ny, nz, ade_method_storage,
+                 grid_space = _grid_space,
+                 calculation_param = _calculation_param, this](auto&& grid) {
+                  auto material_index = grid.materialIndex();
+                  if (material_index != materialIndex()) {
+                    return;
+                  }
 
-  auto num_pole = linear_dispersive_material;
+                  ade_method_storage->correctCoeff(
+                      grid.i(), grid.j(), grid.k(), *linear_dispersive_material,
+                      grid_space, calculation_param);
+                });
+#else
+  std::for_each(_grid_space->gridWithMaterial().begin(),
+                _grid_space->gridWithMaterial().end(),
+                [linear_dispersive_material, nx, ny, nz, ade_method_storage,
+                 grid_space = _grid_space,
+                 calculation_param = _calculation_param, this](auto&& grid) {
+                  auto material_index = grid.materialIndex();
+                  if (material_index != materialIndex()) {
+                    return;
+                  }
 
-  for (Index i{0}; i < nx; ++i) {
-    for (Index j{0}; j < ny; ++j) {
-      for (Index k{0}; k < nz; ++k) {
-        const auto& grid = _grid_space->gridWithMaterial()(i, j, k);
-        auto material_index = grid.materialIndex();
-        if (material_index != materialIndex()) {
-          continue;
-        }
-
-        ade_method_storage->correctCoeff(i, j, k, *linear_dispersive_material,
-                                         _grid_space, _calculation_param);
-      }
-    }
-  }
+                  ade_method_storage->correctCoeff(
+                      grid.i(), grid.j(), grid.k(), *linear_dispersive_material,
+                      grid_space, calculation_param);
+                });
+#endif
 }
 
 void Object::correctE() {}
@@ -118,44 +137,64 @@ void Object::defaultCorrectMaterialSpace(Index index) {
   auto nx = _grid_space->sizeX();
   auto ny = _grid_space->sizeY();
   auto nz = _grid_space->sizeZ();
-
-  std::for_each(g_variety->gridWithMaterial().begin(),
+#ifdef XFDTD_CORE_PSTL_ENABLE
+  std::for_each(std::execution::par_unseq,
+                g_variety->gridWithMaterial().begin(),
                 g_variety->gridWithMaterial().end(),
-                [index, &grid_space = _grid_space, &shape = _shape](auto&& g) {
+                [index, &grid_space = _grid_space, &shape = _shape, &eps_x,
+                 &eps_y, &eps_z, &mu_x, &mu_y, &mu_z, &sigma_e_x, &sigma_e_y,
+                 &sigma_e_z, &sigma_m_x, &sigma_m_y, &sigma_m_z, eps, mu,
+                 sigma_e, sigma_m](auto&& g) {
                   if (!shape->isInside(grid_space->getGridCenterVector(g),
                                        grid_space->eps())) {
                     return;
                   }
                   g.setMaterialIndex(index);
+                  auto i = g.i();
+                  auto j = g.j();
+                  auto k = g.k();
+                  eps_x(i, j, k) = eps;
+                  eps_y(i, j, k) = eps;
+                  eps_z(i, j, k) = eps;
+                  mu_x(i, j, k) = mu;
+                  mu_y(i, j, k) = mu;
+                  mu_z(i, j, k) = mu;
+                  sigma_e_x(i, j, k) = sigma_e;
+                  sigma_e_y(i, j, k) = sigma_e;
+                  sigma_e_z(i, j, k) = sigma_e;
+                  sigma_m_x(i, j, k) = sigma_m;
+                  sigma_m_y(i, j, k) = sigma_m;
+                  sigma_m_z(i, j, k) = sigma_m;
                 });
-  auto correct_func = [&grid_space = _grid_space, &shape = _shape, this](
-                          Index is, Index ie, Index js, Index je, Index ks,
-                          Index ke, const auto& value, auto&& arr) {
-    for (auto i{is}; i < ie; ++i) {
-      for (auto j{js}; j < je; ++j) {
-        for (auto k{ks}; k < ke; ++k) {
-          if (grid_space->gridWithMaterial()(i, j, k).materialIndex() !=
-              materialIndex()) {
-            continue;
-          }
-          arr(i, j, k) = value;
-        }
-      }
-    }
-  };
-
-  correct_func(0, nx, 0, ny, 0, nz, eps, eps_x);
-  correct_func(0, nx, 0, ny, 0, nz, eps, eps_y);
-  correct_func(0, nx, 0, ny, 0, nz, eps, eps_z);
-  correct_func(0, nx, 0, ny, 0, nz, mu, mu_x);
-  correct_func(0, nx, 0, ny, 0, nz, mu, mu_y);
-  correct_func(0, nx, 0, ny, 0, nz, mu, mu_z);
-  correct_func(0, nx, 0, ny, 0, nz, sigma_e, sigma_e_x);
-  correct_func(0, nx, 0, ny, 0, nz, sigma_e, sigma_e_y);
-  correct_func(0, nx, 0, ny, 0, nz, sigma_e, sigma_e_z);
-  correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_x);
-  correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_y);
-  correct_func(0, nx, 0, ny, 0, nz, sigma_m, sigma_m_z);
+#else
+  std::for_each(g_variety->gridWithMaterial().begin(),
+                g_variety->gridWithMaterial().end(),
+                [index, &grid_space = _grid_space, &shape = _shape, &eps_x,
+                 &eps_y, &eps_z, &mu_x, &mu_y, &mu_z, &sigma_e_x, &sigma_e_y,
+                 &sigma_e_z, &sigma_m_x, &sigma_m_y, &sigma_m_z, eps, mu,
+                 sigma_e, sigma_m](auto&& g) {
+                  if (!shape->isInside(grid_space->getGridCenterVector(g),
+                                       grid_space->eps())) {
+                    return;
+                  }
+                  g.setMaterialIndex(index);
+                  auto i = g.i();
+                  auto j = g.j();
+                  auto k = g.k();
+                  eps_x(i, j, k) = eps;
+                  eps_y(i, j, k) = eps;
+                  eps_z(i, j, k) = eps;
+                  mu_x(i, j, k) = mu;
+                  mu_y(i, j, k) = mu;
+                  mu_z(i, j, k) = mu;
+                  sigma_e_x(i, j, k) = sigma_e;
+                  sigma_e_y(i, j, k) = sigma_e;
+                  sigma_e_z(i, j, k) = sigma_e;
+                  sigma_m_x(i, j, k) = sigma_m;
+                  sigma_m_y(i, j, k) = sigma_m;
+                  sigma_m_z(i, j, k) = sigma_m;
+                });
+#endif
 }
 
 auto Object::materialIndex() const -> Index { return _material_index; }

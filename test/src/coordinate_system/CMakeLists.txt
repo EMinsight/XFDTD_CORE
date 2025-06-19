@@ -1,3 +1,0 @@
-add_executable(coordinate_system_test coordinate_system_test.cpp)
-
-target_link_libraries(coordinate_system_test xfdtd_coordinate_system)

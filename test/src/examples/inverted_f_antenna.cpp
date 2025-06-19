@@ -17,9 +17,9 @@
 #include "xfdtd/waveform/waveform.h"
 
 void invertedFAntenna() {
-  constexpr double dx{0.262e-3};
-  constexpr double dy{0.4e-3};
-  constexpr double dz{0.4e-3};
+  constexpr xfdtd::Real dx{0.262e-3};
+  constexpr xfdtd::Real dy{0.4e-3};
+  constexpr xfdtd::Real dz{0.4e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -71,22 +71,23 @@ void invertedFAntenna() {
       "v1",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.787e-3, 0, 24e-3},
                                     xfdtd::Vector{0.787e-3, 0, 2.4e-3}),
-      xfdtd::Axis::Direction::XP, "./data/inverted_f_antenna")};
+      xfdtd::Axis::Direction::XP, "./tmp/data/inverted_f_antenna")};
 
   auto c1{std::make_shared<xfdtd::CurrentMonitor>(
       "c1",
       std::make_unique<xfdtd::Cube>(xfdtd::Vector{-0.39e-3, 0, 24e-3},
                                     xfdtd::Vector{0, 0, 2.4e-3}),
-      xfdtd::Axis::Direction::XP, "./data/inverted_f_antenna")};
+      xfdtd::Axis::Direction::XP, "./tmp/data/inverted_f_antenna")};
 
   auto port_1{std::make_shared<xfdtd::Port>(1, true, 50, c1, v1)};
   auto network{std::make_shared<xfdtd::Network>(
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1},
-      xt::arange<double>(2e7, 10e9, 2e7), "./data/inverted_f_antenna")};
+      xt::arange<xfdtd::Real>(2e7, 10e9, 2e7),
+      "./tmp/data/inverted_f_antenna")};
 
   auto nffft{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
-      13, 13, 13, xt::xarray<double>{2.4e9, 5.8e9},
-      "./data/inverted_f_antenna")};
+      13, 13, 13, xt::xarray<xfdtd::Real>{2.4e9, 5.8e9},
+      "./tmp/data/inverted_f_antenna")};
 
   auto s{xfdtd::Simulation{dx, dy, dz, 0.9}};
   s.addObject(domain);
@@ -116,13 +117,13 @@ void invertedFAntenna() {
   nffft->outputRadiationPower();
   nffft->processFarField(
       xfdtd::constant::PI * 0.5,
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       "xy");
   nffft->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
-      "xz");
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      0, "xz");
   nffft->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
 }
 

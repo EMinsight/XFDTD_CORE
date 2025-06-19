@@ -14,7 +14,7 @@ This is a part of the XFDTD project. It contains the core functionality of the X
 
 ## Getting Stared
 
-You will require the the following libraries on your system to compile:[xtl](https://github.com/xtensor-stack/xtl), [xtensor](https://github.com/xtensor-stack/xtensor).
+You will require the the following libraries on your system to compile:[xtensor](https://github.com/xtensor-stack/xtensor).Specify Version:0.25.0:[Reason](https://github.com/xtensor-stack/xtensor/issues/2844).
 
 C++20 is required to compile the library.
 

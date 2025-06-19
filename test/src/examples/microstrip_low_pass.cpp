@@ -1,4 +1,3 @@
-
 #include <memory>
 
 #include "xfdtd/boundary/pml.h"
@@ -138,15 +137,13 @@ void microstripLowPass() {
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZN));
   s.addBoundary(std::make_shared<xfdtd::PML>(8, xfdtd::Axis::Direction::ZP));
   //   s.addMonitor(movie_monitor);
-
+  s.addDefaultVisitor();
   s.run(3500);
 
-  std::cout << "Output Data..."
-            << "\n";
   network->output();
-  v2->setOutputDir("./data/microstrip_low_pass/");
+  v2->setOutputDir("./tmp/data/microstrip_low_pass/");
   v2->output();
-  v1->setOutputDir("./data/microstrip_low_pass/");
+  v1->setOutputDir("./tmp/data/microstrip_low_pass/");
   v1->output();
 }
 

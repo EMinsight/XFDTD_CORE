@@ -16,9 +16,9 @@
 #include "xfdtd/waveform/waveform.h"
 
 void microstripBranchLineCoupler() {
-  constexpr double dx{0.406e-3};
-  constexpr double dy{0.406e-3};
-  constexpr double dz{0.265e-3};
+  constexpr xfdtd::Real dx{0.406e-3};
+  constexpr xfdtd::Real dy{0.406e-3};
+  constexpr xfdtd::Real dz{0.265e-3};
 
   auto domain{std::make_shared<xfdtd::Object>(
       "domain",
@@ -161,8 +161,8 @@ void microstripBranchLineCoupler() {
 
   auto network{std::make_shared<xfdtd::Network>(
       std::vector<std::shared_ptr<xfdtd::Port>>{port_1, port_2, port_3, port_4},
-      xt::linspace<double>(1e9, 10e9, 100),
-      "./data/microstrip_branch_line_coupler")};
+      xt::linspace<xfdtd::Real>(1e9, 10e9, 100),
+      "./tmp/data/microstrip_branch_line_coupler")};
 
   auto s{xfdtd::Simulation{dx, dy, dz, 0.9, xfdtd::ThreadConfig{1, 2, 1}}};
   s.addObject(domain);

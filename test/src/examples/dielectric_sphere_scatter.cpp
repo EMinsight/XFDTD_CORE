@@ -1,10 +1,11 @@
 #include <cstddef>
+#include <filesystem>
 #include <memory>
 #include <xtensor/xnpy.hpp>
-#include <filesystem>
 
 #include "xfdtd/boundary/pml.h"
 #include "xfdtd/common/constant.h"
+#include "xfdtd/common/type_define.h"
 #include "xfdtd/coordinate_system/coordinate_system.h"
 #include "xfdtd/electromagnetic_field/electromagnetic_field.h"
 #include "xfdtd/material/material.h"
@@ -24,9 +25,9 @@
 
 void dielectricSphereScatter() {
   xfdtd::MpiSupport::setMpiParallelDim(2, 2, 1);
-  constexpr double dl{3e-3};
+  constexpr xfdtd::Real dl{3e-3};
   using namespace std::string_view_literals;
-  constexpr auto data_path_str = "./data/dielectric_sphere_scatter"sv;
+  constexpr auto data_path_str = "./tmp/data/dielectric_sphere_scatter"sv;
   const auto data_path = std::filesystem::path{data_path_str};
 
   auto domain{std::make_shared<xfdtd::Object>(
@@ -45,14 +46,14 @@ void dielectricSphereScatter() {
   constexpr auto f_max{3e8 / l_min};  // max frequency: 5 GHz in dl = 3e-3
   constexpr auto tau{l_min / 6e8};
   constexpr auto t_0{4.5 * tau};
-  constexpr std::size_t tfsf_start{static_cast<size_t>(15)};
+  constexpr xfdtd::Index tfsf_start{15};
   auto tfsf{
       std::make_shared<xfdtd::TFSF3D>(tfsf_start, tfsf_start, tfsf_start, 0, 0,
                                       0, xfdtd::Waveform::gaussian(tau, t_0))};
 
   constexpr std::size_t nffft_start{static_cast<size_t>(11)};
   auto nffft_fd{std::make_shared<xfdtd::NFFFTFrequencyDomain>(
-      nffft_start, nffft_start, nffft_start, xt::xarray<double>{1e9},
+      nffft_start, nffft_start, nffft_start, xt::xarray<xfdtd::Real>{1e9},
       (data_path / "fd").string())};
 
   auto nffft_td = std::make_shared<xfdtd::NFFFTTimeDomain>(
@@ -107,10 +108,10 @@ void dielectricSphereScatter() {
 
   nffft_fd->setOutputDir((data_path / "fd").string());
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360), 0,
-      "xz");
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      0, "xz");
   nffft_fd->processFarField(
-      xt::linspace<double>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
+      xt::linspace<xfdtd::Real>(-xfdtd::constant::PI, xfdtd::constant::PI, 360),
       xfdtd::constant::PI * 0.5, "yz");
 
   nffft_td->setOutputDir((data_path / "td").string());

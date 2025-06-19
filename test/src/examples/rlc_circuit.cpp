@@ -1,7 +1,4 @@
-
-
 #include <memory>
-#include <xtensor.hpp>
 #include <xtensor/xnpy.hpp>
 
 #include "xfdtd/coordinate_system/coordinate_system.h"
@@ -18,59 +15,59 @@
 #include "xfdtd/simulation/simulation.h"
 #include "xfdtd/waveform/waveform.h"
 
-constexpr double SIZE{1e-3};
+constexpr xfdtd::Real SIZE{1e-3};
 
-constexpr static double ORIGIN_A{-1 * SIZE};
-constexpr static double ORIGIN_B{-1 * SIZE};
-constexpr static double ORIGIN_C{-1 * SIZE};
+constexpr static xfdtd::Real ORIGIN_A{-1 * SIZE};
+constexpr static xfdtd::Real ORIGIN_B{-1 * SIZE};
+constexpr static xfdtd::Real ORIGIN_C{-1 * SIZE};
 
-constexpr static double LENGTH_A{6 * SIZE};
-constexpr static double LENGTH_B{4 * SIZE};
-constexpr static double LENGTH_C{4 * SIZE};
+constexpr static xfdtd::Real LENGTH_A{6 * SIZE};
+constexpr static xfdtd::Real LENGTH_B{4 * SIZE};
+constexpr static xfdtd::Real LENGTH_C{4 * SIZE};
 
-constexpr static double PLANE_O_A{0 * SIZE};
-constexpr static double PLANE_O_B{0 * SIZE};
-constexpr static double PLANE_O_C{0 * SIZE};
+constexpr static xfdtd::Real PLANE_O_A{0 * SIZE};
+constexpr static xfdtd::Real PLANE_O_B{0 * SIZE};
+constexpr static xfdtd::Real PLANE_O_C{0 * SIZE};
 
-constexpr static double PLANE_L_A{1 * SIZE};
-constexpr static double PLANE_L_B{1 * SIZE};
-constexpr static double PLANE_L_C{0 * SIZE};
+constexpr static xfdtd::Real PLANE_L_A{1 * SIZE};
+constexpr static xfdtd::Real PLANE_L_B{1 * SIZE};
+constexpr static xfdtd::Real PLANE_L_C{0 * SIZE};
 
-constexpr static double PLANE1_O_A{0 * SIZE};
-constexpr static double PLANE1_O_B{0 * SIZE};
-constexpr static double PLANE1_O_C{2 * SIZE};
+constexpr static xfdtd::Real PLANE1_O_A{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_O_B{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_O_C{2 * SIZE};
 
-constexpr static double PLANE1_L_A{1 * SIZE};
-constexpr static double PLANE1_L_B{1 * SIZE};
-constexpr static double PLANE1_L_C{0 * SIZE};
+constexpr static xfdtd::Real PLANE1_L_A{1 * SIZE};
+constexpr static xfdtd::Real PLANE1_L_B{1 * SIZE};
+constexpr static xfdtd::Real PLANE1_L_C{0 * SIZE};
 
-constexpr static double V_SOURCE_O_A{0 * SIZE};
-constexpr static double V_SOURCE_O_B{0 * SIZE};
-constexpr static double V_SOURCE_O_C{0 * SIZE};
-constexpr static double V_SOURCE_L_A{0 * SIZE};
-constexpr static double V_SOURCE_L_B{1 * SIZE};
-constexpr static double V_SOURCE_L_C{2 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_O_A{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_O_B{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_O_C{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_L_A{0 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_L_B{1 * SIZE};
+constexpr static xfdtd::Real V_SOURCE_L_C{2 * SIZE};
 
-constexpr static double INDUCTOR_O_A{1 * SIZE};
-constexpr static double INDUCTOR_O_B{0 * SIZE};
-constexpr static double INDUCTOR_O_C{0 * SIZE};
-constexpr static double INDUCTOR_L_A{0 * SIZE};
-constexpr static double INDUCTOR_L_B{1 * SIZE};
-constexpr static double INDUCTOR_L_C{1 * SIZE};
+constexpr static xfdtd::Real INDUCTOR_O_A{1 * SIZE};
+constexpr static xfdtd::Real INDUCTOR_O_B{0 * SIZE};
+constexpr static xfdtd::Real INDUCTOR_O_C{0 * SIZE};
+constexpr static xfdtd::Real INDUCTOR_L_A{0 * SIZE};
+constexpr static xfdtd::Real INDUCTOR_L_B{1 * SIZE};
+constexpr static xfdtd::Real INDUCTOR_L_C{1 * SIZE};
 
-constexpr static double CAPACITOR_O_A{1 * SIZE};
-constexpr static double CAPACITOR_O_B{0 * SIZE};
-constexpr static double CAPACITOR_O_C{1 * SIZE};
-constexpr static double CAPACITOR_L_A{0 * SIZE};
-constexpr static double CAPACITOR_L_B{1 * SIZE};
-constexpr static double CAPACITOR_L_C{1 * SIZE};
+constexpr static xfdtd::Real CAPACITOR_O_A{1 * SIZE};
+constexpr static xfdtd::Real CAPACITOR_O_B{0 * SIZE};
+constexpr static xfdtd::Real CAPACITOR_O_C{1 * SIZE};
+constexpr static xfdtd::Real CAPACITOR_L_A{0 * SIZE};
+constexpr static xfdtd::Real CAPACITOR_L_B{1 * SIZE};
+constexpr static xfdtd::Real CAPACITOR_L_C{1 * SIZE};
 
-constexpr static double V_MONITOR_O_A{1 * SIZE};
-constexpr static double V_MONITOR_O_B{0 * SIZE};
-constexpr static double V_MONITOR_O_C{0 * SIZE};
-constexpr static double V_MONITOR_L_A{0 * SIZE};
-constexpr static double V_MONITOR_L_B{1 * SIZE};
-constexpr static double V_MONITOR_L_C{2 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_O_A{1 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_O_B{0 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_O_C{0 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_L_A{0 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_L_B{1 * SIZE};
+constexpr static xfdtd::Real V_MONITOR_L_C{2 * SIZE};
 
 void rlcCircuit() {
   // Y : B C A
@@ -90,9 +87,9 @@ void rlcCircuit() {
                     xfdtd::Vector{PLANE1_O_A, PLANE1_O_B, PLANE1_O_C},
                     xfdtd::Vector{PLANE1_L_A, PLANE1_L_B, PLANE1_L_C}))};
 
-  constexpr double bandwidth{4e9};
-  constexpr double tau{0.996 / bandwidth};
-  constexpr double t_0{4.5 * tau};
+  constexpr xfdtd::Real bandwidth{4e9};
+  constexpr xfdtd::Real tau{0.996 / bandwidth};
+  constexpr xfdtd::Real t_0{4.5 * tau};
   auto v_source{std::make_shared<xfdtd::VoltageSource>(
       "v_source",
       std::make_unique<xfdtd::Cube>(
@@ -120,7 +117,7 @@ void rlcCircuit() {
       std::make_unique<xfdtd::Cube>(
           xfdtd::Vector{V_MONITOR_O_A, V_MONITOR_O_B, V_MONITOR_O_C},
           xfdtd::Vector{V_MONITOR_L_A, V_MONITOR_L_B, V_MONITOR_L_C}),
-      xfdtd::Axis::Direction::ZP, "./data/rlc_circuit")};
+      xfdtd::Axis::Direction::ZP, "./tmp/data/rlc_circuit")};
 
   auto s{
       xfdtd::Simulation{SIZE, SIZE, SIZE, 0.98, xfdtd::ThreadConfig{2, 1, 1}}};
@@ -134,8 +131,9 @@ void rlcCircuit() {
   s.run(2000);
 
   v_monitor->output();
-  xt::dump_npy("./data/rlc_circuit/source.npy", v_source->waveform()->value());
-  xt::dump_npy("./data/rlc_circuit/time.npy",
+  xt::dump_npy("./tmp/data/rlc_circuit/source.npy",
+               v_source->waveform()->value());
+  xt::dump_npy("./tmp/data/rlc_circuit/time.npy",
                s.calculationParam()->timeParam()->hTime());
 }
 
